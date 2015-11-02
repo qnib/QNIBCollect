@@ -1,0 +1,7 @@
+client:
+    image: qnib/golang
+    dns: 127.0.0.1
+    hostname: client
+    external_links:
+     - dockerhost_consul_1:consul
+    privileged: true
