@@ -62,10 +62,9 @@ class ConnTrackCollector(diamond.collector.Collector):
 
         for sdir in dirs:
             for sfile in files:
-                if sfile.endswith('conntrack_count'):
-                    metric_name = 'ip_conntrack_count'
-                elif sfile.endswith('conntrack_max'):
-                    metric_name = 'ip_conntrack_max'
+                if sfile.endswith('conntrack_count') or sfile.endswith('conntrack_max') \
+                        or sfile.endswith('conntrack_buckets'):
+                    metric_name = sfile
                 else:
                     self.log.error('Unknown file for collection: %s', sfile)
                     continue
@@ -74,7 +73,7 @@ class ConnTrackCollector(diamond.collector.Collector):
                     continue
                 try:
                     with open(fpath, "r") as fhandle:
-                        metric = float(fhandle.readline().rstrip("\n"))
+                        metric = int(fhandle.readline().rstrip("\n"))
                         collected[metric_name] = metric
                 except Exception as exception:
                     self.log.error("Failed to collect from '%s': %s",
@@ -85,5 +84,12 @@ class ConnTrackCollector(diamond.collector.Collector):
                            'nf_conntrack/ip_conntrack kernel module was '
                            'not loaded')
         else:
+            if collected.get('ip_conntrack_max', None) and collected.get('ip_conntrack_buckets', None):
+                collected['ip_hash_ratio'] = collected['ip_conntrack_max']/collected['ip_conntrack_buckets']
+            if collected.get('nf_conntrack_max', None) and collected.get('nf_conntrack_buckets', None):
+                collected['nf_hash_ratio'] = collected['nf_conntrack_max']/collected['nf_conntrack_buckets']
             for key in collected.keys():
+                self.log.debug(
+                    "Publishing: {0}, {1}".format(key, collected[key])
+                )
                 self.publish(key, collected[key])
