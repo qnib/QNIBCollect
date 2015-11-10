@@ -30,6 +30,7 @@ class NetworkCollector(diamond.collector.Collector):
         config_help.update({
             'interfaces': 'List of interface types to collect',
             'greedy': 'Greedy match interfaces',
+            'fields': 'List or comma-separated string of metrics to collect'
         })
         return config_help
 
@@ -40,9 +41,10 @@ class NetworkCollector(diamond.collector.Collector):
         config = super(NetworkCollector, self).get_default_config()
         config.update({
             'path':         'network',
-            'interfaces':   ['eth', 'bond', 'em', 'p1p'],
+            'interfaces':   [''],
             'byte_unit':    ['bit', 'byte'],
             'greedy':       'true',
+            'fields':       ['rx_errors', 'rx_drop', 'tx_errors', 'tx_drop']
         })
         return config
 
@@ -50,6 +52,12 @@ class NetworkCollector(diamond.collector.Collector):
         """
         Collect network interface stats.
         """
+
+        # Initialize fields list
+        if isinstance(self.config['fields'], basestring):
+            fields = [f.strip() for f in self.config['fields'].split(',')]
+        elif isinstance(self.config['fields'], list):
+            fields = self.config['fields']
 
         # Initialize results
         results = {}
@@ -65,7 +73,7 @@ class NetworkCollector(diamond.collector.Collector):
 
             exp = ('^(?:\s*)((?:%s)%s):(?:\s*)'
                    + '(?P<rx_bytes>\d+)(?:\s*)'
-                   + '(?P<rx_packets>\w+)(?:\s*)'
+                   + '(?P<rx_packets>[\d\w]+)(?:\s*)'
                    + '(?P<rx_errors>\d+)(?:\s*)'
                    + '(?P<rx_drop>\d+)(?:\s*)'
                    + '(?P<rx_fifo>\d+)(?:\s*)'
@@ -73,13 +81,13 @@ class NetworkCollector(diamond.collector.Collector):
                    + '(?P<rx_compressed>\d+)(?:\s*)'
                    + '(?P<rx_multicast>\d+)(?:\s*)'
                    + '(?P<tx_bytes>\d+)(?:\s*)'
-                   + '(?P<tx_packets>\w+)(?:\s*)'
+                   + '(?P<tx_packets>[\d\w]+)(?:\s*)'
                    + '(?P<tx_errors>\d+)(?:\s*)'
                    + '(?P<tx_drop>\d+)(?:\s*)'
                    + '(?P<tx_fifo>\d+)(?:\s*)'
-                   + '(?P<tx_frame>\d+)(?:\s*)'
-                   + '(?P<tx_compressed>\d+)(?:\s*)'
-                   + '(?P<tx_multicast>\d+)(?:.*)$') % (
+                   + '(?P<tx_colls>\d+)(?:\s*)'
+                   + '(?P<tx_carrier>\d+)(?:\s*)'
+                   + '(?P<tx_compressed>\d+)(?:.*)$') % (
                 ('|'.join(self.config['interfaces'])), greed)
             reg = re.compile(exp)
             # Match Interfaces
@@ -107,25 +115,18 @@ class NetworkCollector(diamond.collector.Collector):
 
         for device in results:
             stats = results[device]
-            for s, v in stats.items():
-                # Get Metric Name
-                metric_name = '.'.join([device, s])
-                # Get Metric Value
-                metric_value = self.derivative(metric_name,
-                                               long(v),
-                                               diamond.collector.MAX_COUNTER)
+            for s in fields:
+                if s in stats:
+                    # Get Metric Name
+                    metric_name = '.'.join([device, s])
+                    # Get Metric Value
+                    metric_value = self.derivative(metric_name,
+                                                   long(stats[s]),
+                                                   diamond.collector.MAX_COUNTER)
 
-                # Convert rx_bytes and tx_bytes
-                if s == 'rx_bytes' or s == 'tx_bytes':
-                    convertor = diamond.convertor.binary(value=metric_value,
-                                                         unit='byte')
-
-                    for u in self.config['byte_unit']:
-                        # Public Converted Metric
-                        self.publish(metric_name.replace('bytes', u),
-                                     convertor.get(unit=u), precision=2)
-                else:
                     # Publish Metric Derivative
                     self.publish(metric_name, metric_value)
+                else:
+                    self.log.warn('{0} is not a valid metric field'.format(s))
 
         return None
