@@ -13,9 +13,8 @@ import (
 )
 
 const (
-	mesosTaskID         = "MESOS_TASK_ID"
-	endpoint            = "unix:///var/run/docker.sock"
-	defaultStatsTimeout = 7
+	mesosTaskID = "MESOS_TASK_ID"
+	endpoint    = "unix:///var/run/docker.sock"
 )
 
 // DockerStats collector type.
@@ -45,17 +44,18 @@ func NewDockerStats(channel chan metric.Metric, initialInterval int, log *l.Entr
 	d.name = "DockerStats"
 	d.previousCPUValues = make(map[string]*CPUValues)
 	d.dockerClient, _ = docker.NewClient(endpoint)
-	d.statsTimeout = defaultStatsTimeout
 
 	return d
 }
 
 // Configure takes a dictionary of values with which the handler can configure itself.
 func (d *DockerStats) Configure(configMap map[string]interface{}) {
-	if timeout, exists := configMap["dockerStatsTimeout"]; exists {
-		d.statsTimeout = config.GetAsInt(timeout, defaultStatsTimeout)
-	}
 	d.configureCommonParams(configMap)
+	if timeout, exists := configMap["dockerStatsTimeout"]; exists {
+		d.statsTimeout = min(config.GetAsInt(timeout, d.interval), d.interval)
+	} else {
+		d.statsTimeout = d.interval
+	}
 }
 
 // Collect iterates on all the docker containers alive and, if possible, collects the correspondent
@@ -92,7 +92,7 @@ func (d DockerStats) getDockerContainerInfo(container *docker.Container) {
 	done := make(chan bool)
 
 	go func() {
-		errC <- d.dockerClient.Stats(docker.StatsOptions{container.ID, statsC, false, done, 0})
+		errC <- d.dockerClient.Stats(docker.StatsOptions{container.ID, statsC, false, done, time.Second * time.Duration(d.interval)})
 	}()
 	select {
 	case stats, ok := <-statsC:
@@ -186,4 +186,11 @@ func calculateCPUPercent(previousCPU, previousSystem uint64, stats *docker.Stats
 		cpuPercent = (cpuDelta / systemDelta) * float64(len(stats.CPUStats.CPUUsage.PercpuUsage)) * 100.0
 	}
 	return cpuPercent
+}
+
+func min(x, y int) int {
+	if x < y {
+		return x
+	}
+	return y
 }
