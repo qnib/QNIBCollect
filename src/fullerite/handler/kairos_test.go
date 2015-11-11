@@ -112,3 +112,28 @@ func TestKairosRun(t *testing.T) {
 		t.Fatal("Failed to post and handle after 2 seconds")
 	}
 }
+
+func TestKairosServerErrorParse(t *testing.T) {
+	k := getTestKairosHandler(12, 13, 14)
+
+	metrics := make([]metric.Metric, 0, 3)
+
+	metrics = append(metrics, metric.New("Test1"))
+	metrics = append(metrics, metric.New("Test2"))
+	metrics = append(metrics, metric.New("test3"))
+
+	metrics[0].AddDimension("somedim", "")
+	metrics[1].AddDimension("somedim", "working")
+	metrics[2].AddDimension("somedime", "")
+
+	series := make([]KairosMetric, 0, 2)
+	series = append(series, k.convertToKairos(metrics[0]))
+	series = append(series, k.convertToKairos(metrics[2]))
+
+	expectByt, _ := json.Marshal(series)
+
+	errByt := []byte(`{\"errors\":[\"metric[0](name=Test1).tag[somedim].value may not be empty.\",` +
+		`\"metric[2](name=Test3).tag[somedim].value may not be empty.\"]}`)
+
+	assert.Equal(t, k.parseServerError(string(errByt), metrics), string(expectByt))
+}
