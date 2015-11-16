@@ -6,11 +6,6 @@ import (
 	"strings"
 )
 
-const (
-	METRIC_TYPE_COUNTER = "COUNTER"
-	METRIC_TYPE_GAUGE   = "GAUGE"
-)
-
 func parseDropwizardMetric(raw *[]byte) ([]metric.Metric, error) {
 	var parsed map[string]interface{}
 
@@ -70,18 +65,16 @@ func collectHistogram(jsonMap map[string]interface{}, metricName []string, metri
 	if _, ok := jsonMap["count"]; ok {
 		compositeMetricName := strings.Join(metricName, ".")
 		return metricFromMap(&jsonMap, compositeMetricName, metricType)
-	} else {
-		return []metric.Metric{}
 	}
+	return []metric.Metric{}
 }
 
 func collectCounter(jsonMap map[string]interface{}, metricName []string, metricType string) []metric.Metric {
 	if _, ok := jsonMap["count"]; ok {
 		compositeMetricName := strings.Join(metricName, ".")
 		return metricFromMap(&jsonMap, compositeMetricName, metricType)
-	} else {
-		return []metric.Metric{}
 	}
+	return []metric.Metric{}
 }
 
 func collectRate(jsonMap map[string]interface{}, metricName []string) []metric.Metric {
@@ -91,10 +84,10 @@ func collectRate(jsonMap map[string]interface{}, metricName []string) []metric.M
 			if key == "unit" {
 				continue
 			}
-			metricType := METRIC_TYPE_GAUGE
+			metricType := "GAUGE"
 
 			if key == "count" {
-				metricType = METRIC_TYPE_COUNTER
+				metricType = "COUNTER"
 			}
 
 			compositeMetricName := strings.Join(metricName, ".")
@@ -117,9 +110,9 @@ func collectMeter(jsonMap map[string]interface{}, metricName []string) []metric.
 				continue
 			}
 
-			metricType := METRIC_TYPE_GAUGE
+			metricType := "GAUGE"
 			if key == "count" {
-				metricType = METRIC_TYPE_COUNTER
+				metricType = "COUNTER"
 			}
 
 			compositeMetricName := strings.Join(metricName, ".")

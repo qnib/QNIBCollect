@@ -225,9 +225,8 @@ func parseUWSGIMetrics(raw *[]byte) ([]metric.Metric, error) {
 
 	if len(results) == 0 {
 		return parseDropwizardMetric(raw)
-	} else {
-		return results, nil
 	}
+	return results, nil
 }
 
 // convertToMetrics takes in data formatted like this::
