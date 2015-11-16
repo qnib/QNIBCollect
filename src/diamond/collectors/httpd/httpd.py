@@ -158,7 +158,7 @@ class HttpdCollector(diamond.collector.Collector):
                 for proc in self.config['processes']:
                     metric_name = '.'.join([proc, 'WorkersResidentMemory'])
                     memory_rss = resident_memory.get(proc, [0])
-                    metric_value = (sum(memory_rss)/len(memory_rss))/1024
+                    metric_value = sum(memory_rss) / len(memory_rss)
 
                     self.log.debug(
                         "Publishing: {0} {1}".format(metric_name, metric_value)
@@ -168,7 +168,7 @@ class HttpdCollector(diamond.collector.Collector):
 
                     metric_name = '.'.join([proc, 'WorkersVirtualMemory'])
                     memory_vsz = virtual_memory.get(proc, [0])
-                    metric_value = (sum(memory_vsz)/len(memory_vsz))/1024
+                    metric_value = sum(memory_vsz) / len(memory_vsz)
 
                     self.log.debug(
                         "Publishing: {0} {1}".format(metric_name, metric_value)
