@@ -223,7 +223,11 @@ func parseUWSGIMetrics(raw *[]byte) ([]metric.Metric, error) {
 	appendIt(convertToMetrics(&parsed.Histograms, metric.Gauge), "histogram")
 	appendIt(convertToMetrics(&parsed.Timers, metric.Gauge), "timer")
 
-	return results, nil
+	if len(results) == 0 {
+		return parseDropwizardMetric(raw)
+	} else {
+		return results, nil
+	}
 }
 
 // convertToMetrics takes in data formatted like this::
@@ -241,24 +245,41 @@ func convertToMetrics(metricMap *map[string]map[string]interface{}, metricType s
 	results := []metric.Metric{}
 
 	for metricName, metricData := range *metricMap {
-		for rollup, value := range metricData {
-			m := metric.New(metricName)
-			m.MetricType = metricType
-			m.AddDimension("rollup", rollup)
+		tempResults := metricFromMap(&metricData, metricName, metricType)
+		results = append(results, tempResults...)
+	}
 
-			// only add things that have a numeric base
-			switch value.(type) {
-			case float64:
-				m.Value = value.(float64)
-				results = append(results, m)
-			case int:
-				m.Value = float64(value.(int))
-				results = append(results, m)
-			}
+	return results
+}
+
+func metricFromMap(metricMap *map[string]interface{}, metricName string, metricType string) []metric.Metric {
+	results := []metric.Metric{}
+
+	for rollup, value := range *metricMap {
+		tempMetric, ok := createMetricFromDatam(rollup, value, metricName, metricType)
+		if ok {
+			results = append(results, tempMetric)
 		}
 	}
 
 	return results
+}
+
+func createMetricFromDatam(rollup string, value interface{}, metricName string, metricType string) (metric.Metric, bool) {
+	m := metric.New(metricName)
+	m.MetricType = metricType
+	m.AddDimension("rollup", rollup)
+
+	// only add things that have a numeric base
+	switch value.(type) {
+	case float64:
+		m.Value = value.(float64)
+	case int:
+		m.Value = float64(value.(int))
+	default:
+		return m, false
+	}
+	return m, true
 }
 
 // getIps is responsible for getting all the ips that are associated with this NIC
