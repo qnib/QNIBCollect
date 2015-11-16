@@ -2,6 +2,7 @@ package collector
 
 import (
 	"encoding/json"
+	"fmt"
 	"fullerite/metric"
 	"strings"
 )
@@ -21,12 +22,20 @@ func parseDropwizardMetric(raw *[]byte) ([]metric.Metric, error) {
 	return parseMetricMap(parsed, metricName, results), nil
 }
 
-func parseMetricMap(jsonMap map[string]interface{}, metricName []string, results []metric.Metric) []metric.Metric {
+func parseMetricMap(
+	jsonMap map[string]interface{},
+	metricName []string,
+	results []metric.Metric) []metric.Metric {
 	for k, v := range jsonMap {
 		switch t := v.(type) {
 		case map[string]interface{}:
 			metricName = append(metricName, k)
 			tempResults := parseMetricMap(t, metricName, results)
+			fmt.Println(results)
+			// pop the name, now that it is processed
+			if len(metricName)-1 >= 0 {
+				metricName = metricName[:(len(metricName) - 1)]
+			}
 			results = append(results, tempResults...)
 		default:
 			tempResults := parseFlattenedMetricMap(jsonMap, metricName)
