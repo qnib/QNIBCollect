@@ -304,10 +304,6 @@ func TestUWSGIMetricConversion(t *testing.T) {
 	}
 }
 
-func TestJavaUWSGIResponseParsing(t *testing.T) {
-
-}
-
 func TestUWSGIResponseConversion(t *testing.T) {
 	uwsgiRsp := []byte(getTestUWSGIResponse())
 
