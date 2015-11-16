@@ -213,6 +213,7 @@ class TestHttpdCollector(CollectorTestCase):
             'nickname2.LoggingWorkers': 0,
             'nickname2.FinishingWorkers': 0,
             'nickname2.CleanupWorkers': 0,
+            'nickname2.AccessesPerSec': 0,
         }
 
         self.setDocExample(collector=self.collector.__class__.__name__,

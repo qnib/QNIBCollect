@@ -21,8 +21,8 @@ import diamond.collector
 class HttpdCollector(diamond.collector.Collector):
 
 
-    last_collected_time = 0
-    last_collected_total_accesses = 0
+    last_collected_time = None
+    last_collected_total_accesses = None
 
     def process_config(self):
         super(HttpdCollector, self).process_config()
@@ -123,7 +123,7 @@ class HttpdCollector(diamond.collector.Collector):
                             self._publish(nickname, k, v)
 
                         if k == 'Total Accesses':
-                            if self.last_collected_time > 0 and self.last_collected_total_accesses:
+                            if self.last_collected_time and self.last_collected_total_accesses:
                                 gen_metric_name = 'AccessesPerSec'
                                 if v > self.last_collected_total_accesses:
                                     gen_metric_value = (int(v) - int(self.last_collected_total_accesses)) / (time.time() - self.last_collected_time)
