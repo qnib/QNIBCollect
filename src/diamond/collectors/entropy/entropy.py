@@ -29,6 +29,9 @@ class EntropyStatCollector(diamond.collector.Collector):
 
     def collect(self):
         if not os.access(self.PROC, os.R_OK):
+            self.log.error(
+                "Permisison denied to access {0}".format(self.PROC)
+            )
             return None
 
         # open file
@@ -41,4 +44,7 @@ class EntropyStatCollector(diamond.collector.Collector):
         entropy_file.close()
 
         # Publish value
+        self.log.debug(
+            "Publishing: available {0} ".format(entropy)
+        )
         self.publish_gauge("available", entropy)
