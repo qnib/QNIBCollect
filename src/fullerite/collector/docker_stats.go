@@ -103,7 +103,7 @@ func (d DockerStats) getDockerContainerInfo(container *docker.Container) {
 		}
 		done <- true
 
-		ret := d.buildMetrics(container, float64(stats.MemoryStats.Usage), float64(stats.MemoryStats.Limit), calculateCPUPercent(d.previousCPUValues[container.ID].totCPU, d.previousCPUValues[container.ID].systemCPU, stats))
+		ret := d.buildMetrics(container, stats, calculateCPUPercent(d.previousCPUValues[container.ID].totCPU, d.previousCPUValues[container.ID].systemCPU, stats))
 
 		d.sendMetrics(ret)
 
@@ -119,10 +119,12 @@ func (d DockerStats) getDockerContainerInfo(container *docker.Container) {
 }
 
 // buildMetrics creates the actual metrics for the given container.
-func (d DockerStats) buildMetrics(container *docker.Container, memUsed, memLimit, cpuPercentage float64) []metric.Metric {
+func (d DockerStats) buildMetrics(container *docker.Container, containerStats *docker.Stats, cpuPercentage float64) []metric.Metric {
 	ret := []metric.Metric{
-		buildDockerMetric("DockerMemoryUsed", memUsed),
-		buildDockerMetric("DockerMemoryLimit", memLimit),
+		buildDockerMetric("DockerRxBytes", float64(containerStats.Network.RxBytes)),
+		buildDockerMetric("DockerTxBytes", float64(containerStats.Network.TxBytes)),
+		buildDockerMetric("DockerMemoryUsed", float64(containerStats.MemoryStats.Usage)),
+		buildDockerMetric("DockerMemoryLimit", float64(containerStats.MemoryStats.Limit)),
 		buildDockerMetric("DockerCpuPercentage", cpuPercentage),
 	}
 	additionalDimensions := map[string]string{
