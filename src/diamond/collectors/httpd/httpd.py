@@ -16,6 +16,7 @@ import httplib
 import time
 import urlparse
 import diamond.collector
+from subprocess import Popen, PIPE
 
 
 class HttpdCollector(diamond.collector.Collector):
@@ -49,6 +50,8 @@ class HttpdCollector(diamond.collector.Collector):
             'urls': "Urls to server-status in auto format, comma seperated,"
             + " Format 'nickname http://host:port/server-status?auto, "
             + ", nickname http://host:port/server-status?auto, etc'",
+            'processes' : "Command names of the httpd processes running"
+            + " as a comma separated string",
         })
         return config_help
 
@@ -59,6 +62,7 @@ class HttpdCollector(diamond.collector.Collector):
         config = super(HttpdCollector, self).get_default_config()
         config.update({
             'path':     'httpd',
+            'processes': ['apache2'],
             'urls':     ['localhost http://localhost:8080/server-status?auto']
         })
         return config
@@ -123,16 +127,57 @@ class HttpdCollector(diamond.collector.Collector):
                             self._publish(nickname, k, v)
 
                         if k == 'Total Accesses':
+                            gen_metric_name = 'AccessesPerSec'
+                            gen_metric_value = 0
                             if self.last_collected_time and self.last_collected_total_accesses:
-                                gen_metric_name = 'AccessesPerSec'
                                 if v > self.last_collected_total_accesses:
                                     gen_metric_value = (int(v) - int(self.last_collected_total_accesses)) / (time.time() - self.last_collected_time)
-                                else:
-                                    gen_metric_value = 0
                                 self._publish(nickname, gen_metric_name, gen_metric_value)
                             self.last_collected_total_accesses = v
 
             self.last_collected_time = time.time()
+        try:
+            p = Popen('ps ax -o rss=,vsz=,comm='.split(), stdout=PIPE, stderr=PIPE)
+            output, errors = p.communicate()
+
+            if errors:
+                self.log.error(
+                    "Failed to open process: {0!s}".format(errors)
+                )
+            else:
+                resident_memory = {}
+                virtual_memory = {}
+                for line in output.split('\n'):
+                    if not line:
+                        continue
+                    (rss, vsz, proc) = line.strip('\n').split(None,2)
+                    if proc in self.config['processes']:
+                        resident_memory.setdefault(proc, []).append(int(rss))
+                        virtual_memory.setdefault(proc, []).append(int(vsz))
+
+                for proc in self.config['processes']:
+                    metric_name = '.'.join([proc, 'WorkersResidentMemory'])
+                    memory_rss = resident_memory.get(proc, [0])
+                    metric_value = (sum(memory_rss)/len(memory_rss))/1024
+
+                    self.log.debug(
+                        "Publishing: {0} {1}".format(metric_name, metric_value)
+                    )
+                    self.publish(metric_name, metric_value)
+
+
+                    metric_name = '.'.join([proc, 'WorkersVirtualMemory'])
+                    memory_vsz = virtual_memory.get(proc, [0])
+                    metric_value = (sum(memory_vsz)/len(memory_vsz))/1024
+
+                    self.log.debug(
+                        "Publishing: {0} {1}".format(metric_name, metric_value)
+                    )
+                    self.publish(metric_name, metric_value)
+        except Exception as e:
+            self.log.error(
+                "Failed because: {0!s}".format(e)
+            )
 
     def _publish(self, nickname, key, value):
 
@@ -140,9 +185,9 @@ class HttpdCollector(diamond.collector.Collector):
                    'Total Accesses', 'IdleWorkers', 'StartingWorkers',
                    'ReadingWorkers', 'WritingWorkers', 'KeepaliveWorkers',
                    'DnsWorkers', 'ClosingWorkers', 'LoggingWorkers',
-                   'FinishingWorkers', 'CleanupWorkers']
+                   'FinishingWorkers', 'CleanupWorkers', 'StandbyWorkers', 'CPULoad']
 
-        metrics_precision = ['ReqPerSec', 'BytesPerSec', 'BytesPerReq', 'AccessesPerSec']
+        metrics_precision = ['ReqPerSec', 'BytesPerSec', 'BytesPerReq', 'AccessesPerSec', 'CPULoad']
 
         if key in metrics:
             # Get Metric Name
@@ -158,26 +203,34 @@ class HttpdCollector(diamond.collector.Collector):
                 metric_value = "%f" % float(value)
 
                 # Publish Metric
+                self.log.debug(
+                    "Publishing: {0} {1}".format(metric_name, metric_value)
+                )
                 self.publish(metric_name, metric_value, precision=5)
             else:
                 # Get Metric Value
                 metric_value = "%d" % float(value)
 
                 # Publish Metric
+                self.log.debug(
+                    "Publishing: {0} {1}".format(metric_name, metric_value)
+                )
                 self.publish(metric_name, metric_value)
 
     def _parseScoreboard(self, sb):
 
         ret = []
 
-        ret.append(('IdleWorkers', sb.count('_')))
-        ret.append(('ReadingWorkers', sb.count('R')))
-        ret.append(('WritingWorkers', sb.count('W')))
-        ret.append(('KeepaliveWorkers', sb.count('K')))
-        ret.append(('DnsWorkers', sb.count('D')))
-        ret.append(('ClosingWorkers', sb.count('C')))
-        ret.append(('LoggingWorkers', sb.count('L')))
-        ret.append(('FinishingWorkers', sb.count('G')))
-        ret.append(('CleanupWorkers', sb.count('I')))
+        ret.append(('IdleWorkers', sb.count('_'))) # Waiting for connection
+        ret.append(('StartingWorkers', sb.count('S'))) # Starting up
+        ret.append(('ReadingWorkers', sb.count('R'))) # Reading request
+        ret.append(('WritingWorkers', sb.count('W'))) # Sending reply
+        ret.append(('KeepaliveWorkers', sb.count('K'))) # Read Keep-alive
+        ret.append(('DnsWorkers', sb.count('D'))) # DNS Lookup
+        ret.append(('ClosingWorkers', sb.count('C'))) # Closing connection
+        ret.append(('LoggingWorkers', sb.count('L'))) # Logging
+        ret.append(('FinishingWorkers', sb.count('G'))) # Gracefully finishing
+        ret.append(('CleanupWorkers', sb.count('I'))) # Idle cleanup of worker
+        ret.append(('StandbyWorkers', sb.count('_'))) # Open slot with no current processes
 
         return ret
