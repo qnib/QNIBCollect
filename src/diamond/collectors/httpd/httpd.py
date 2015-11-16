@@ -13,11 +13,16 @@ Collect stats from Apache HTTPD server using mod_status
 
 import re
 import httplib
+import time
 import urlparse
 import diamond.collector
 
 
 class HttpdCollector(diamond.collector.Collector):
+
+
+    last_collected_time = 0
+    last_collected_total_accesses = 0
 
     def process_config(self):
         super(HttpdCollector, self).process_config()
@@ -117,29 +122,38 @@ class HttpdCollector(diamond.collector.Collector):
                         else:
                             self._publish(nickname, k, v)
 
+                        if k == 'Total Accesses':
+                            if self.last_collected_time > 0 and self.last_collected_total_accesses:
+                                gen_metric_name = 'AccessesPerSec'
+                                if v > self.last_collected_total_accesses:
+                                    gen_metric_value = (int(v) - int(self.last_collected_total_accesses)) / (time.time() - self.last_collected_time)
+                                else:
+                                    gen_metric_value = 0
+                                self._publish(nickname, gen_metric_name, gen_metric_value)
+                            self.last_collected_total_accesses = v
+
+            self.last_collected_time = time.time()
+
     def _publish(self, nickname, key, value):
 
-        metrics = ['ReqPerSec', 'BytesPerSec', 'BytesPerReq', 'BusyWorkers',
+        metrics = ['AccessesPerSec', 'ReqPerSec', 'BytesPerSec', 'BytesPerReq', 'BusyWorkers',
                    'Total Accesses', 'IdleWorkers', 'StartingWorkers',
                    'ReadingWorkers', 'WritingWorkers', 'KeepaliveWorkers',
                    'DnsWorkers', 'ClosingWorkers', 'LoggingWorkers',
                    'FinishingWorkers', 'CleanupWorkers']
 
-        metrics_precision = ['ReqPerSec', 'BytesPerSec', 'BytesPerReq']
+        metrics_precision = ['ReqPerSec', 'BytesPerSec', 'BytesPerReq', 'AccessesPerSec']
 
         if key in metrics:
             # Get Metric Name
-            presicion_metric = False
             metric_name = "%s" % re.sub('\s+', '', key)
-            if metric_name in metrics_precision:
-                presicion_metric = 1
 
             # Prefix with the nickname?
             if len(nickname) > 0:
                 metric_name = nickname + '.' + metric_name
 
             # Use precision for ReqPerSec BytesPerSec BytesPerReq
-            if presicion_metric:
+            if metric_name in metrics_precision:
                 # Get Metric Value
                 metric_value = "%f" % float(value)
 
