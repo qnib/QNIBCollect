@@ -11,6 +11,7 @@ Collect stats from Apache HTTPD server using mod_status
 
 """
 
+import collections
 import re
 import httplib
 import time
@@ -129,7 +130,7 @@ class HttpdCollector(diamond.collector.Collector):
                         if k == 'Total Accesses':
                             gen_metric_name = 'AccessesPerSec'
                             gen_metric_value = 0
-                            if self.last_collected_time and self.last_collected_total_accesses:
+                            if self.last_collected_time is not None and self.last_collected_total_accesses is not None:
                                 if v > self.last_collected_total_accesses:
                                     gen_metric_value = (int(v) - int(self.last_collected_total_accesses)) / (time.time() - self.last_collected_time)
                                 self._publish(nickname, gen_metric_name, gen_metric_value)
@@ -145,15 +146,15 @@ class HttpdCollector(diamond.collector.Collector):
                     "Failed to open process: {0!s}".format(errors)
                 )
             else:
-                resident_memory = {}
-                virtual_memory = {}
+                resident_memory = collections.defaultdict(list)
+                virtual_memory = collections.defaultdict(list)
                 for line in output.split('\n'):
                     if not line:
                         continue
                     (rss, vsz, proc) = line.strip('\n').split(None,2)
                     if proc in self.config['processes']:
-                        resident_memory.setdefault(proc, []).append(int(rss))
-                        virtual_memory.setdefault(proc, []).append(int(vsz))
+                        resident_memory[proc].append(int(rss))
+                        virtual_memory[proc].append(int(vsz))
 
                 for proc in self.config['processes']:
                     metric_name = '.'.join([proc, 'WorkersResidentMemory'])
