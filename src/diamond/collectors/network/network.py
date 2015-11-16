@@ -42,7 +42,6 @@ class NetworkCollector(diamond.collector.Collector):
         config.update({
             'path':         'network',
             'interfaces':   [''],
-            'byte_unit':    ['bit', 'byte'],
             'greedy':       'true',
             'fields':       ['rx_errors', 'rx_drop', 'tx_errors', 'tx_drop']
         })
