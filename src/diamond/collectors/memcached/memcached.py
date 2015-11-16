@@ -26,8 +26,9 @@ TO use a unix socket, set a host string like this
 """
 
 import diamond.collector
-import socket
 import re
+import socket
+import time
 
 
 class MemcachedCollector(diamond.collector.Collector):
@@ -42,7 +43,13 @@ class MemcachedCollector(diamond.collector.Collector):
         'hash_power_level',
         'hash_bytes',
         'hash_is_expanding',
+        'total_items',
         'uptime'
+    ]
+
+    COUNTERS = [
+        'bytes',
+        'total_items',
     ]
 
     def get_default_config_help(self):
@@ -96,7 +103,7 @@ class MemcachedCollector(diamond.collector.Collector):
 
     def get_stats(self, host, port):
         # stuff that's always ignored, aren't 'stats'
-        ignored = ('libevent', 'pointer_size', 'time', 'version',
+        ignored = ('libevent', 'pointer_size', 'time',
                    'repcached_version', 'replication', 'accepting_conns',
                    'pid')
         pid = None
@@ -111,6 +118,9 @@ class MemcachedCollector(diamond.collector.Collector):
                 continue
             elif pieces[1] == 'pid':
                 pid = pieces[2]
+                continue
+            elif pieces[1] == 'version':
+                stats[pieces[1]] = str(pieces[2])
                 continue
             if '.' in pieces[2]:
                 stats[pieces[1]] = float(pieces[2])
@@ -156,11 +166,16 @@ class MemcachedCollector(diamond.collector.Collector):
             # for everything we want
             for stat in desired:
                 if stat in stats:
-
                     # we have it
                     if stat in self.GAUGES:
+                        self.log.debug(
+                            "Publishing gauge, {0}: {1}".format(alias + "." + stat, stats[stat])
+                        )
                         self.publish_gauge(alias + "." + stat, stats[stat])
-                    else:
+                    if stat in self.COUNTERS or stat not in self.GAUGES:
+                        self.log.debug(
+                            "Publishing counter, {0}: {1}".format(alias + "." + stat, stats[stat])
+                        )
                         self.publish_counter(alias + "." + stat, stats[stat])
 
                 else:
