@@ -140,6 +140,5 @@ func TestBigFileJSON(t *testing.T) {
 
 	metrics, err := parseUWSGIMetrics(&dat)
 	assert.Nil(t, err)
-	t.Log(metrics)
 	assert.Equal(t, 560, len(metrics))
 }
