@@ -1,6 +1,7 @@
 package collector
 
 import (
+	"io/ioutil"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -79,17 +80,13 @@ func TestDropJVMMetrics(t *testing.T) {
 
 	metrics, err := parseUWSGIMetrics(&rawData)
 	assert.Nil(t, err)
-	assert.Equal(t, 0, len(metrics))
+	assert.Equal(t, 14, len(metrics))
 }
 
 func TestTimerMetrics(t *testing.T) {
 	rawData := []byte(`
 {
   "jetty": {
-    "percent-4xx-1m": {
-      "type": "gauge",
-      "value": 5.612
-    },
     "trace-requests": {
       "duration": {
         "p98": 0,
@@ -106,12 +103,17 @@ func TestTimerMetrics(t *testing.T) {
         "mean": 0
       },
       "type": "timer"
+    },
+    "foo": {
+      "type": "gauge",
+      "value": 5.612
     }
   }
 }
         `)
 	metrics, err := parseUWSGIMetrics(&rawData)
 	assert.Nil(t, err)
+	assert.Equal(t, 9, len(metrics))
 	t.Log(metrics)
 }
 
@@ -126,6 +128,18 @@ func TestGauge(t *testing.T) {
   }
 }
         `)
-	_, err := parseUWSGIMetrics(&rawData)
+	metrics, err := parseUWSGIMetrics(&rawData)
 	assert.Nil(t, err)
+	assert.Equal(t, 1, len(metrics))
+}
+
+func TestBigFileJSON(t *testing.T) {
+	dat, err := ioutil.ReadFile("sample.json")
+
+	assert.Nil(t, err)
+
+	metrics, err := parseUWSGIMetrics(&dat)
+	assert.Nil(t, err)
+	t.Log(metrics)
+	assert.Equal(t, 560, len(metrics))
 }

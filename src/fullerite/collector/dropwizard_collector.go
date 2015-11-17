@@ -2,7 +2,6 @@ package collector
 
 import (
 	"encoding/json"
-	"fmt"
 	"fullerite/metric"
 	"strings"
 )
@@ -16,22 +15,21 @@ func parseDropwizardMetric(raw *[]byte) ([]metric.Metric, error) {
 		return []metric.Metric{}, err
 	}
 
-	results := []metric.Metric{}
 	metricName := []string{}
 
-	return parseMetricMap(parsed, metricName, results), nil
+	return parseMetricMap(parsed, metricName), nil
 }
 
 func parseMetricMap(
 	jsonMap map[string]interface{},
-	metricName []string,
-	results []metric.Metric) []metric.Metric {
+	metricName []string) []metric.Metric {
+	results := []metric.Metric{}
+
 	for k, v := range jsonMap {
 		switch t := v.(type) {
 		case map[string]interface{}:
 			metricName = append(metricName, k)
-			tempResults := parseMetricMap(t, metricName, results)
-			fmt.Println(results)
+			tempResults := parseMetricMap(t, metricName)
 			// pop the name, now that it is processed
 			if len(metricName)-1 >= 0 {
 				metricName = metricName[:(len(metricName) - 1)]
@@ -39,12 +37,24 @@ func parseMetricMap(
 			results = append(results, tempResults...)
 		default:
 			tempResults := parseFlattenedMetricMap(jsonMap, metricName)
-			results = append(results, tempResults...)
-			return results
+			if len(tempResults) > 0 {
+				results = append(results, tempResults...)
+				return results
+			} else {
+				m, ok := extractGaugeValue(k, v, metricName)
+				if ok {
+					results = append(results, m)
+				}
+			}
 		}
 	}
 
 	return results
+}
+
+func extractGaugeValue(key string, value interface{}, metricName []string) (metric.Metric, bool) {
+	compositeMetricName := strings.Join(append(metricName, key), ".")
+	return createMetricFromDatam("value", value, compositeMetricName, "GAUGE")
 }
 
 func parseFlattenedMetricMap(jsonMap map[string]interface{}, metricName []string) []metric.Metric {
