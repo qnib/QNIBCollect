@@ -48,8 +48,7 @@ class NUMAZoneInfoCollector(diamond.collector.Collector):
                     numlines_to_process -= 1
                     statname, metric_value = line.split('pages')[-1].split()
                     metric_name = ''.join([metric, statname])
-                    self.log.debug("Publishing %s %s" %
-                                  (metric_name, metric_value))
+
                     self.publish(metric_name, metric_value)
 
                 if match:

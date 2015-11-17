@@ -22,9 +22,7 @@ class OSDistroCollector(diamond.collector.Collector):
             output, errors = p.communicate()
             metric_name = 'os_distro'
             metric_value = output.replace('\n', ' ').strip().strip('"').strip("'")
-            self.log.debug(
-                "Publishing {0} {1}".format(metric_name, metric_value)
-            )
+
             self.publish(metric_name, metric_value)
         except Exception as e:
             self.log.error(
