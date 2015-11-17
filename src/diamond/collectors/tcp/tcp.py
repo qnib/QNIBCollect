@@ -271,12 +271,6 @@ class TCPCollector(diamond.collector.Collector):
 
             # Publish the metric
             if metric_name in self.GAUGES:
-                self.log.debug(
-                    "Publishing gauge: {0} {1}".format(metric_name, value)
-                )
                 self.publish_gauge(metric_name, value, 0)
             else:
-                self.log.debug(
-                    "Publishing counter: {0} {1}".format(metric_name, value)
-                )
                 self.publish_counter(metric_name, value, 0)

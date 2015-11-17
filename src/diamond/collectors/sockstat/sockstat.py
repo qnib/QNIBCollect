@@ -58,9 +58,6 @@ class SockstatCollector(diamond.collector.Collector):
             f.close()
 
         for key, value in result.items():
-            self.log.debug(
-                "Publishing gauge: {0} {1}".format(key, value)
-            )
             self.publish(key, value, metric_type='GAUGE')
 
     def collect_stat(self, data, f):

@@ -91,9 +91,6 @@ class MemoryCollector(diamond.collector.Collector):
                         value = diamond.convertor.binary.convert(value=value,
                                                                  oldUnit=units,
                                                                  newUnit=unit)
-                        self.log.debug(
-                            "Publishing procfile: {0} {1}".format(name, value)
-                        )
                         self.publish(name, value, metric_type='GAUGE')
 
                         # TODO: We only support one unit node here. Fix it!
@@ -115,37 +112,22 @@ class MemoryCollector(diamond.collector.Collector):
             for unit in self.config['byte_unit']:
                 value = diamond.convertor.binary.convert(
                     value=phymem_usage.total, oldUnit=units, newUnit=unit)
-                self.log.debug(
-                    "Publishing: MemTotal {0}".format(value)
-                )
                 self.publish('MemTotal', value, metric_type='GAUGE')
 
                 value = diamond.convertor.binary.convert(
                     value=phymem_usage.available, oldUnit=units, newUnit=unit)
-                self.log.debug(
-                    "Publishing: MemAvailable {0}".format(value)
-                )
                 self.publish('MemAvailable', value, metric_type='GAUGE')
 
                 value = diamond.convertor.binary.convert(
                     value=phymem_usage.free, oldUnit=units, newUnit=unit)
-                self.log.debug(
-                    "Publishing: MemFree {0}".format(value)
-                )
                 self.publish('MemFree', value, metric_type='GAUGE')
 
                 value = diamond.convertor.binary.convert(
                     value=virtmem_usage.total, oldUnit=units, newUnit=unit)
-                self.log.debug(
-                    "Publishing: SwapTotal {0}".format(value)
-                )
                 self.publish('SwapTotal', value, metric_type='GAUGE')
 
                 value = diamond.convertor.binary.convert(
                     value=virtmem_usage.free, oldUnit=units, newUnit=unit)
-                self.log.debug(
-                    "Publishing: SwapFree {0}".format(value)
-                )
                 self.publish('SwapFree', value, metric_type='GAUGE')
 
                 # TODO: We only support one unit node here. Fix it!

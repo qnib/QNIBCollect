@@ -44,7 +44,4 @@ class EntropyStatCollector(diamond.collector.Collector):
         entropy_file.close()
 
         # Publish value
-        self.log.debug(
-            "Publishing: available {0} ".format(entropy)
-        )
         self.publish_gauge("available", entropy)

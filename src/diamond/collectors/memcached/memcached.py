@@ -32,6 +32,7 @@ import time
 
 
 class MemcachedCollector(diamond.collector.Collector):
+
     GAUGES = [
         'bytes',
         'connection_structures',
@@ -45,11 +46,6 @@ class MemcachedCollector(diamond.collector.Collector):
         'hash_is_expanding',
         'total_items',
         'uptime'
-    ]
-
-    COUNTERS = [
-        'bytes',
-        'total_items',
     ]
 
     def get_default_config_help(self):
@@ -168,14 +164,8 @@ class MemcachedCollector(diamond.collector.Collector):
                 if stat in stats:
                     # we have it
                     if stat in self.GAUGES:
-                        self.log.debug(
-                            "Publishing gauge, {0}: {1}".format(alias + "." + stat, stats[stat])
-                        )
                         self.publish_gauge(alias + "." + stat, stats[stat])
-                    if stat in self.COUNTERS or stat not in self.GAUGES:
-                        self.log.debug(
-                            "Publishing counter, {0}: {1}".format(alias + "." + stat, stats[stat])
-                        )
+                    else:
                         self.publish_counter(alias + "." + stat, stats[stat])
 
                 else:
