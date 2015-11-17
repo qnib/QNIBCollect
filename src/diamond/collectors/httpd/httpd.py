@@ -160,9 +160,6 @@ class HttpdCollector(diamond.collector.Collector):
                     memory_rss = resident_memory.get(proc, [0])
                     metric_value = sum(memory_rss) / len(memory_rss)
 
-                    self.log.debug(
-                        "Publishing: {0} {1}".format(metric_name, metric_value)
-                    )
                     self.publish(metric_name, metric_value)
 
 
@@ -170,9 +167,6 @@ class HttpdCollector(diamond.collector.Collector):
                     memory_vsz = virtual_memory.get(proc, [0])
                     metric_value = sum(memory_vsz) / len(memory_vsz)
 
-                    self.log.debug(
-                        "Publishing: {0} {1}".format(metric_name, metric_value)
-                    )
                     self.publish(metric_name, metric_value)
         except Exception as e:
             self.log.error(
@@ -203,18 +197,12 @@ class HttpdCollector(diamond.collector.Collector):
                 metric_value = "%f" % float(value)
 
                 # Publish Metric
-                self.log.debug(
-                    "Publishing: {0} {1}".format(metric_name, metric_value)
-                )
                 self.publish(metric_name, metric_value, precision=5)
             else:
                 # Get Metric Value
                 metric_value = "%d" % float(value)
 
                 # Publish Metric
-                self.log.debug(
-                    "Publishing: {0} {1}".format(metric_name, metric_value)
-                )
                 self.publish(metric_name, metric_value)
 
     def _parseScoreboard(self, sb):
