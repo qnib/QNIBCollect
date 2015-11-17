@@ -144,7 +144,7 @@ func (k *Kairos) emitMetrics(metrics []metric.Metric) bool {
 		k.log.Error("Failed to post to Kairos @", apiURL,
 			" status was ", rsp.Status,
 			" rsp body was ", string(body),
-			" malformed metrics are ", k.parseServerError(string(body), metrics))
+			" malformed metrics are ", k.parseServerError(string(body), series))
 	} else {
 		k.log.Error("Failed to post to Kairos @", apiURL,
 			" status was ", rsp.Status,
@@ -158,7 +158,7 @@ func (k *Kairos) dialTimeout(network, addr string) (net.Conn, error) {
 	return net.DialTimeout(network, addr, k.timeout)
 }
 
-func (k *Kairos) parseServerError(errMsg string, metrics []metric.Metric) string {
+func (k *Kairos) parseServerError(errMsg string, metrics []KairosMetric) string {
 	re, err := regexp.Compile(`metric\[([0-9]+)\]`)
 	if err != nil {
 		return ""
@@ -169,15 +169,15 @@ func (k *Kairos) parseServerError(errMsg string, metrics []metric.Metric) string
 		return ""
 	}
 
-	series := make([]KairosMetric, 0, len(result))
+	errMetrics := make([]KairosMetric, 0, len(result))
 	for i := range result {
 		v, err := strconv.Atoi(result[i][1])
 		if err == nil {
-			series = append(series, k.convertToKairos(metrics[v]))
+			errMetrics = append(errMetrics, metrics[v])
 		}
 	}
 
-	retData, err := json.Marshal(series)
+	retData, err := json.Marshal(errMetrics)
 	if err != nil {
 		return ""
 	}

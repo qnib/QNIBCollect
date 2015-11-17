@@ -126,14 +126,19 @@ func TestKairosServerErrorParse(t *testing.T) {
 	metrics[1].AddDimension("somedim", "working")
 	metrics[2].AddDimension("somedime", "")
 
-	series := make([]KairosMetric, 0, 2)
-	series = append(series, k.convertToKairos(metrics[0]))
-	series = append(series, k.convertToKairos(metrics[2]))
+	series := make([]KairosMetric, 0, len(metrics))
+	for i := range metrics {
+		series = append(series, k.convertToKairos(metrics[i]))
+	}
 
-	expectByt, _ := json.Marshal(series)
+	expectMetrics := make([]KairosMetric, 0, 2)
+	expectMetrics = append(expectMetrics, k.convertToKairos(metrics[0]))
+	expectMetrics = append(expectMetrics, k.convertToKairos(metrics[2]))
+
+	expectByt, _ := json.Marshal(expectMetrics)
 
 	errByt := []byte(`{\"errors\":[\"metric[0](name=Test1).tag[somedim].value may not be empty.\",` +
 		`\"metric[2](name=Test3).tag[somedim].value may not be empty.\"]}`)
 
-	assert.Equal(t, k.parseServerError(string(errByt), metrics), string(expectByt))
+	assert.Equal(t, k.parseServerError(string(errByt), series), string(expectByt))
 }
