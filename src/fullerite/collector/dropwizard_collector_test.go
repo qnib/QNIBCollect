@@ -1,11 +1,38 @@
 package collector
 
 import (
+	"fullerite/metric"
 	"io/ioutil"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
+
+func extractMetricWithName(metrics []metric.Metric,
+	metricName string) (metric.Metric, bool) {
+	var m metric.Metric
+
+	for _, metric := range metrics {
+		if metric.Name == metricName {
+			return metric, true
+		}
+	}
+
+	return m, false
+}
+
+func extractMetricWithType(metrics []metric.Metric,
+	metricType string) (metric.Metric, bool) {
+	var m metric.Metric
+
+	for _, metric := range metrics {
+		if metric.MetricType == metricType {
+			return metric, true
+		}
+	}
+
+	return m, false
+}
 
 func TestDropwizardNtesting(t *testing.T) {
 	rawData := []byte(`
@@ -141,4 +168,35 @@ func TestBigFileJSON(t *testing.T) {
 	metrics, err := parseUWSGIMetrics(&dat)
 	assert.Nil(t, err)
 	assert.Equal(t, 560, len(metrics))
+}
+
+func TestHistogram(t *testing.T) {
+	rawData := []byte(`
+{
+  "foo": {
+    "bar": {
+      "type": "histogram",
+      "count": 100,
+      "min": 2,
+      "max": 2,
+      "mean": 2,
+      "std_dev": 0,
+      "median": 2,
+      "p75": 2,
+      "p95": 2,
+      "p98": 2,
+      "p99": 2,
+      "p999": 2
+    }
+  }
+}
+        `)
+	metrics, err := parseUWSGIMetrics(&rawData)
+	assert.Nil(t, err)
+	assert.Equal(t, 11, len(metrics))
+	t.Log(len(metrics))
+	counterMetric, ok := extractMetricWithType(metrics, "COUNTER")
+	assert.True(t, ok)
+
+	assert.Equal(t, 100.0, counterMetric.Value)
 }

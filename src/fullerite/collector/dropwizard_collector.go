@@ -6,6 +6,13 @@ import (
 	"strings"
 )
 
+const (
+	// MetricTypeCounter String for counter metric type
+	MetricTypeCounter = "COUNTER"
+	// MetricTypeGauge String for Gauge metric type
+	MetricTypeGauge = "GAUGE"
+)
+
 func parseDropwizardMetric(raw *[]byte) ([]metric.Metric, error) {
 	var parsed map[string]interface{}
 
@@ -40,11 +47,10 @@ func parseMetricMap(
 			if len(tempResults) > 0 {
 				results = append(results, tempResults...)
 				return results
-			} else {
-				m, ok := extractGaugeValue(k, v, metricName)
-				if ok {
-					results = append(results, m)
-				}
+			}
+			m, ok := extractGaugeValue(k, v, metricName)
+			if ok {
+				results = append(results, m)
 			}
 		}
 	}
@@ -75,38 +81,27 @@ func parseFlattenedMetricMap(jsonMap map[string]interface{}, metricName []string
 	return collectRate(jsonMap, metricName)
 }
 
-func collectGauge(jsonMap map[string]interface{}, metricName []string, metricType string) []metric.Metric {
+func collectGauge(jsonMap map[string]interface{}, metricName []string,
+	metricType string) []metric.Metric {
+
 	compositeMetricName := strings.Join(metricName, ".")
 	return metricFromMap(&jsonMap, compositeMetricName, metricType)
 }
 
-func collectHistogram(jsonMap map[string]interface{}, metricName []string, metricType string) []metric.Metric {
-	if _, ok := jsonMap["count"]; ok {
-		compositeMetricName := strings.Join(metricName, ".")
-		return metricFromMap(&jsonMap, compositeMetricName, metricType)
-	}
-	return []metric.Metric{}
-}
+func collectHistogram(jsonMap map[string]interface{},
+	metricName []string, metricType string) []metric.Metric {
 
-func collectCounter(jsonMap map[string]interface{}, metricName []string, metricType string) []metric.Metric {
-	if _, ok := jsonMap["count"]; ok {
-		compositeMetricName := strings.Join(metricName, ".")
-		return metricFromMap(&jsonMap, compositeMetricName, metricType)
-	}
-	return []metric.Metric{}
-}
-
-func collectRate(jsonMap map[string]interface{}, metricName []string) []metric.Metric {
 	results := []metric.Metric{}
-	if checkForRateUnits(jsonMap) {
+
+	if _, ok := jsonMap["count"]; ok {
 		for key, value := range jsonMap {
-			if key == "unit" {
+			if key == "type" {
 				continue
 			}
-			metricType := "GAUGE"
 
+			metricType := MetricTypeGauge
 			if key == "count" {
-				metricType = "COUNTER"
+				metricType = MetricTypeCounter
 			}
 
 			compositeMetricName := strings.Join(metricName, ".")
@@ -117,7 +112,40 @@ func collectRate(jsonMap map[string]interface{}, metricName []string) []metric.M
 		}
 	}
 	return results
+}
 
+func collectCounter(jsonMap map[string]interface{}, metricName []string,
+	metricType string) []metric.Metric {
+
+	if _, ok := jsonMap["count"]; ok {
+		compositeMetricName := strings.Join(metricName, ".")
+		return metricFromMap(&jsonMap, compositeMetricName, metricType)
+	}
+	return []metric.Metric{}
+}
+
+func collectRate(jsonMap map[string]interface{}, metricName []string) []metric.Metric {
+	results := []metric.Metric{}
+	if unit, ok := jsonMap["unit"]; ok && (unit == "seconds" || unit == "milliseconds") {
+		for key, value := range jsonMap {
+			if key == "unit" {
+				continue
+			}
+			metricType := MetricTypeGauge
+
+			if key == "count" {
+				metricType = MetricTypeCounter
+			}
+
+			compositeMetricName := strings.Join(metricName, ".")
+			m, ok := createMetricFromDatam(key, value, compositeMetricName, metricType)
+			if ok {
+				results = append(results, m)
+			}
+		}
+
+	}
+	return results
 }
 
 func collectMeter(jsonMap map[string]interface{}, metricName []string) []metric.Metric {
@@ -129,9 +157,9 @@ func collectMeter(jsonMap map[string]interface{}, metricName []string) []metric.
 				continue
 			}
 
-			metricType := "GAUGE"
+			metricType := MetricTypeGauge
 			if key == "count" {
-				metricType = "COUNTER"
+				metricType = MetricTypeCounter
 			}
 
 			compositeMetricName := strings.Join(metricName, ".")
@@ -145,16 +173,10 @@ func collectMeter(jsonMap map[string]interface{}, metricName []string) []metric.
 	return results
 }
 
-func checkForRateUnits(jsonMap map[string]interface{}) bool {
-	if unit, ok := jsonMap["unit"]; ok && (unit == "seconds" || unit == "milliseconds") {
-		return true
-	}
-	return false
-}
-
 func checkForMeterUnits(jsonMap map[string]interface{}) bool {
 	if _, ok := jsonMap["event_type"]; ok {
-		if unit, ok := jsonMap["unit"]; ok && (unit == "seconds" || unit == "milliseconds" || unit == "minutes") {
+		if unit, ok := jsonMap["unit"]; ok &&
+			(unit == "seconds" || unit == "milliseconds" || unit == "minutes") {
 			return true
 		}
 	}
