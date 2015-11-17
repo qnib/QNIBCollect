@@ -44,7 +44,6 @@ class MemcachedCollector(diamond.collector.Collector):
         'hash_power_level',
         'hash_bytes',
         'hash_is_expanding',
-        'total_items',
         'uptime'
     ]
 
