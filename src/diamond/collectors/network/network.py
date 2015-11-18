@@ -40,7 +40,7 @@ class NetworkCollector(diamond.collector.Collector):
         config = super(NetworkCollector, self).get_default_config()
         config.update({
             'path':         'network',
-            'interfaces':   ['eth', 'bond', 'em', 'p1p'],
+            'interfaces':   ['eth', 'bond', 'em', 'p1p', 'tun'],
             'byte_unit':    ['bit', 'byte'],
             'greedy':       'true',
         })
@@ -77,9 +77,9 @@ class NetworkCollector(diamond.collector.Collector):
                    + '(?P<tx_errors>\d+)(?:\s*)'
                    + '(?P<tx_drop>\d+)(?:\s*)'
                    + '(?P<tx_fifo>\d+)(?:\s*)'
-                   + '(?P<tx_frame>\d+)(?:\s*)'
-                   + '(?P<tx_compressed>\d+)(?:\s*)'
-                   + '(?P<tx_multicast>\d+)(?:.*)$') % (
+                   + '(?P<tx_colls>\d+)(?:\s*)'
+                   + '(?P<tx_carrier>\d+)(?:\s*)'
+                   + '(?P<tx_compressed>\d+)(?:.*)$') % (
                 ('|'.join(self.config['interfaces'])), greed)
             reg = re.compile(exp)
             # Match Interfaces
