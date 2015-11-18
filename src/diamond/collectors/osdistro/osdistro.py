@@ -2,7 +2,7 @@
 
 """
 The OSDistroCollector collects
-thedistribution of the OS on a machine.
+the distribution of the OS on a machine.
 
 #### Dependencies
 
