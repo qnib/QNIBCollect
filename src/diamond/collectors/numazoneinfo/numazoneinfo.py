@@ -14,7 +14,7 @@ from re import compile as re_compile
 
 import diamond.collector
 
-ZONEINFO_PATH = '/proc/zoneinfo'
+PROC_ZONEINFO = '/proc/zoneinfo'
 node_re = re_compile(r'^Node\s+(?P<node>\d+),\s+zone\s+(?P<zone>\w+)$')
 
 
@@ -26,13 +26,14 @@ class NUMAZoneInfoCollector(diamond.collector.Collector):
         """
         config = super(NUMAZoneInfoCollector, self).get_default_config()
         config.update({
-            'path': ZONEINFO_PATH,
+            'path': 'numazoneinfo',
+            'proc_path': PROC_ZONEINFO,
         })
         return config
 
     def collect(self):
         try:
-            filepath = self.config['path']
+            filepath = self.config['proc_path']
 
             with open(filepath, 'r') as file_handle:
                 metric = ''
