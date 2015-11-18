@@ -18,9 +18,9 @@ import (
 
 const (
 	// MetricTypeCounter String for counter metric type
-	MetricTypeCounter = "COUNTER"
+	MetricTypeCounter string = "COUNTER"
 	// MetricTypeGauge String for Gauge metric type
-	MetricTypeGauge = "GAUGE"
+	MetricTypeGauge string = "GAUGE"
 )
 
 // This is a collector that will parse a config file on collection
@@ -83,6 +83,7 @@ type uwsgiJSONFormat struct {
 	Timers     map[string]map[string]interface{}
 }
 
+// For parsing Dropwizard json output
 type nestedMetricMap struct {
 	metricSegments []string
 	metricMap      map[string]interface{}
@@ -258,17 +259,23 @@ func convertToMetrics(metricMap *map[string]map[string]interface{}, metricType s
 	results := []metric.Metric{}
 
 	for metricName, metricData := range *metricMap {
-		tempResults := metricFromMap(&metricData, metricName, metricType)
+		tempResults := metricFromMap(metricData, metricName, metricType)
 		results = append(results, tempResults...)
 	}
 
 	return results
 }
 
-func metricFromMap(metricMap *map[string]interface{}, metricName string, metricType string) []metric.Metric {
+// metricFromMap takes in flattened maps formatted like this::
+// {
+//    "count":      3443,
+//    "mean_rate": 100
+// }
+// and metricname and metrictype and returns metrics for each name:rollup pair
+func metricFromMap(metricMap map[string]interface{}, metricName string, metricType string) []metric.Metric {
 	results := []metric.Metric{}
 
-	for rollup, value := range *metricMap {
+	for rollup, value := range metricMap {
 		tempMetric, ok := createMetricFromDatam(rollup, value, metricName, metricType)
 		if ok {
 			results = append(results, tempMetric)
@@ -278,6 +285,8 @@ func metricFromMap(metricMap *map[string]interface{}, metricName string, metricT
 	return results
 }
 
+// createMetricFromDatam takes in rollup, value, metricName, metricType and returns metric only if
+// value was numeric
 func createMetricFromDatam(rollup string, value interface{}, metricName string, metricType string) (metric.Metric, bool) {
 	m := metric.New(metricName)
 	m.MetricType = metricType
@@ -343,6 +352,18 @@ func queryEndpoint(endpoint string, timeout int) ([]byte, error) {
 	return txt, nil
 }
 
+// parseDropwizardMetric takes json string in following format::
+// {
+//     "jettyHandler": {
+// 		"trace-requests": {
+//			duration: {
+//				p98: 45,
+//				p75: 0
+//			}
+// 		 }
+//      }
+// }
+// and returns list of metrices. The map can be arbitrarily nested.
 func parseDropwizardMetric(raw *[]byte) ([]metric.Metric, error) {
 	var parsed map[string]interface{}
 
@@ -355,6 +376,28 @@ func parseDropwizardMetric(raw *[]byte) ([]metric.Metric, error) {
 	return parseNestedMetricMaps(parsed), nil
 }
 
+// parseNestedMetricMaps takes in arbitrarily nested map of following format::
+//        "jetty": {
+//            "trace-requests": {
+//                "put-requests": {
+//                    "duration": {
+//                        "30x-response": {
+//                            "count": 0,
+//                            "type": "counter"
+//                        }
+//                    }
+//                }
+//            }
+//        }
+// and returns list of metrices by unrolling the map until it finds flattened map
+// and then it combines keys encountered so far to emit metrices. For above sample
+// data - emitted metrices will look like:
+//	metric.Metric(
+//		MetricName=jetty.trace-requests.put-request.duration.30x-response,
+//		MetricType=COUNTER,
+//		Value=0,
+//		Dimenstions={rollup:count}
+//		)
 func parseNestedMetricMaps(
 	jsonMap map[string]interface{}) []metric.Metric {
 
@@ -401,6 +444,42 @@ func parseNestedMetricMaps(
 	return results
 }
 
+// extractGaugeValue emits metric for Map data which otherwise did not conform to
+// any of predefined schemas as GAUGEs. For example::
+//  "jvm": {
+//    "garbage-collectors": {
+//      "ConcurrentMarkSweep": {
+//        "runs": 13,
+//        "time": 1531
+//      },
+//      "ParNew": {
+//        "runs": 45146,
+//        "time": 1324093
+//      }
+//    },
+//    "memory": {
+//      "heap_usage": 0.24599579808405247,
+//      "totalInit": 12887457792,
+//      "memory_pool_usages": {
+//        "Par Survivor Space": 0.11678684852358097,
+//        "CMS Old Gen": 0.2679682979112999,
+//        "Metaspace": 0.9466757034141924
+//      },
+//      "totalMax": 12727877631
+//    },
+//    "buffers": {
+//      "direct": {
+//        "count": 410,
+//        "memoryUsed": 23328227,
+//        "totalCapacity": 23328227
+//      },
+//      "mapped": {
+//        "count": 1,
+//        "memoryUsed": 18421396,
+//        "totalCapacity": 18421396
+//      }
+//    }
+//  }
 func extractGaugeValue(key string, value interface{}, metricName []string) (metric.Metric, bool) {
 	compositeMetricName := strings.Join(append(metricName, key), ".")
 	return createMetricFromDatam("value", value, compositeMetricName, "GAUGE")
@@ -424,13 +503,36 @@ func parseFlattenedMetricMap(jsonMap map[string]interface{}, metricName []string
 	return collectRate(jsonMap, metricName)
 }
 
+// collectGauge emits metric array for maps that contain guage values:
+//    "percent-idle": {
+//      "value": 0.985,
+//      "type": "gauge"
+//    }
 func collectGauge(jsonMap map[string]interface{}, metricName []string,
 	metricType string) []metric.Metric {
 
-	compositeMetricName := strings.Join(metricName, ".")
-	return metricFromMap(&jsonMap, compositeMetricName, metricType)
+	if _, ok := jsonMap["value"]; ok {
+		compositeMetricName := strings.Join(metricName, ".")
+		return metricFromMap(jsonMap, compositeMetricName, metricType)
+	}
+	return []metric.Metric{}
 }
 
+// collectHistogram returns metrics list for maps that contain following data::
+//    "prefix-length": {
+//        "type": "histogram",
+//        "count": 1,
+//        "min": 2,
+//        "max": 2,
+//        "mean": 2,
+//        "std_dev": 0,
+//        "median": 2,
+//        "p75": 2,
+//        "p95": 2,
+//        "p98": 2,
+//        "p99": 2,
+//        "p999": 2
+//    }
 func collectHistogram(jsonMap map[string]interface{},
 	metricName []string, metricType string) []metric.Metric {
 
@@ -457,16 +559,30 @@ func collectHistogram(jsonMap map[string]interface{},
 	return results
 }
 
+// collectCounter returns metric list for data that looks like:
+//    "active-suspended-requests": {
+//       "count": 0,
+//       "type": "counter"
+//    }
 func collectCounter(jsonMap map[string]interface{}, metricName []string,
 	metricType string) []metric.Metric {
 
 	if _, ok := jsonMap["count"]; ok {
 		compositeMetricName := strings.Join(metricName, ".")
-		return metricFromMap(&jsonMap, compositeMetricName, metricType)
+		return metricFromMap(jsonMap, compositeMetricName, metricType)
 	}
 	return []metric.Metric{}
 }
 
+// collectRate returns metric list for data that looks like:
+//    "rate": {
+//      "m15": 0,
+//      "m5": 0,
+//      "m1": 0,
+//      "mean": 0,
+//      "count": 0,
+//      "unit": "seconds"
+//    }
 func collectRate(jsonMap map[string]interface{}, metricName []string) []metric.Metric {
 	results := []metric.Metric{}
 	if unit, ok := jsonMap["unit"]; ok && (unit == "seconds" || unit == "milliseconds") {
@@ -491,6 +607,17 @@ func collectRate(jsonMap map[string]interface{}, metricName []string) []metric.M
 	return results
 }
 
+// collectMeter returns metric list for data that looks like:
+//    "suspends": {
+//      "m15": 0,
+//      "m5": 0,
+//      "m1": 0,
+//      "mean": 0,
+//      "count": 0,
+//      "unit": "seconds",
+//      "event_type": "requests",
+//      "type": "meter"
+//    }
 func collectMeter(jsonMap map[string]interface{}, metricName []string) []metric.Metric {
 	results := []metric.Metric{}
 
