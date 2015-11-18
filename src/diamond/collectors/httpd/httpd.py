@@ -14,7 +14,6 @@ Collect stats from Apache HTTPD server using mod_status
 import collections
 import re
 import httplib
-import time
 import urlparse
 import diamond.collector
 from subprocess import Popen, PIPE
@@ -22,9 +21,6 @@ from subprocess import Popen, PIPE
 
 class HttpdCollector(diamond.collector.Collector):
 
-
-    last_collected_time = None
-    last_collected_total_accesses = None
 
     def process_config(self):
         super(HttpdCollector, self).process_config()
@@ -126,17 +122,6 @@ class HttpdCollector(diamond.collector.Collector):
                                 self._publish(nickname, sb_kv[0], sb_kv[1])
                         else:
                             self._publish(nickname, k, v)
-
-                        if k == 'Total Accesses':
-                            gen_metric_name = 'AccessesPerSec'
-                            gen_metric_value = 0
-                            if self.last_collected_time is not None and self.last_collected_total_accesses is not None:
-                                if v > self.last_collected_total_accesses:
-                                    gen_metric_value = (int(v) - int(self.last_collected_total_accesses)) / (time.time() - self.last_collected_time)
-                                self._publish(nickname, gen_metric_name, gen_metric_value)
-                            self.last_collected_total_accesses = v
-
-            self.last_collected_time = time.time()
         try:
             p = Popen('ps ax -o rss=,vsz=,comm='.split(), stdout=PIPE, stderr=PIPE)
             output, errors = p.communicate()
@@ -176,13 +161,13 @@ class HttpdCollector(diamond.collector.Collector):
 
     def _publish(self, nickname, key, value):
 
-        metrics = ['AccessesPerSec', 'ReqPerSec', 'BytesPerSec', 'BytesPerReq', 'BusyWorkers',
+        metrics = ['ReqPerSec', 'BytesPerSec', 'BytesPerReq', 'BusyWorkers',
                    'Total Accesses', 'IdleWorkers', 'StartingWorkers',
                    'ReadingWorkers', 'WritingWorkers', 'KeepaliveWorkers',
                    'DnsWorkers', 'ClosingWorkers', 'LoggingWorkers',
                    'FinishingWorkers', 'CleanupWorkers', 'StandbyWorkers', 'CPULoad']
 
-        metrics_precision = ['ReqPerSec', 'BytesPerSec', 'BytesPerReq', 'AccessesPerSec', 'CPULoad']
+        metrics_precision = ['ReqPerSec', 'BytesPerSec', 'BytesPerReq', 'CPULoad']
 
         if key in metrics:
             # Get Metric Name
