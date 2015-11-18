@@ -39,6 +39,8 @@ _KEY_MAPPING = [
     'VmallocUsed',
     'VmallocChunk',
     'Committed_AS',
+    'Mapped',
+    'Mlocked',
 ]
 
 
