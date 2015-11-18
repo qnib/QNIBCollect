@@ -28,11 +28,9 @@ TO use a unix socket, set a host string like this
 import diamond.collector
 import re
 import socket
-import time
 
 
 class MemcachedCollector(diamond.collector.Collector):
-
     GAUGES = [
         'bytes',
         'connection_structures',
@@ -158,6 +156,7 @@ class MemcachedCollector(diamond.collector.Collector):
             # for everything we want
             for stat in desired:
                 if stat in stats:
+
                     # we have it
                     if stat in self.GAUGES:
                         self.publish_gauge(alias + "." + stat, stats[stat])
