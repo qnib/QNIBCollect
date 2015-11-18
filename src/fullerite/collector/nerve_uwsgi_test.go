@@ -2,6 +2,8 @@ package collector
 
 import (
 	"fullerite/metric"
+	"path"
+	"test_utils"
 
 	"encoding/json"
 	"fmt"
@@ -580,7 +582,8 @@ func TestDropwizardGauge(t *testing.T) {
 }
 
 func TestDropwizardJsonInput(t *testing.T) {
-	dat, err := ioutil.ReadFile("sample.json")
+	fixtureFilePath := path.Join(test_utils.DirectoryOfCurrentFile(), "/../../fixtures/dropwizard_data.json")
+	dat, err := ioutil.ReadFile(fixtureFilePath)
 
 	assert.Nil(t, err)
 
