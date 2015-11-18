@@ -236,6 +236,8 @@ func parseUWSGIMetrics(raw *[]byte) ([]metric.Metric, error) {
 	appendIt(convertToMetrics(&parsed.Timers, metric.Gauge), "timer")
 
 	if len(results) == 0 {
+		// If parsing using UWSGI format did not work, the output is probably
+		// in Dropwizard format and should be handled as such.
 		return parseDropwizardMetric(raw)
 	}
 	return results, nil
