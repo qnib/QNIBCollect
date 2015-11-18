@@ -13,24 +13,24 @@ import (
 )
 
 func getSUT() *DockerStats {
-	expected_chan := make(chan metric.Metric)
-	var expected_logger = defaultLog.WithFields(l.Fields{"collector": "fullerite"})
+	expectedChan := make(chan metric.Metric)
+	var expectedLogger = defaultLog.WithFields(l.Fields{"collector": "fullerite"})
 
-	return NewDockerStats(expected_chan, 10, expected_logger)
+	return NewDockerStats(expectedChan, 10, expectedLogger)
 }
 
 func TestDockerStatsNewDockerStats(t *testing.T) {
-	expected_chan := make(chan metric.Metric)
-	var expected_logger = defaultLog.WithFields(l.Fields{"collector": "fullerite"})
-	expected_type := make(map[string]*CPUValues)
+	expectedChan := make(chan metric.Metric)
+	var expectedLogger = defaultLog.WithFields(l.Fields{"collector": "fullerite"})
+	expectedType := make(map[string]*CPUValues)
 
-	d := NewDockerStats(expected_chan, 10, expected_logger)
+	d := NewDockerStats(expectedChan, 10, expectedLogger)
 
-	assert.Equal(t, d.log, expected_logger)
-	assert.Equal(t, d.channel, expected_chan)
+	assert.Equal(t, d.log, expectedLogger)
+	assert.Equal(t, d.channel, expectedChan)
 	assert.Equal(t, d.interval, 10)
 	assert.Equal(t, d.name, "DockerStats")
-	assert.Equal(t, reflect.TypeOf(d.previousCPUValues), reflect.TypeOf(expected_type))
+	assert.Equal(t, reflect.TypeOf(d.previousCPUValues), reflect.TypeOf(expectedType))
 	assert.Equal(t, len(d.previousCPUValues), 0)
 	assert.Equal(t, d.dockerClient.Endpoint(), endpoint)
 }
@@ -61,7 +61,7 @@ func TestDockerStatsBuildMetrics(t *testing.T) {
 	stats.MemoryStats.Usage = 50
 	stats.MemoryStats.Limit = 70
 
-	containerJson := []byte(`
+	containerJSON := []byte(`
 	{
 		"ID": "test-id",
 		"Name": "test-container",
@@ -72,28 +72,28 @@ func TestDockerStatsBuildMetrics(t *testing.T) {
 		}
 	}`)
 	var container *docker.Container
-	err := json.Unmarshal(containerJson, &container)
+	err := json.Unmarshal(containerJSON, &container)
 	assert.Equal(t, err, nil)
 
-	expected_dims := map[string]string{
+	expectedDims := map[string]string{
 		"container_id":   "test-id",
 		"container_name": "test-container",
 		"service_name":   "my_service",
 		"instance_name":  "main",
 		"collector":      "DockerStats",
 	}
-	expected_metrics := []metric.Metric{
-		metric.Metric{"DockerRxBytes", "gauge", 10, expected_dims},
-		metric.Metric{"DockerTxBytes", "gauge", 20, expected_dims},
-		metric.Metric{"DockerMemoryUsed", "gauge", 50, expected_dims},
-		metric.Metric{"DockerMemoryLimit", "gauge", 70, expected_dims},
-		metric.Metric{"DockerCpuPercentage", "gauge", 0.5, expected_dims},
+	expectedMetrics := []metric.Metric{
+		metric.Metric{"DockerRxBytes", "gauge", 10, expectedDims},
+		metric.Metric{"DockerTxBytes", "gauge", 20, expectedDims},
+		metric.Metric{"DockerMemoryUsed", "gauge", 50, expectedDims},
+		metric.Metric{"DockerMemoryLimit", "gauge", 70, expectedDims},
+		metric.Metric{"DockerCpuPercentage", "gauge", 0.5, expectedDims},
 	}
 
 	d := getSUT()
 	ret := d.buildMetrics(container, stats, 0.5)
 
-	assert.Equal(t, ret, expected_metrics)
+	assert.Equal(t, ret, expectedMetrics)
 }
 
 func TestDockerStatsCalculateCPUPercent(t *testing.T) {
