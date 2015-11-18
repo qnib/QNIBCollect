@@ -1,0 +1,997 @@
+{
+  "org.eclipse.jetty.servlet.ServletContextHandler": {
+    "percent-4xx-1m": {
+      "type": "gauge",
+      "value": 5.611051195902441e-77
+    },
+    "trace-requests": {
+      "duration": {
+        "p98": 0,
+        "p99": 0,
+        "p75": 0,
+        "min": 0,
+        "max": 0,
+        "median": 0,
+        "p95": 0,
+        "std_dev": 0,
+        "p999": 0,
+        "unit": "milliseconds",
+        "mean": 0
+      },
+      "rate": {
+        "count": 0,
+        "m5": 0,
+        "m15": 0,
+        "m1": 0,
+        "unit": "seconds",
+        "mean": 0
+      },
+      "type": "timer"
+    },
+    "patch-requests": {
+      "duration": {
+        "p98": 0,
+        "p99": 0,
+        "p75": 0,
+        "min": 0,
+        "max": 0,
+        "median": 0,
+        "p95": 0,
+        "std_dev": 0,
+        "p999": 0,
+        "unit": "milliseconds",
+        "mean": 0
+      },
+      "rate": {
+        "count": 0,
+        "m5": 0,
+        "m15": 0,
+        "m1": 0,
+        "unit": "seconds",
+        "mean": 0
+      },
+      "type": "timer"
+    },
+    "options-requests": {
+      "duration": {
+        "p98": 0,
+        "p99": 0,
+        "p75": 0,
+        "min": 0,
+        "max": 0,
+        "median": 0,
+        "p95": 0,
+        "std_dev": 0,
+        "p999": 0,
+        "unit": "milliseconds",
+        "mean": 0
+      },
+      "rate": {
+        "count": 0,
+        "m5": 0,
+        "m15": 0,
+        "m1": 0,
+        "unit": "seconds",
+        "mean": 0
+      },
+      "type": "timer"
+    },
+    "4xx-responses": {
+      "count": 30,
+      "event_type": "responses",
+      "m5": 9.034893230178383e-18,
+      "m1": 2.4387690251329237e-75,
+      "m15": 1.549189276550359e-8,
+      "type": "meter",
+      "unit": "seconds",
+      "mean": 0.00007149422871954008
+    },
+    "percent-4xx-15m": {
+      "type": "gauge",
+      "value": 4.117933655461638e-10
+    },
+    "post-requests": {
+      "duration": {
+        "p98": 0,
+        "p99": 0,
+        "p75": 0,
+        "min": 0,
+        "max": 0,
+        "median": 0,
+        "p95": 0,
+        "std_dev": 0,
+        "p999": 0,
+        "unit": "milliseconds",
+        "mean": 0
+      },
+      "rate": {
+        "count": 0,
+        "m5": 0,
+        "m15": 0,
+        "m1": 0,
+        "unit": "seconds",
+        "mean": 0
+      },
+      "type": "timer"
+    },
+    "get-requests": {
+      "duration": {
+        "p98": 316.77999999999963,
+        "p99": 383.4900000000007,
+        "p75": 121.75,
+        "min": 1,
+        "max": 6749,
+        "median": 79,
+        "p95": 238,
+        "std_dev": 84.44903086817855,
+        "p999": 1024.572000000002,
+        "unit": "milliseconds",
+        "mean": 83.49451745255134
+      },
+      "rate": {
+        "count": 12609102,
+        "m5": 41.78344078978259,
+        "m15": 37.62154180558572,
+        "m1": 43.47678049301089,
+        "unit": "seconds",
+        "mean": 30.049267485877536
+      },
+      "type": "timer"
+    },
+    "connect-requests": {
+      "duration": {
+        "p98": 0,
+        "p99": 0,
+        "p75": 0,
+        "min": 0,
+        "max": 0,
+        "median": 0,
+        "p95": 0,
+        "std_dev": 0,
+        "p999": 0,
+        "unit": "milliseconds",
+        "mean": 0
+      },
+      "rate": {
+        "count": 0,
+        "m5": 0,
+        "m15": 0,
+        "m1": 0,
+        "unit": "seconds",
+        "mean": 0
+      },
+      "type": "timer"
+    },
+    "percent-5xx-15m": {
+      "type": "gauge",
+      "value": 2.1286140211375095e-19
+    },
+    "active-dispatches": {
+      "count": 2,
+      "type": "counter"
+    },
+    "1xx-responses": {
+      "count": 0,
+      "event_type": "responses",
+      "m5": 0,
+      "m1": 0,
+      "m15": 0,
+      "type": "meter",
+      "unit": "seconds",
+      "mean": 0
+    },
+    "percent-4xx-5m": {
+      "type": "gauge",
+      "value": 2.1624638775411186e-19
+    },
+    "other-requests": {
+      "duration": {
+        "p98": 0,
+        "p99": 0,
+        "p75": 0,
+        "min": 0,
+        "max": 0,
+        "median": 0,
+        "p95": 0,
+        "std_dev": 0,
+        "p999": 0,
+        "unit": "milliseconds",
+        "mean": 0
+      },
+      "rate": {
+        "count": 0,
+        "m5": 0,
+        "m15": 0,
+        "m1": 0,
+        "unit": "seconds",
+        "mean": 0
+      },
+      "type": "timer"
+    },
+    "percent-5xx-1m": {
+      "type": "gauge",
+      "value": 1.0515257976554375e-224
+    },
+    "expires": {
+      "count": 0,
+      "event_type": "requests",
+      "m5": 0,
+      "m1": 0,
+      "m15": 0,
+      "type": "meter",
+      "unit": "seconds",
+      "mean": 0
+    },
+    "3xx-responses": {
+      "count": 0,
+      "event_type": "responses",
+      "m5": 0,
+      "m1": 0,
+      "m15": 0,
+      "type": "meter",
+      "unit": "seconds",
+      "mean": 0
+    },
+    "percent-5xx-5m": {
+      "type": "gauge",
+      "value": 1.866773803375436e-48
+    },
+    "suspends": {
+      "count": 0,
+      "event_type": "requests",
+      "m5": 0,
+      "m1": 0,
+      "m15": 0,
+      "type": "meter",
+      "unit": "seconds",
+      "mean": 0
+    },
+    "dispatches": {
+      "duration": {
+        "p98": 317,
+        "p99": 359,
+        "p75": 123,
+        "min": 1,
+        "max": 6749,
+        "median": 77,
+        "p95": 252.54999999999995,
+        "std_dev": 84.44902423482816,
+        "p999": 1244.8810000000008,
+        "unit": "milliseconds",
+        "mean": 83.49451745255134
+      },
+      "rate": {
+        "count": 12609102,
+        "m5": 41.78055146415806,
+        "m15": 37.620551192678334,
+        "m1": 43.46367445219314,
+        "unit": "seconds",
+        "mean": 30.0492672985876
+      },
+      "type": "timer"
+    },
+    "active-requests": {
+      "count": 2,
+      "type": "counter"
+    },
+    "delete-requests": {
+      "duration": {
+        "p98": 0,
+        "p99": 0,
+        "p75": 0,
+        "min": 0,
+        "max": 0,
+        "median": 0,
+        "p95": 0,
+        "std_dev": 0,
+        "p999": 0,
+        "unit": "milliseconds",
+        "mean": 0
+      },
+      "rate": {
+        "count": 0,
+        "m5": 0,
+        "m15": 0,
+        "m1": 0,
+        "unit": "seconds",
+        "mean": 0
+      },
+      "type": "timer"
+    },
+    "2xx-responses": {
+      "count": 12609049,
+      "event_type": "responses",
+      "m5": 41.78371736349716,
+      "m1": 43.47797682689112,
+      "m15": 37.6216184866742,
+      "type": "meter",
+      "unit": "seconds",
+      "mean": 30.04914108879358
+    },
+    "active-suspended-requests": {
+      "count": 0,
+      "type": "counter"
+    },
+    "put-requests": {
+      "duration": {
+        "p98": 0,
+        "p99": 0,
+        "p75": 0,
+        "min": 0,
+        "max": 0,
+        "median": 0,
+        "p95": 0,
+        "std_dev": 0,
+        "p999": 0,
+        "unit": "milliseconds",
+        "mean": 0
+      },
+      "rate": {
+        "count": 0,
+        "m5": 0,
+        "m15": 0,
+        "m1": 0,
+        "unit": "seconds",
+        "mean": 0
+      },
+      "type": "timer"
+    },
+    "head-requests": {
+      "duration": {
+        "p98": 0,
+        "p99": 0,
+        "p75": 0,
+        "min": 0,
+        "max": 0,
+        "median": 0,
+        "p95": 0,
+        "std_dev": 0,
+        "p999": 0,
+        "unit": "milliseconds",
+        "mean": 0
+      },
+      "rate": {
+        "count": 0,
+        "m5": 0,
+        "m15": 0,
+        "m1": 0,
+        "unit": "seconds",
+        "mean": 0
+      },
+      "type": "timer"
+    },
+    "resumes": {
+      "count": 0,
+      "event_type": "requests",
+      "m5": 0,
+      "m1": 0,
+      "m15": 0,
+      "type": "meter",
+      "unit": "seconds",
+      "mean": 0
+    },
+    "requests": {
+      "count": 12609102,
+      "event_type": "requests",
+      "m5": 41.780550990991465,
+      "m1": 43.46367445219308,
+      "m15": 37.620549677765226,
+      "type": "meter",
+      "unit": "seconds",
+      "mean": 30.049267281786296
+    },
+    "5xx-responses": {
+      "count": 23,
+      "event_type": "responses",
+      "m5": 7.799483808057448e-47,
+      "m1": 4.570317494737859e-223,
+      "m15": 8.007962952699127e-18,
+      "type": "meter",
+      "unit": "seconds",
+      "mean": 0.00005481224203108008
+    }
+  },
+  "com.acme.federator.core.search.preprocessing.SoxhletStage": {
+    "soxhlet-duration": {
+      "duration": {
+        "p98": 60.30725117999998,
+        "p99": 64.25895034000001,
+        "p75": 16.0894065,
+        "min": 1.350671,
+        "max": 1140.105418,
+        "median": 5.4248265,
+        "p95": 46.78819329999996,
+        "std_dev": 13.999829914731624,
+        "p999": 103.80090684900009,
+        "unit": "milliseconds",
+        "mean": 11.639057356270436
+      },
+      "rate": {
+        "count": 12240561,
+        "m5": 40.94795428482021,
+        "m15": 36.730418260012684,
+        "m1": 42.760939822476296,
+        "unit": "seconds",
+        "mean": 29.16990493336563
+      },
+      "type": "timer"
+    }
+  },
+  "com.acme.federator.core.search.preprocessing.LookasideStage": {
+    "lookaside": {
+      "duration": {
+        "p98": 272.48050173999997,
+        "p99": 332.19259746,
+        "p75": 50.4134865,
+        "min": 10.396406,
+        "max": 1466.511822,
+        "median": 29.7557505,
+        "p95": 151.35794664999977,
+        "std_dev": 58.9774104326254,
+        "p999": 660.2266021190002,
+        "unit": "milliseconds",
+        "mean": 49.46459225240458
+      },
+      "rate": {
+        "count": 29631,
+        "m5": 0.047642691048748166,
+        "m15": 0.05172873691082786,
+        "m1": 0.032519452477765144,
+        "unit": "seconds",
+        "mean": 0.07061846362346894
+      },
+      "type": "timer"
+    }
+  },
+  "org.eclipse.jetty.util.thread.QueuedThreadPool": {
+    "active-threads": {
+      "type": "gauge",
+      "value": 200
+    },
+    "percent-idle": {
+      "type": "gauge",
+      "value": 0.98
+    },
+    "idle-threads": {
+      "type": "gauge",
+      "value": 196
+    }
+  },
+  "org.eclipse.jetty.server.nio.SelectChannelConnector.8888": {
+    "active-connections": {
+      "count": 4,
+      "type": "counter"
+    },
+    "connection-duration": {
+      "duration": {
+        "p98": 300.2599999999999,
+        "p99": 389.4200000000001,
+        "p75": 121,
+        "min": 1,
+        "max": 6751,
+        "median": 80,
+        "p95": 246,
+        "std_dev": 84.62262455870106,
+        "p999": 762.4190000000003,
+        "unit": "milliseconds",
+        "mean": 85.18392922339632
+      },
+      "rate": {
+        "count": 12525269,
+        "m5": 41.58039288809217,
+        "m15": 37.420454604313704,
+        "m1": 43.26561880433145,
+        "unit": "seconds",
+        "mean": 29.84947884682745
+      },
+      "type": "timer"
+    },
+    "disconnects": {
+      "count": 12525269,
+      "event_type": "connections",
+      "m5": 41.58034800200201,
+      "m1": 43.265595324158134,
+      "m15": 37.42043463033794,
+      "type": "meter",
+      "unit": "seconds",
+      "mean": 29.849478882827135
+    },
+    "accepts": {
+      "count": 12525273,
+      "event_type": "connections",
+      "m5": 41.58277111945236,
+      "m1": 43.27377893831674,
+      "m15": 37.42158602029818,
+      "type": "meter",
+      "unit": "seconds",
+      "mean": 29.849488412519367
+    },
+    "connects": {
+      "count": 12525273,
+      "event_type": "connections",
+      "m5": 41.58278176627144,
+      "m1": 43.273818870987014,
+      "m15": 37.421588333833206,
+      "type": "meter",
+      "unit": "seconds",
+      "mean": 29.849488406920646
+    }
+  },
+  "com.acme.federator.resources.FederatorResource": {
+    "perform_single_lucy_query_timing_checkpoint": {
+      "duration": {
+        "p98": 325.80881267999985,
+        "p99": 438.23422718000023,
+        "p75": 96.113464,
+        "min": 0.004266,
+        "max": 6710.863275,
+        "median": 52.389126000000005,
+        "p95": 219.97597019999984,
+        "std_dev": 80.66305474731443,
+        "p999": 1018.7280840040007,
+        "unit": "milliseconds",
+        "mean": 68.9399787315825
+      },
+      "rate": {
+        "count": 12242532,
+        "m5": 40.86360147455338,
+        "m15": 36.71958397262675,
+        "m1": 42.246447578115806,
+        "unit": "seconds",
+        "mean": 29.176859504657692
+      },
+      "type": "timer"
+    },
+    "query_without_lookaside": {
+      "duration": {
+        "p98": 301.85278159999973,
+        "p99": 340.2843442400003,
+        "p75": 116.0901725,
+        "min": 0.24663,
+        "max": 6747.44701,
+        "median": 74.173597,
+        "p95": 235.1961869,
+        "std_dev": 83.762811004155,
+        "p999": 521.1472549070002,
+        "unit": "milliseconds",
+        "mean": 82.02480089017607
+      },
+      "rate": {
+        "count": 12215707,
+        "m5": 40.87700129524445,
+        "m15": 36.68512330930928,
+        "m1": 42.527225844748,
+        "unit": "seconds",
+        "mean": 29.11285196559791
+      },
+      "type": "timer"
+    },
+    "perform_concurrent_queries_timing_checkpoint": {
+      "duration": {
+        "p98": 317.21266119999996,
+        "p99": 384.9085323800001,
+        "p75": 106.11739825000001,
+        "min": 0.04695,
+        "max": 6710.983453,
+        "median": 58.858332,
+        "p95": 224.72687419999997,
+        "std_dev": 80.70479171152118,
+        "p999": 658.6553216630006,
+        "unit": "milliseconds",
+        "mean": 69.53622276088974
+      },
+      "rate": {
+        "count": 12236627,
+        "m5": 40.84990489608166,
+        "m15": 36.7053300984568,
+        "m1": 42.241698228244225,
+        "unit": "seconds",
+        "mean": 29.162786556138112
+      },
+      "type": "timer"
+    },
+    "perform_name_match_timing_checkpoint": {
+      "duration": {
+        "p98": 114.28607482,
+        "p99": 138.22750232000004,
+        "p75": 27.25659625,
+        "min": 4.98305,
+        "max": 3947.204654,
+        "median": 19.031962,
+        "p95": 87.50010499999996,
+        "std_dev": 25.726411354614434,
+        "p999": 222.3568160210001,
+        "unit": "milliseconds",
+        "mean": 25.84000671139269
+      },
+      "rate": {
+        "count": 3241886,
+        "m5": 10.248513192650558,
+        "m15": 9.787697115698732,
+        "m1": 10.379350381221743,
+        "unit": "seconds",
+        "mean": 7.726183809530538
+      },
+      "type": "timer"
+    },
+    "perform_two_phase_lookaside_query_timing_checkpoint": {
+      "duration": {
+        "p98": 116.33598911999995,
+        "p99": 122.423124,
+        "p75": 44.220868499999995,
+        "min": 10.993315,
+        "max": 247.930395,
+        "median": 28.758601,
+        "p95": 98.5725803,
+        "std_dev": 21.463885166143925,
+        "p999": 122.423124,
+        "unit": "milliseconds",
+        "mean": 34.344434483305506
+      },
+      "rate": {
+        "count": 1198,
+        "m5": 0.0028627282463784764,
+        "m15": 0.003194510236366842,
+        "m1": 0.0001652104145168886,
+        "unit": "seconds",
+        "mean": 0.002855238016920669
+      },
+      "type": "timer"
+    },
+    "query_with_lookaside": {
+      "duration": {
+        "p98": 380.0117524799996,
+        "p99": 442.5500591600016,
+        "p75": 124.47983675,
+        "min": 17.668364,
+        "max": 1493.12909,
+        "median": 81.854172,
+        "p95": 287.0224371,
+        "std_dev": 81.56207535080229,
+        "p999": 794.1570979690002,
+        "unit": "milliseconds",
+        "mean": 103.89162037583893
+      },
+      "rate": {
+        "count": 24883,
+        "m5": 0.03731299167347097,
+        "m15": 0.04099671780168178,
+        "m1": 0.030600256841354336,
+        "unit": "seconds",
+        "mean": 0.05930272997264888
+      },
+      "type": "timer"
+    },
+    "highlight_business_id_timing_checkpoint": {
+      "duration": {
+        "p98": 74.78939837999994,
+        "p99": 102.35320935000004,
+        "p75": 12.471936,
+        "min": 4.115424,
+        "max": 4641.338822,
+        "median": 10.831552,
+        "p95": 48.895760399999936,
+        "std_dev": 19.412083685699464,
+        "p999": 233.18973130000023,
+        "unit": "milliseconds",
+        "mean": 14.611336782465111
+      },
+      "rate": {
+        "count": 406367,
+        "m5": 2.0179191836599584,
+        "m15": 1.4011322281730718,
+        "m1": 2.325541679928416,
+        "unit": "seconds",
+        "mean": 0.9684710384726786
+      },
+      "type": "timer"
+    },
+    "query": {
+      "duration": {
+        "p98": 318.31910995999965,
+        "p99": 379.42333897000105,
+        "p75": 115.36074875,
+        "min": 1.406309,
+        "max": 6747.780539,
+        "median": 73.6995,
+        "p95": 223.53991929999987,
+        "std_dev": 83.79580087648806,
+        "p999": 686.2050369100001,
+        "unit": "milliseconds",
+        "mean": 82.46489980358284
+      },
+      "rate": {
+        "count": 12240590,
+        "m5": 40.88388376278036,
+        "m15": 36.713130795688514,
+        "m1": 42.42347901728256,
+        "unit": "seconds",
+        "mean": 29.171073506708495
+      },
+      "type": "timer"
+    },
+    "get_composite_query_result_timing_checkpoint": {
+      "duration": {
+        "p98": 263.5155860999997,
+        "p99": 315.2664264900002,
+        "p75": 95.589361,
+        "min": 4.202383,
+        "max": 4851.950527,
+        "median": 50.3474825,
+        "p95": 201.57136194999998,
+        "std_dev": 75.0241041422664,
+        "p999": 630.7358116310004,
+        "unit": "milliseconds",
+        "mean": 62.75977303609329
+      },
+      "rate": {
+        "count": 9813955,
+        "m5": 33.460433738923456,
+        "m15": 29.478286429381253,
+        "m1": 34.89008728484267,
+        "unit": "seconds",
+        "mean": 23.38898416438027
+      },
+      "type": "timer"
+    },
+    "perform_multiple_concurrent_queries_timing_checkpoint": {
+      "duration": {
+        "p98": 313.0073173200001,
+        "p99": 566.1002832799982,
+        "p75": 103.71929449999999,
+        "min": 14.692978,
+        "max": 822.21014,
+        "median": 73.508167,
+        "p95": 208.32685649999985,
+        "std_dev": 83.7302502999994,
+        "p999": 614.229638,
+        "unit": "milliseconds",
+        "mean": 94.93270438260254
+      },
+      "rate": {
+        "count": 2828,
+        "m5": 0.006183031417629676,
+        "m15": 0.0066684119675491935,
+        "m1": 0.0017041113154851722,
+        "unit": "seconds",
+        "mean": 0.006740756845410015
+      },
+      "type": "timer"
+    },
+    "perform_category_match_timing_checkpoint": {
+      "duration": {
+        "p98": 283.6704200999996,
+        "p99": 389.4492538200002,
+        "p75": 46.941309,
+        "min": 3.812074,
+        "max": 3812.744157,
+        "median": 12.9670665,
+        "p95": 172.0259584499999,
+        "std_dev": 66.08831380903952,
+        "p999": 1015.644775342001,
+        "unit": "milliseconds",
+        "mean": 33.722362435094276
+      },
+      "rate": {
+        "count": 2353706,
+        "m5": 7.214165579381567,
+        "m15": 7.054470024126966,
+        "m1": 7.1810597279964785,
+        "unit": "seconds",
+        "mean": 5.609440065923679
+      },
+      "type": "timer"
+    },
+    "perform_lookaside_query_timing_checkpoint": {
+      "duration": {
+        "p98": 272.47581332,
+        "p99": 332.18735564,
+        "p75": 49.4525325,
+        "min": 10.394075,
+        "max": 1466.50937,
+        "median": 29.2469215,
+        "p95": 153.79498395,
+        "std_dev": 59.69246197706515,
+        "p999": 660.2233377530002,
+        "unit": "milliseconds",
+        "mean": 49.406478799563885
+      },
+      "rate": {
+        "count": 28433,
+        "m5": 0.044795776673926396,
+        "m15": 0.04853777426729033,
+        "m1": 0.03235865014815337,
+        "unit": "seconds",
+        "mean": 0.06776333448597417
+      },
+      "type": "timer"
+    }
+  },
+  "com.acme.federator.FederatorService": {
+    "exception-rate": {
+      "count": 53,
+      "event_type": "exceptions",
+      "m5": 5.331335748123974e-16,
+      "m1": 1.3462654920867278e-73,
+      "m15": 9.243639199712685e-7,
+      "type": "meter",
+      "unit": "minutes",
+      "mean": 0.007578095157576371
+    }
+  },
+  "jvm": {
+    "current_time": 1447699597200,
+    "uptime": 419631,
+    "thread_count": 315,
+    "vm": {
+      "version": "1.8.0_45-b14",
+      "name": "Java HotSpot(TM) 64-Bit Server VM"
+    },
+    "garbage-collectors": {
+      "ConcurrentMarkSweep": {
+        "runs": 13,
+        "time": 1531
+      },
+      "ParNew": {
+        "runs": 45146,
+        "time": 1324093
+      }
+    },
+    "daemon_thread_count": 96,
+    "thread-states": {
+      "terminated": 0,
+      "runnable": 0.17777777777777778,
+      "timed_waiting": 0.7714285714285715,
+      "waiting": 0.050793650793650794,
+      "new": 0,
+      "blocked": 0
+    },
+    "memory": {
+      "heap_usage": 0.24599579808405247,
+      "non_heap_usage": -93557288,
+      "heapCommitted": 12727877632,
+      "heapInit": 12884901888,
+      "heapUsed": 3131004416,
+      "totalCommitted": 12826583040,
+      "heapMax": 12727877632,
+      "totalUsed": 3224561704,
+      "totalInit": 12887457792,
+      "memory_pool_usages": {
+        "Par Survivor Space": 0.11678684852358097,
+        "Code Cache": 0.15299402872721354,
+        "Par Eden Space": 0.06424914804868864,
+        "Compressed Class Space": 0.005421601235866547,
+        "CMS Old Gen": 0.2679682979112999,
+        "Metaspace": 0.9466757034141924
+      },
+      "totalMax": 12727877631
+    },
+    "fd_usage": 0.0001811981201171875,
+    "buffers": {
+      "direct": {
+        "count": 410,
+        "memoryUsed": 23328227,
+        "totalCapacity": 23328227
+      },
+      "mapped": {
+        "count": 1,
+        "memoryUsed": 18421396,
+        "totalCapacity": 18421396
+      }
+    }
+  },
+  "com.acme.soxhlet.client.rpc.SoxhletFuture": {
+    "service-exception": {
+      "count": 10,
+      "event_type": "occurrence",
+      "m5": 2.9027449538581987e-101,
+      "m1": 2.964393875e-314,
+      "m15": 2.285948374033154e-36,
+      "type": "meter",
+      "unit": "seconds",
+      "mean": 0.000023832318181931335
+    },
+    "service-interrupted-exception": {
+      "count": 0,
+      "event_type": "occurrence",
+      "m5": 0,
+      "m1": 0,
+      "m15": 0,
+      "type": "meter",
+      "unit": "seconds",
+      "mean": 0
+    },
+    "service-timeout-exception": {
+      "count": 5,
+      "event_type": "occurrence",
+      "m5": 2.9027449538581987e-101,
+      "m1": 2.964393875e-314,
+      "m15": 2.285948374033154e-36,
+      "type": "meter",
+      "unit": "seconds",
+      "mean": 0.000011916159130103025
+    },
+    "other-service-exception": {
+      "count": 0,
+      "event_type": "occurrence",
+      "m5": 0,
+      "m1": 0,
+      "m15": 0,
+      "type": "meter",
+      "unit": "seconds",
+      "mean": 0
+    },
+    "service-execution-exception": {
+      "count": 5,
+      "event_type": "occurrence",
+      "m5": 2.414877419681673e-191,
+      "m1": 2.964393875e-314,
+      "m15": 2.149950637372134e-66,
+      "type": "meter",
+      "unit": "seconds",
+      "mean": 0.000011916159123572994
+    }
+  },
+  "ch.qos.logback.core.Appender": {
+    "info": {
+      "count": 51,
+      "event_type": "statements",
+      "m5": 1.4821969375e-313,
+      "m1": 2.964393875e-314,
+      "m15": 1.3705983250723114e-202,
+      "type": "meter",
+      "unit": "seconds",
+      "mean": 0.00012153542009381646
+    },
+    "all": {
+      "count": 30177,
+      "event_type": "statements",
+      "m5": 0.062035537570256406,
+      "m1": 0.043134920497501186,
+      "m15": 0.05826303021282316,
+      "type": "meter",
+      "unit": "seconds",
+      "mean": 0.07191322252281965
+    },
+    "trace": {
+      "count": 0,
+      "event_type": "statements",
+      "m5": 0,
+      "m1": 0,
+      "m15": 0,
+      "type": "meter",
+      "unit": "seconds",
+      "mean": 0
+    },
+    "warn": {
+      "count": 30116,
+      "event_type": "statements",
+      "m5": 0.062035537570256406,
+      "m1": 0.043134920497501186,
+      "m15": 0.05826303021282316,
+      "type": "meter",
+      "unit": "seconds",
+      "mean": 0.07176785710705114
+    },
+    "error": {
+      "count": 10,
+      "event_type": "statements",
+      "m5": 2.9027449538581987e-101,
+      "m1": 2.964393875e-314,
+      "m15": 2.285948374033154e-36,
+      "type": "meter",
+      "unit": "seconds",
+      "mean": 0.000023830474542392222
+    },
+    "debug": {
+      "count": 0,
+      "event_type": "statements",
+      "m5": 0,
+      "m1": 0,
+      "m15": 0,
+      "type": "meter",
+      "unit": "seconds",
+      "mean": 0
+    }
+  }
+}
