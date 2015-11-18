@@ -26,8 +26,8 @@ TO use a unix socket, set a host string like this
 """
 
 import diamond.collector
-import re
 import socket
+import re
 
 
 class MemcachedCollector(diamond.collector.Collector):
