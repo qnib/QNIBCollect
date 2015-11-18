@@ -83,9 +83,9 @@ type uwsgiJSONFormat struct {
 	Timers     map[string]map[string]interface{}
 }
 
-type NestedMetricMap struct {
-	MetricSegments []string
-	MetricMap      map[string]interface{}
+type nestedMetricMap struct {
+	metricSegments []string
+	metricMap      map[string]interface{}
 }
 
 func newNerveUWSGICollector(channel chan metric.Metric, initialInterval int, log *l.Entry) *nerveUWSGICollector {
@@ -350,35 +350,48 @@ func parseDropwizardMetric(raw *[]byte) ([]metric.Metric, error) {
 		return []metric.Metric{}, err
 	}
 
-	metricName := []string{}
-
-	return parseMetricMap(parsed, metricName), nil
+	return parseNestedMetricMaps(parsed), nil
 }
 
-func parseMetricMap(
-	jsonMap map[string]interface{},
-	metricName []string) []metric.Metric {
-	results := []metric.Metric{}
+func parseNestedMetricMaps(
+	jsonMap map[string]interface{}) []metric.Metric {
 
-	for k, v := range jsonMap {
-		switch t := v.(type) {
-		case map[string]interface{}:
-			metricName = append(metricName, k)
-			tempResults := parseMetricMap(t, metricName)
-			// pop the name, now that it is processed
-			if len(metricName)-1 >= 0 {
-				metricName = metricName[:(len(metricName) - 1)]
-			}
-			results = append(results, tempResults...)
-		default:
-			tempResults := parseFlattenedMetricMap(jsonMap, metricName)
-			if len(tempResults) > 0 {
-				results = append(results, tempResults...)
-				return results
-			}
-			m, ok := extractGaugeValue(k, v, metricName)
-			if ok {
-				results = append(results, m)
+	results := []metric.Metric{}
+	unvisitedMetricMaps := []nestedMetricMap{}
+
+	startMetricMap := nestedMetricMap{
+		metricSegments: []string{},
+		metricMap:      jsonMap,
+	}
+
+	unvisitedMetricMaps = append(unvisitedMetricMaps, startMetricMap)
+
+	for len(unvisitedMetricMaps) > 0 {
+		nodeToVisit := unvisitedMetricMaps[0]
+		unvisitedMetricMaps = unvisitedMetricMaps[1:]
+
+		currentMetricSegment := nodeToVisit.metricSegments
+
+	nodeVisitorLoop:
+		for k, v := range nodeToVisit.metricMap {
+			switch t := v.(type) {
+			case map[string]interface{}:
+				unvistedNode := nestedMetricMap{
+					metricSegments: append(currentMetricSegment, k),
+					metricMap:      t,
+				}
+				unvisitedMetricMaps = append(unvisitedMetricMaps, unvistedNode)
+			default:
+				tempResults := parseFlattenedMetricMap(nodeToVisit.metricMap,
+					currentMetricSegment)
+				if len(tempResults) > 0 {
+					results = append(results, tempResults...)
+					break nodeVisitorLoop
+				}
+				m, ok := extractGaugeValue(k, v, currentMetricSegment)
+				if ok {
+					results = append(results, m)
+				}
 			}
 		}
 	}

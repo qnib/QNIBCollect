@@ -165,7 +165,7 @@ func validateFullDimensions(t *testing.T, actual []metric.Metric, serviceName, p
 func validateEmptyChannel(t *testing.T, c chan metric.Metric) {
 	close(c)
 	for m := range c {
-		t.Fatalf("The channel was not empty! got value ", m)
+		t.Fatal("The channel was not empty! got value ", m)
 	}
 }
 
@@ -552,7 +552,15 @@ func TestDropwizardTimer(t *testing.T) {
 	metrics, err := parseUWSGIMetrics(&rawData)
 	assert.Nil(t, err)
 	assert.Equal(t, 9, len(metrics))
-	t.Log(metrics)
+
+	_, ok := extractMetricWithName(metrics, "jetty.trace-requests.rate")
+	assert.True(t, ok)
+
+	_, ok = extractMetricWithName(metrics, "jetty.trace-requests.duration")
+	assert.True(t, ok)
+
+	_, ok = extractMetricWithName(metrics, "jetty.foo")
+	assert.True(t, ok)
 }
 
 func TestDropwizardGauge(t *testing.T) {
@@ -605,7 +613,6 @@ func TestDropwizardHistogram(t *testing.T) {
 	metrics, err := parseUWSGIMetrics(&rawData)
 	assert.Nil(t, err)
 	assert.Equal(t, 11, len(metrics))
-	t.Log(len(metrics))
 	counterMetric, ok := extractMetricWithType(metrics, "COUNTER")
 	assert.True(t, ok)
 
