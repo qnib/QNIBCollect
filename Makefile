@@ -14,6 +14,7 @@ PKGS           := \
 	$(FULLERITE)/internalserver\
 	$(FULLERITE)/metric
 
+GO_VERSION     := $(shell go version | grep -Po '\bgo[\d\.]+\b')
 SOURCES        := $(foreach pkg, $(PKGS), $(wildcard $(SRCDIR)/$(pkg)/*.go))
 SOURCES        := $(filter-out $(GEN_PROTO_SFX), $(SOURCES))
 OS	       := $(shell /usr/bin/lsb_release -si 2> /dev/null)
@@ -56,8 +57,18 @@ $(BEATIT): $(BEATIT_SOURCES)
 test: tests
 tests: deps
 	@echo Testing $(FULLERITE)
+	@echo Creating virtualenv
+	@$(curl -L https://raw.github.com/DamnWidget/VenGO/master/install.sh | bash)
+	@$(source $(HOME)/.VenGO/bin/vengo)
+	@echo Installing test dependencies
+	@$(vengo mkenv -g $(GO_VERSION) temp)
+	@$(vengo activate temp)
 	@go get golang.org/x/tools/cmd/cover
+	@echo Running tests
 	@$(foreach pkg, $(PKGS), go test -cover $(pkg);)
+	@echo Removing vengo installation
+	@$(deactivate)
+	@rm -rf $(HOME)/.VenGO/
 
 coverage_report: deps
 	@echo Creating a coverage rport for $(FULLERITE)
