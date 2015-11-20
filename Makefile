@@ -56,7 +56,7 @@ $(BEATIT): $(BEATIT_SOURCES)
 test: tests
 tests: deps
 	@echo Testing $(FULLERITE)
-	@go get golang.org/x/tools/cmd/cover
+	@go get -d golang.org/x/tools/cmd/cover
 	@$(foreach pkg, $(PKGS), go test -cover $(pkg);)
 
 coverage_report: deps
