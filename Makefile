@@ -60,10 +60,10 @@ tests: deps
 	@echo Creating virtualenv
 	@$(curl -L https://raw.github.com/DamnWidget/VenGO/master/install.sh | bash)
 	@$(source $(HOME)/.VenGO/bin/vengo)
+	@echo Installing test dependencies
 	@$(vengo mkenv -g $(GO_VERSION) temp)
 	@$(vengo activate temp)
-	@echo Installing test dependencies
-	@$(vengo get golang.org/x/tools/cmd/cover)
+	@go get golang.org/x/tools/cmd/cover
 	@echo Running tests
 	@$(foreach pkg, $(PKGS), go test -cover $(pkg);)
 	@echo Removing vengo installation
