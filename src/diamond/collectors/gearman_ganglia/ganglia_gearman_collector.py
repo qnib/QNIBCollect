@@ -2,6 +2,11 @@
 
 """
 Port of the ganglia gearman collector
+
+#### Dependencies
+
+ *  gearman
+
 """
 
 import diamond.collector
@@ -9,13 +14,12 @@ import os
 import subprocess
 import time
 
-import gearman
-
+try:
+    import gearman
+except ImportError:
+    gearman = None
 
 class GearmanCollector(diamond.collector.Collector):
-
-    GEARMAN_PID_PATH_DEFAULT="/var/run/gearman/gearman-job-server.pid"
-    GEARMAN_ENDPOINT_DEFAULT="localhost"
 
     def get_default_config_help(sef):
         config_help = super(GearmanCollector, self).get_default_config_help()
@@ -31,8 +35,8 @@ class GearmanCollector(diamond.collector.Collector):
         """
         config = super(GearmanCollector, self).get_default_config()
         config.update({
-            'gearman_pid_path': self.GEARMAN_PID_PATH_DEFAULT,
-            'url': self.GEARMAN_ENDPOINT_DEFAULT,
+            'gearman_pid_path': '/var/run/gearman/gearman-job-server.pid',
+            'url': 'localhost',
         })
         return config
 
@@ -41,27 +45,21 @@ class GearmanCollector(diamond.collector.Collector):
         Collector gearman stats
         """
         def gearman_ping(gm_admin_client):
-            server_ping = gm_admin_client.ping_server()
-            return server_ping
+            return gm_admin_client.ping_server()
 
         def gearman_queued(gm_admin_client):
-            server_status = gm_admin_client.get_status()
-            queued = 0
-            for entry in server_status:
-                queued += entry['queued']
-            return queued
+            return sum(entry['queued'] 
+                    for entry in gm_admin_client.get_status())
 
         def get_fds(gearman_pid_path):
-            with open(gearman_pid_path) as fp:
-                gearman_pid = fp.read().strip()
-            gearman_dir = os.path.join("/proc/", gearman_pid, "fd/")
-            
-            process = subprocess.Popen('sudo ls ' + gearman_dir,
-                          shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            count = len(process.stdout.readlines())
-            return count
+            proc_path = os.path.join('/proc', gearman_pid, 'fd')
+            return len(os.listdir(proc_path))
 
         try:
+            if gearman is None:
+                self.log.error("Unable to import python gearman client")
+                return 
+                
             # Collect and Publish Metrics
             self.log.debug("Using pid file: %s & gearman endpoint : %s",
                     self.config['gearman_pid_path'], self.config['url'])
@@ -71,4 +69,4 @@ class GearmanCollector(diamond.collector.Collector):
             self.publish('gearman_queued', gearman_queued(gm_admin_client))
             self.publish('gearman_fds', get_fds(self.config['gearman_pid_path']))
         except Exception, e:
-            self.log.error("Error: %s", e)
+            self.log.error("GearmanCollector Error: %s", e)
