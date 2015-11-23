@@ -66,6 +66,7 @@ class Collector(object):
 
         self._socket = None
         self._reconnect = False
+        self.dimensions = None
         self.handlers = handlers
         self.last_values = {}
 
@@ -268,11 +269,16 @@ class Collector(object):
         ttl = float(self.config['interval']) * float(
             self.config['ttl_multiplier'])
 
+        dimensions = None
+        if self.dimensions is not None:
+            dimensions = self.dimensions
+            self.dimensions = None
+
         # Create Metric
         try:
             metric = Metric(path, value, raw_value=raw_value, timestamp=None,
                             precision=precision,
-                            metric_type=metric_type, ttl=ttl)
+                            metric_type=metric_type, ttl=ttl, dimensions=dimensions)
         except DiamondException:
             self.log.error(('Error when creating new Metric: path=%r, '
                             'value=%r'), path, value)
@@ -303,6 +309,9 @@ class Collector(object):
             }
         }
 
+        payload['dimensions'].update(
+            metric.dimensions or {}
+        )
         payloadStr = "%s\n" % json.dumps(payload)
         success = False
 
