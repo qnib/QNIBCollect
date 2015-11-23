@@ -61,6 +61,11 @@ class Metric(object):
                 raise DiamondException(("Invalid dimensions when "
                                         "creating new Metric %r: %s")
                                        % (path, dimensions))
+            else:
+                dimensions = dict(
+                    (k, str(v)) for k, v in dimensions.iteritems()
+                    if v is not None and isinstance(v, (int, float, str)) and k is not None and isinstance(k, str)
+                )
 
         self.dimensions = dimensions
         self.path = path
