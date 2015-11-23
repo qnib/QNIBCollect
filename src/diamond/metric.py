@@ -11,7 +11,7 @@ class Metric(object):
     _METRIC_TYPES = ['COUNTER', 'GAUGE']
 
     def __init__(self, path, value, raw_value=None, timestamp=None, precision=0,
-                 host=None, metric_type='COUNTER', ttl=None):
+                 metric_type='COUNTER', ttl=None, host="ignored"):
         """
         Create new instance of the Metric class
 
@@ -60,7 +60,6 @@ class Metric(object):
         self.raw_value = raw_value
         self.timestamp = timestamp
         self.precision = precision
-        self.host = host
         self.metric_type = metric_type
         self.ttl = ttl
 
@@ -84,9 +83,9 @@ class Metric(object):
         """
         Parse a string and create a metric
         """
-        match = re.match(r'^(?P<name>[A-Za-z0-9\.\-_]+)\s+' +
-                         '(?P<value>[0-9\.]+)\s+' +
-                         '(?P<timestamp>[0-9\.]+)(\n?)$',
+        match = re.match(r'^(?P<name>[A-Za-z0-9\.\-_]+)\s+'
+                         + '(?P<value>[0-9\.]+)\s+'
+                         + '(?P<timestamp>[0-9\.]+)(\n?)$',
                          string)
         try:
             groups = match.groupdict()
@@ -101,47 +100,24 @@ class Metric(object):
     def getPathPrefix(self):
         """
             Returns the path prefix path
-            servers.host.cpu.total.idle
+            servers.cpu.total.idle
             return "servers"
         """
-        # If we don't have a host name, assume it's just the first part of the
-        # metric path
-        if self.host is None:
-            return self.path.split('.')[0]
-
-        offset = self.path.index(self.host) - 1
-        return self.path[0:offset]
+        return self.path.split('.')[0]
 
     def getCollectorPath(self):
         """
             Returns collector path
-            servers.host.cpu.total.idle
+            servers.cpu.total.idle
             return "cpu"
         """
-        # If we don't have a host name, assume it's just the third part of the
-        # metric path
-        if self.host is None:
-            return self.path.split('.')[2]
-
-        offset = self.path.index(self.host)
-        offset += len(self.host) + 1
-        endoffset = self.path.index('.', offset)
-        return self.path[offset:endoffset]
+        return self.path.split('.')[1]
 
     def getMetricPath(self):
         """
             Returns the metric path after the collector name
-            servers.host.cpu.total.idle
+            servers.cpu.total.idle
             return "total.idle"
         """
-        # If we don't have a host name, assume it's just the fourth+ part of the
-        # metric path
-        if self.host is None:
-            path = self.path.split('.')[3:]
-            return '.'.join(path)
-
-        prefix = '.'.join([self.getPathPrefix(), self.host,
-                           self.getCollectorPath()])
-
-        offset = len(prefix) + 1
-        return self.path[offset:]
+        path = self.path.split('.')[2:]
+        return '.'.join(path)

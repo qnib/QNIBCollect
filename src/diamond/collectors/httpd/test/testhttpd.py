@@ -92,6 +92,10 @@ class TestHttpdCollector(CollectorTestCase):
             'LoggingWorkers': 0,
             'FinishingWorkers': 0,
             'CleanupWorkers': 0,
+            'AccessesPerSec': 0,
+            'StartingFinishingWorkers': 0,
+            'StandbyWorkers': 5,
+            'CPULoad': 0.5,
         })
 
     @patch.object(Collector, 'publish')
@@ -142,6 +146,7 @@ class TestHttpdCollector(CollectorTestCase):
             'LoggingWorkers': 0,
             'FinishingWorkers': 0,
             'CleanupWorkers': 0,
+            'AccessesPerSec': 0,
         }
         self.assertPublishedMany(publish_mock, metrics)
 
@@ -198,6 +203,7 @@ class TestHttpdCollector(CollectorTestCase):
             'nickname1.LoggingWorkers': 0,
             'nickname1.FinishingWorkers': 0,
             'nickname1.CleanupWorkers': 0,
+            'nickname1.AccessesPerSec': 0,
 
             'nickname2.TotalAccesses': 8314,
             'nickname2.ReqPerSec': 0,
@@ -213,6 +219,7 @@ class TestHttpdCollector(CollectorTestCase):
             'nickname2.LoggingWorkers': 0,
             'nickname2.FinishingWorkers': 0,
             'nickname2.CleanupWorkers': 0,
+            'nickname2.AccessesPerSec': 0,
         }
 
         self.setDocExample(collector=self.collector.__class__.__name__,
@@ -270,6 +277,7 @@ class TestHttpdCollector(CollectorTestCase):
             'vhost.LoggingWorkers': 0,
             'vhost.FinishingWorkers': 0,
             'vhost.CleanupWorkers': 0,
+            'vhost.AccessesPerSec': 0,
         }
         self.assertPublishedMany(publish_mock, metrics)
 

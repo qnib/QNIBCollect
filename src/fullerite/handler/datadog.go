@@ -56,12 +56,12 @@ func NewDatadog(
 
 // Configure the Datadog handler
 func (d *Datadog) Configure(configMap map[string]interface{}) {
-	if apiKey, exists := configMap["apiKey"]; exists == true {
+	if apiKey, exists := configMap["apiKey"]; exists {
 		d.apiKey = apiKey.(string)
 	} else {
 		d.log.Error("There was no API key specified for the Datadog handler, there won't be any emissions")
 	}
-	if endpoint, exists := configMap["endpoint"]; exists == true {
+	if endpoint, exists := configMap["endpoint"]; exists {
 		d.endpoint = endpoint.(string)
 	} else {
 		d.log.Error("There was no endpoint specified for the Datadog Handler, there won't be any emissions")

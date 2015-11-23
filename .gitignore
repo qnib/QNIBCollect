@@ -5,6 +5,8 @@ src/github.com/*
 src/golang.org/*
 *.deb
 *.secret
+*.swp
 *.pyc
 *.DS_Store
 .project
+src/fullerite/collector/collector.test

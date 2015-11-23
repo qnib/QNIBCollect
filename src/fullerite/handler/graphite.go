@@ -49,14 +49,14 @@ func (g *Graphite) Port() string {
 
 // Configure accepts the different configuration options for the Graphite handler
 func (g *Graphite) Configure(configMap map[string]interface{}) {
-	if server, exists := configMap["server"]; exists == true {
+	if server, exists := configMap["server"]; exists {
 		g.server = server.(string)
 	} else {
 		g.log.Error("There was no server specified for the Graphite Handler, there won't be any emissions")
 	}
 
-	if port, exists := configMap["port"]; exists == true {
-		g.port = port.(string)
+	if port, exists := configMap["port"]; exists {
+		g.port = fmt.Sprint(port)
 	} else {
 		g.log.Error("There was no port specified for the Graphite Handler, there won't be any emissions")
 	}

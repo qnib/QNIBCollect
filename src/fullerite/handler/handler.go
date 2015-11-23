@@ -207,21 +207,21 @@ func (base BaseHandler) InternalMetrics() InternalMetrics {
 
 // configureCommonParams will extract the common parameters that are used and set them in the handler
 func (base *BaseHandler) configureCommonParams(configMap map[string]interface{}) {
-	if asInterface, exists := configMap["timeout"]; exists == true {
+	if asInterface, exists := configMap["timeout"]; exists {
 		timeout := config.GetAsFloat(asInterface, DefaultTimeoutSec)
 		base.timeout = time.Duration(timeout) * time.Second
 	}
 
-	if asInterface, exists := configMap["max_buffer_size"]; exists == true {
+	if asInterface, exists := configMap["max_buffer_size"]; exists {
 		base.maxBufferSize = config.GetAsInt(asInterface, DefaultBufferSize)
 	}
 
-	if asInterface, exists := configMap["interval"]; exists == true {
+	if asInterface, exists := configMap["interval"]; exists {
 		base.interval = config.GetAsInt(asInterface, DefaultInterval)
 	}
 
 	// Default dimensions can be extended or overridden on a per handler basis.
-	if asInterface, exists := configMap["defaultDimensions"]; exists == true {
+	if asInterface, exists := configMap["defaultDimensions"]; exists {
 		handlerLevelDimensions := config.GetAsMap(asInterface)
 		base.SetDefaultDimensions(handlerLevelDimensions)
 	}

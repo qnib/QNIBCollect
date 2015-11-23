@@ -231,27 +231,27 @@ class DiskSpaceCollector(diamond.collector.Collector):
                 metric_name = '%s.%s_percentfree' % (name, unit)
                 metric_value = float(blocks_free) / float(
                     blocks_free + (blocks_total - blocks_free)) * 100
-                self.publish_gauge(metric_name, metric_value, 2)
+                self.publish_gauge(metric_name, metric_value, precision=2)
 
                 metric_name = '%s.%s_used' % (name, unit)
                 metric_value = float(block_size) * float(
                     blocks_total - blocks_free)
                 metric_value = diamond.convertor.binary.convert(
                     value=metric_value, oldUnit='byte', newUnit=unit)
-                self.publish_gauge(metric_name, metric_value, 2)
+                self.publish_gauge(metric_name, metric_value, precision=2)
 
                 metric_name = '%s.%s_free' % (name, unit)
                 metric_value = float(block_size) * float(blocks_free)
                 metric_value = diamond.convertor.binary.convert(
                     value=metric_value, oldUnit='byte', newUnit=unit)
-                self.publish_gauge(metric_name, metric_value, 2)
+                self.publish_gauge(metric_name, metric_value, precision=2)
 
                 if os.name != 'nt':
                     metric_name = '%s.%s_avail' % (name, unit)
                     metric_value = float(block_size) * float(blocks_avail)
                     metric_value = diamond.convertor.binary.convert(
                         value=metric_value, oldUnit='byte', newUnit=unit)
-                    self.publish_gauge(metric_name, metric_value, 2)
+                    self.publish_gauge(metric_name, metric_value, precision=2)
 
             if os.name != 'nt':
                 if float(inodes_total) > 0:

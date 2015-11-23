@@ -15,7 +15,7 @@ import (
 
 const (
 	name    = "fullerite"
-	version = "0.1.6"
+	version = "0.1.16"
 	desc    = "Diamond compatible metrics collector"
 )
 
@@ -23,6 +23,7 @@ var log = logrus.WithFields(logrus.Fields{"app": "fullerite"})
 
 func initLogrus(ctx *cli.Context) {
 	logrus.SetFormatter(&logrus.TextFormatter{
+		DisableColors:   true,
 		TimestampFormat: time.RFC822,
 		FullTimestamp:   true,
 	})
@@ -34,22 +35,7 @@ func initLogrus(ctx *cli.Context) {
 		logrus.SetLevel(logrus.InfoLevel)
 	}
 
-	filename := ctx.String("log_file")
-	logrus.SetOutput(os.Stderr)
-	if filename != "" {
-		var f *os.File
-		_, err := os.Stat(filename)
-		if !os.IsNotExist(err) {
-			os.Rename(filename, filename+".prev")
-		}
-		f, err = os.Create(filename)
-		if err != nil {
-			log.Error("Cannot create log file ", err)
-			log.Warning("Continuing to log to stderr")
-		} else {
-			logrus.SetOutput(f)
-		}
-	}
+	logrus.SetOutput(os.Stdout)
 }
 
 func main() {
@@ -67,11 +53,6 @@ func main() {
 			Name:  "log_level, l",
 			Value: "info",
 			Usage: "Logging level (debug, info, warn, error, fatal, panic)",
-		},
-		cli.StringFlag{
-			Name:  "log_file",
-			Value: "",
-			Usage: "Log to file",
 		},
 		cli.BoolFlag{
 			Name:  "profile",

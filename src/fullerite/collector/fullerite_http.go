@@ -47,7 +47,7 @@ func newFulleriteHTTPCollector(channel chan metric.Metric, initialInterval int, 
 }
 
 func (inst *fulleriteHTTP) Configure(configMap map[string]interface{}) {
-	if endpoint, exists := configMap["endpoint"]; exists == true {
+	if endpoint, exists := configMap["endpoint"]; exists {
 		inst.endpoint = endpoint.(string)
 	}
 

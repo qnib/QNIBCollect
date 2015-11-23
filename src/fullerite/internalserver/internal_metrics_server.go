@@ -36,7 +36,7 @@ type ResponseFormat struct {
 // New createse a new internal server instance
 func New(cfg config.Config, handlers *[]handler.Handler) *InternalServer {
 	srv := new(InternalServer)
-	srv.log = l.WithFields(l.Fields{"app": "fullerite", "pkg": "internalserver["})
+	srv.log = l.WithFields(l.Fields{"app": "fullerite", "pkg": "internalserver"})
 	srv.handlers = handlers
 	srv.configure(cfg.InternalServerConfig)
 	return srv
@@ -61,13 +61,13 @@ func (srv *InternalServer) Run() {
 
 func (srv *InternalServer) configure(cfgMap map[string]interface{}) {
 
-	if val, exists := (cfgMap)["port"]; exists == true {
+	if val, exists := (cfgMap)["port"]; exists {
 		srv.port = config.GetAsInt(val, defaultPort)
 	} else {
 		srv.port = defaultPort
 	}
 
-	if val, exists := (cfgMap)["path"]; exists == true {
+	if val, exists := (cfgMap)["path"]; exists {
 		srv.path = val.(string)
 	} else {
 		srv.path = defaultMetricsPath

@@ -42,12 +42,12 @@ func NewSignalFx(
 
 // Configure accepts the different configuration options for the signalfx handler
 func (s *SignalFx) Configure(configMap map[string]interface{}) {
-	if authToken, exists := configMap["authToken"]; exists == true {
+	if authToken, exists := configMap["authToken"]; exists {
 		s.authToken = authToken.(string)
 	} else {
 		s.log.Error("There was no auth key specified for the SignalFx Handler, there won't be any emissions")
 	}
-	if endpoint, exists := configMap["endpoint"]; exists == true {
+	if endpoint, exists := configMap["endpoint"]; exists {
 		s.endpoint = endpoint.(string)
 	} else {
 		s.log.Error("There was no endpoint specified for the SignalFx Handler, there won't be any emissions")

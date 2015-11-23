@@ -9,6 +9,8 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
+	"regexp"
+	"strconv"
 	"time"
 
 	l "github.com/Sirupsen/logrus"
@@ -52,14 +54,14 @@ func NewKairos(
 
 // Configure the Kairos handler
 func (k *Kairos) Configure(configMap map[string]interface{}) {
-	if server, exists := configMap["server"]; exists == true {
+	if server, exists := configMap["server"]; exists {
 		k.server = server.(string)
 	} else {
 		k.log.Error("There was no server specified for the Kairos Handler, there won't be any emissions")
 	}
 
-	if port, exists := configMap["port"]; exists == true {
-		k.port = port.(string)
+	if port, exists := configMap["port"]; exists {
+		k.port = fmt.Sprint(port)
 	} else {
 		k.log.Error("There was no port specified for the Kairos Handler, there won't be any emissions")
 	}
@@ -138,13 +140,47 @@ func (k *Kairos) emitMetrics(metrics []metric.Metric) bool {
 	}
 
 	body, _ := ioutil.ReadAll(rsp.Body)
-	k.log.Error("Failed to post to Kairos @", apiURL,
-		" status was ", rsp.Status,
-		" rsp body was ", string(body),
-		" payload was ", string(payload))
+	if (rsp.StatusCode / 100) == 4 {
+		k.log.Error("Failed to post to Kairos @", apiURL,
+			" status was ", rsp.Status,
+			" rsp body was ", string(body),
+			" malformed metrics are ", k.parseServerError(string(body), series))
+	} else {
+		k.log.Error("Failed to post to Kairos @", apiURL,
+			" status was ", rsp.Status,
+			" rsp body was ", string(body))
+	}
+
 	return false
 }
 
 func (k *Kairos) dialTimeout(network, addr string) (net.Conn, error) {
 	return net.DialTimeout(network, addr, k.timeout)
+}
+
+func (k *Kairos) parseServerError(errMsg string, metrics []KairosMetric) string {
+	re, err := regexp.Compile(`metric\[([0-9]+)\]`)
+	if err != nil {
+		return ""
+	}
+
+	result := re.FindAllStringSubmatch(errMsg, -1)
+	if len(result) == 0 {
+		return ""
+	}
+
+	errMetrics := make([]KairosMetric, 0, len(result))
+	for i := range result {
+		v, err := strconv.Atoi(result[i][1])
+		if err == nil {
+			errMetrics = append(errMetrics, metrics[v])
+		}
+	}
+
+	retData, err := json.Marshal(errMetrics)
+	if err != nil {
+		return ""
+	}
+
+	return string(retData)
 }

@@ -29,6 +29,9 @@ class EntropyStatCollector(diamond.collector.Collector):
 
     def collect(self):
         if not os.access(self.PROC, os.R_OK):
+            self.log.error(
+                "Permisison denied to access {0}".format(self.PROC)
+            )
             return None
 
         # open file

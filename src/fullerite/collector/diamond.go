@@ -43,7 +43,7 @@ func NewDiamond(channel chan metric.Metric, initialInterval int, log *l.Entry) *
 
 // Configure the collector
 func (d *Diamond) Configure(configMap map[string]interface{}) {
-	if port, exists := configMap["port"]; exists == true {
+	if port, exists := configMap["port"]; exists {
 		d.port = port.(string)
 	}
 	d.configureCommonParams(configMap)

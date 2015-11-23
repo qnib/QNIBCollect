@@ -46,6 +46,8 @@ func New(name string) Collector {
 		collector = newFulleriteHTTPCollector(channel, DefaultCollectionInterval, collectorLog)
 	case "NerveUWSGI":
 		collector = newNerveUWSGICollector(channel, DefaultCollectionInterval, collectorLog)
+	case "DockerStats":
+		collector = NewDockerStats(channel, DefaultCollectionInterval, collectorLog)
 	default:
 		defaultLog.Error("Cannot create collector", name)
 		return nil
@@ -64,7 +66,7 @@ type baseCollector struct {
 }
 
 func (col *baseCollector) configureCommonParams(configMap map[string]interface{}) {
-	if interval, exists := configMap["interval"]; exists == true {
+	if interval, exists := configMap["interval"]; exists {
 		col.interval = config.GetAsInt(interval, DefaultCollectionInterval)
 	}
 }

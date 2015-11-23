@@ -1,6 +1,6 @@
 FULLERITE      := fullerite
 BEATIT         := beatit
-VERSION        := 0.1.6
+VERSION        := 0.1.16
 SRCDIR         := src
 HANDLER_DIR    := $(SRCDIR)/fullerite/handler
 PROTO_SFX      := $(HANDLER_DIR)/signalfx.proto
@@ -56,7 +56,6 @@ $(BEATIT): $(BEATIT_SOURCES)
 test: tests
 tests: deps
 	@echo Testing $(FULLERITE)
-	@go get golang.org/x/tools/cmd/cover
 	@$(foreach pkg, $(PKGS), go test -cover $(pkg);)
 
 coverage_report: deps

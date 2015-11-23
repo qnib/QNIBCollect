@@ -11,13 +11,16 @@ Collect stats from Apache HTTPD server using mod_status
 
 """
 
+import collections
 import re
 import httplib
 import urlparse
 import diamond.collector
+from subprocess import Popen, PIPE
 
 
 class HttpdCollector(diamond.collector.Collector):
+
 
     def process_config(self):
         super(HttpdCollector, self).process_config()
@@ -44,6 +47,8 @@ class HttpdCollector(diamond.collector.Collector):
             'urls': "Urls to server-status in auto format, comma seperated,"
             + " Format 'nickname http://host:port/server-status?auto, "
             + ", nickname http://host:port/server-status?auto, etc'",
+            'processes' : "Command names of the httpd processes running"
+            + " as a comma separated string",
         })
         return config_help
 
@@ -54,6 +59,7 @@ class HttpdCollector(diamond.collector.Collector):
         config = super(HttpdCollector, self).get_default_config()
         config.update({
             'path':     'httpd',
+            'processes': ['apache2'],
             'urls':     ['localhost http://localhost:8080/server-status?auto']
         })
         return config
@@ -116,6 +122,42 @@ class HttpdCollector(diamond.collector.Collector):
                                 self._publish(nickname, sb_kv[0], sb_kv[1])
                         else:
                             self._publish(nickname, k, v)
+        try:
+            p = Popen('ps ax -o rss=,vsz=,comm='.split(), stdout=PIPE, stderr=PIPE)
+            output, errors = p.communicate()
+
+            if errors:
+                self.log.error(
+                    "Failed to open process: {0!s}".format(errors)
+                )
+            else:
+                resident_memory = collections.defaultdict(list)
+                virtual_memory = collections.defaultdict(list)
+                for line in output.split('\n'):
+                    if not line:
+                        continue
+                    (rss, vsz, proc) = line.strip('\n').split(None,2)
+                    if proc in self.config['processes']:
+                        resident_memory[proc].append(int(rss))
+                        virtual_memory[proc].append(int(vsz))
+
+                for proc in self.config['processes']:
+                    metric_name = '.'.join([proc, 'WorkersResidentMemory'])
+                    memory_rss = resident_memory.get(proc, [0])
+                    metric_value = sum(memory_rss) / len(memory_rss)
+
+                    self.publish(metric_name, metric_value)
+
+
+                    metric_name = '.'.join([proc, 'WorkersVirtualMemory'])
+                    memory_vsz = virtual_memory.get(proc, [0])
+                    metric_value = sum(memory_vsz) / len(memory_vsz)
+
+                    self.publish(metric_name, metric_value)
+        except Exception as e:
+            self.log.error(
+                "Failed because: {0!s}".format(e)
+            )
 
     def _publish(self, nickname, key, value):
 
@@ -123,23 +165,20 @@ class HttpdCollector(diamond.collector.Collector):
                    'Total Accesses', 'IdleWorkers', 'StartingWorkers',
                    'ReadingWorkers', 'WritingWorkers', 'KeepaliveWorkers',
                    'DnsWorkers', 'ClosingWorkers', 'LoggingWorkers',
-                   'FinishingWorkers', 'CleanupWorkers']
+                   'FinishingWorkers', 'CleanupWorkers', 'StandbyWorkers', 'CPULoad']
 
-        metrics_precision = ['ReqPerSec', 'BytesPerSec', 'BytesPerReq']
+        metrics_precision = ['ReqPerSec', 'BytesPerSec', 'BytesPerReq', 'CPULoad']
 
         if key in metrics:
             # Get Metric Name
-            presicion_metric = False
             metric_name = "%s" % re.sub('\s+', '', key)
-            if metric_name in metrics_precision:
-                presicion_metric = 1
 
             # Prefix with the nickname?
             if len(nickname) > 0:
                 metric_name = nickname + '.' + metric_name
 
             # Use precision for ReqPerSec BytesPerSec BytesPerReq
-            if presicion_metric:
+            if metric_name in metrics_precision:
                 # Get Metric Value
                 metric_value = "%f" % float(value)
 
@@ -156,14 +195,16 @@ class HttpdCollector(diamond.collector.Collector):
 
         ret = []
 
-        ret.append(('IdleWorkers', sb.count('_')))
-        ret.append(('ReadingWorkers', sb.count('R')))
-        ret.append(('WritingWorkers', sb.count('W')))
-        ret.append(('KeepaliveWorkers', sb.count('K')))
-        ret.append(('DnsWorkers', sb.count('D')))
-        ret.append(('ClosingWorkers', sb.count('C')))
-        ret.append(('LoggingWorkers', sb.count('L')))
-        ret.append(('FinishingWorkers', sb.count('G')))
-        ret.append(('CleanupWorkers', sb.count('I')))
+        ret.append(('IdleWorkers', sb.count('_'))) # Waiting for connection
+        ret.append(('StartingWorkers', sb.count('S'))) # Starting up
+        ret.append(('ReadingWorkers', sb.count('R'))) # Reading request
+        ret.append(('WritingWorkers', sb.count('W'))) # Sending reply
+        ret.append(('KeepaliveWorkers', sb.count('K'))) # Read Keep-alive
+        ret.append(('DnsWorkers', sb.count('D'))) # DNS Lookup
+        ret.append(('ClosingWorkers', sb.count('C'))) # Closing connection
+        ret.append(('LoggingWorkers', sb.count('L'))) # Logging
+        ret.append(('FinishingWorkers', sb.count('G'))) # Gracefully finishing
+        ret.append(('CleanupWorkers', sb.count('I'))) # Idle cleanup of worker
+        ret.append(('StandbyWorkers', sb.count('_'))) # Open slot with no current processes
 
         return ret

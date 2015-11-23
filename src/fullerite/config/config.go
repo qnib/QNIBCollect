@@ -103,6 +103,8 @@ func GetAsMap(value interface{}) (result map[string]string) {
 				log.Warn("Expected a string but got", reflect.TypeOf(value), ". Discarding handler level metric: ", k)
 			}
 		}
+	case map[string]string:
+		result = value.(map[string]string)
 	default:
 		log.Warn("Expected a string but got", reflect.TypeOf(value), ". Returning empty map!")
 	}

@@ -22,6 +22,7 @@ class VMStatCollector(diamond.collector.Collector):
         'pgpgout': diamond.collector.MAX_COUNTER,
         'pswpin': diamond.collector.MAX_COUNTER,
         'pswpout': diamond.collector.MAX_COUNTER,
+        'pgmajfault': diamond.collector.MAX_COUNTER,
     }
 
     def get_default_config_help(self):
@@ -47,7 +48,7 @@ class VMStatCollector(diamond.collector.Collector):
         results = {}
         # open file
         file = open(self.PROC)
-        exp = '^(pgpgin|pgpgout|pswpin|pswpout)\s(\d+)'
+        exp = '^(pgpgin|pgpgout|pswpin|pswpout|pgmajfault)\s(\d+)'
         reg = re.compile(exp)
         # Build regex
         for line in file:
@@ -63,4 +64,4 @@ class VMStatCollector(diamond.collector.Collector):
         file.close()
 
         for key, value in results.items():
-            self.publish(key, value, 2)
+            self.publish(key, value, precision=2)

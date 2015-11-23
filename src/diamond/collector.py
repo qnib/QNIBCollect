@@ -284,10 +284,18 @@ class Collector(object):
     def publish_metric(self, metric):
         """
         Publish a Metric object
+
+        We will send a payload that is setup specifically for 
+        fullerite. We prioritize the raw_value but some collectors
+        don't set that - so we'll fall back on the value. 
         """
+        value = metric.raw_value
+        if value is None:
+            value = metric.value
+
         payload = {
             'name': metric.getMetricPath(),
-            'value': metric.raw_value,
+            'value': value,
             'type': metric.metric_type,
             'dimensions': {
                 'prefix': metric.getPathPrefix(),

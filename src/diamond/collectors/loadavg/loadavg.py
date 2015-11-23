@@ -43,11 +43,11 @@ class LoadAverageCollector(diamond.collector.Collector):
         load01, load05, load15 = os.getloadavg()
 
         if not str_to_bool(self.config['simple']):
-            self.publish_gauge('01', load01, 2)
-            self.publish_gauge('05', load05, 2)
-            self.publish_gauge('15', load15, 2)
+            self.publish_gauge('01', load01, precision=2)
+            self.publish_gauge('05', load05, precision=2)
+            self.publish_gauge('15', load15, precision=2)
         else:
-            self.publish_gauge('load', load01, 2)
+            self.publish_gauge('load', load01, precision=2)
 
         # Legacy: add process/thread counters provided by
         # /proc/loadavg (if available).
