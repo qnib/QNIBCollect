@@ -66,7 +66,7 @@ class Collector(object):
 
         self._socket = None
         self._reconnect = False
-        self.dimensions = None
+        self.dimensions = {}
         self.handlers = handlers
         self.last_values = {}
 
@@ -270,9 +270,8 @@ class Collector(object):
             self.config['ttl_multiplier'])
 
         dimensions = None
-        if self.dimensions is not None:
-            dimensions = self.dimensions
-            self.dimensions = None
+        if self.dimensions and self.dimensions.get(name, None) is not None:
+            dimensions = self.dimensions[name]
 
         # Create Metric
         try:
@@ -398,6 +397,7 @@ class Collector(object):
 
             # Collect Data
             self.collect()
+            self.dimensions = {}
 
             end_time = time.time()
             collector_time = int((end_time - start_time) * 1000)
