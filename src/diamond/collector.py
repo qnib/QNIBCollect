@@ -66,7 +66,8 @@ class Collector(object):
 
         self._socket = None
         self._reconnect = False
-        self.dimensions = {}
+        self.default_dimensions = None
+        self.dimensions = None
         self.handlers = handlers
         self.last_values = {}
 
@@ -270,8 +271,9 @@ class Collector(object):
             self.config['ttl_multiplier'])
 
         dimensions = None
-        if self.dimensions and self.dimensions.get(name, None) is not None:
-            dimensions = self.dimensions[name]
+        if self.dimensions is not None:
+            dimensions = self.dimensions
+            self.dimensions = None
 
         # Create Metric
         try:
@@ -290,9 +292,9 @@ class Collector(object):
         """
         Publish a Metric object
 
-        We will send a payload that is setup specifically for 
+        We will send a payload that is setup specifically for
         fullerite. We prioritize the raw_value but some collectors
-        don't set that - so we'll fall back on the value. 
+        don't set that - so we'll fall back on the value.
         """
         value = metric.raw_value
         if value is None:
@@ -308,6 +310,9 @@ class Collector(object):
             }
         }
 
+        payload['dimensions'].update(
+            self.default_dimensions or {}
+        )
         payload['dimensions'].update(
             metric.dimensions or {}
         )
@@ -397,7 +402,7 @@ class Collector(object):
 
             # Collect Data
             self.collect()
-            self.dimensions = {}
+            self.default_dimensions = None
 
             end_time = time.time()
             collector_time = int((end_time - start_time) * 1000)
