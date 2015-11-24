@@ -283,6 +283,7 @@ if __name__ == "__main__":
                       action="count",
                       help="verbose")
     parser.add_option("-d",
+                      "--diamond-only",
                       action="store_true",
                       dest="diamond_only",
                       default=False,
