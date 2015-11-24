@@ -11,7 +11,7 @@ class Metric(object):
     _METRIC_TYPES = ['COUNTER', 'GAUGE']
 
     def __init__(self, path, value, raw_value=None, timestamp=None, precision=0,
-                 metric_type='COUNTER', ttl=None, host="ignored"):
+                 metric_type='COUNTER', ttl=None, host="ignored", dimensions=None):
         """
         Create new instance of the Metric class
 
@@ -55,6 +55,19 @@ class Metric(object):
                 raise DiamondException(("Invalid value when creating new "
                                         "Metric %r: %s") % (path, e))
 
+        # If dimensions were passed in make sure they are a dict
+        if dimensions is not None:
+            if not isinstance(dimensions, dict):
+                raise DiamondException(("Invalid dimensions when "
+                                        "creating new Metric %r: %s")
+                                       % (path, dimensions))
+            else:
+                dimensions = dict(
+                    (k, str(v)) for k, v in dimensions.iteritems()
+                    if v is not None and isinstance(v, (int, float, str)) and k is not None and isinstance(k, str)
+                )
+
+        self.dimensions = dimensions
         self.path = path
         self.value = value
         self.raw_value = raw_value
