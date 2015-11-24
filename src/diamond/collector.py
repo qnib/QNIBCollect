@@ -66,6 +66,8 @@ class Collector(object):
 
         self._socket = None
         self._reconnect = False
+        self.default_dimensions = None
+        self.dimensions = None
         self.handlers = handlers
         self.last_values = {}
 
@@ -268,11 +270,16 @@ class Collector(object):
         ttl = float(self.config['interval']) * float(
             self.config['ttl_multiplier'])
 
+        dimensions = None
+        if self.dimensions is not None:
+            dimensions = self.dimensions
+            self.dimensions = None
+
         # Create Metric
         try:
             metric = Metric(path, value, raw_value=raw_value, timestamp=None,
                             precision=precision,
-                            metric_type=metric_type, ttl=ttl)
+                            metric_type=metric_type, ttl=ttl, dimensions=dimensions)
         except DiamondException:
             self.log.error(('Error when creating new Metric: path=%r, '
                             'value=%r'), path, value)
@@ -285,9 +292,9 @@ class Collector(object):
         """
         Publish a Metric object
 
-        We will send a payload that is setup specifically for 
+        We will send a payload that is setup specifically for
         fullerite. We prioritize the raw_value but some collectors
-        don't set that - so we'll fall back on the value. 
+        don't set that - so we'll fall back on the value.
         """
         value = metric.raw_value
         if value is None:
@@ -303,6 +310,12 @@ class Collector(object):
             }
         }
 
+        payload['dimensions'].update(
+            self.default_dimensions or {}
+        )
+        payload['dimensions'].update(
+            metric.dimensions or {}
+        )
         payloadStr = "%s\n" % json.dumps(payload)
         success = False
 
@@ -389,6 +402,7 @@ class Collector(object):
 
             # Collect Data
             self.collect()
+            self.default_dimensions = None
 
             end_time = time.time()
             collector_time = int((end_time - start_time) * 1000)
