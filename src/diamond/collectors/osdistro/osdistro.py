@@ -11,14 +11,14 @@ thedistribution of the OS on a machine.
 """
 
 import diamond.collector
-import subprocess
+from subprocess import Popen, PIPE
 
 
 class OSDistroCollector(diamond.collector.Collector):
 
     def collect(self):
         try:
-            p = subprocess.Popen(['/usr/bin/lsb_release', '-sir'], stdout=subprocess.PIPE)
+            p = Popen(['/usr/bin/lsb_release', '-sir'], stdout=PIPE, stderr=PIPE)
             output, errors = p.communicate()
             if errors:
                 self.log.error(
