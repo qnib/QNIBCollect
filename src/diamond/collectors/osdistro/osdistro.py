@@ -20,10 +20,15 @@ class OSDistroCollector(diamond.collector.Collector):
         try:
             p = subprocess.Popen(['/usr/bin/lsb_release', '-sir'], stdout=subprocess.PIPE)
             output, errors = p.communicate()
-            metric_name = 'os_distro'
-            metric_value = output.replace('\n', ' ').strip().strip('"').strip("'")
+            if errors:
+                self.log.error(
+                    "Could not run lsb_release: {0}".format(errors)
+                )
+                return None
 
-            self.dimensions[metric_name] = metric_value
+            dimensions_value = output.replace('\n', ' ').strip().strip('"').strip("'")
+
+            self.dimensions = { 'os_distro': dimensions_value }
             self.publish('OSDistribution', 1)
         except Exception as e:
             self.log.error(

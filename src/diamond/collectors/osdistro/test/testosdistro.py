@@ -38,7 +38,7 @@ class TestOSDistroCollector(CollectorTestCase):
         patch_communicate.stop()
 
         self.assertPublishedMany(publish_mock, {
-            'os_distro': 'Ubuntu 10.04'
+            'OSDistribution': 1
         })
 
 ################################################################################
