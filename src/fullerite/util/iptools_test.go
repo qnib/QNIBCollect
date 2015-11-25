@@ -30,10 +30,9 @@ func overriddenGetAddrs(addr net.Addr, err error) func(*net.Interface) ([]net.Ad
 		return func(i *net.Interface) ([]net.Addr, error) {
 			return nil, err
 		}
-	} else {
-		return func(i *net.Interface) ([]net.Addr, error) {
-			return []net.Addr{addr}, nil
-		}
+	}
+	return func(i *net.Interface) ([]net.Addr, error) {
+		return []net.Addr{addr}, nil
 	}
 }
 
