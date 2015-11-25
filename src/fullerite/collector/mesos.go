@@ -59,6 +59,8 @@ func NewMesosStats(channel chan metric.Metric, intialInterval int, log *l.Entry)
 
 // Configure Override *baseCollector.Configure(). Will create the required MesosLeaderElect instance.
 func (m *MesosStats) Configure(configMap map[string]interface{}) {
+	m.configureCommonParams(configMap)
+
 	c := config.GetAsMap(configMap)
 	mesosNodes, exists := c["mesosNodes"]
 
