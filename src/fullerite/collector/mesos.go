@@ -27,7 +27,7 @@ var (
 
 const (
 	cacheTimeout = 5 * time.Minute
-	getTimeout   = 5 * time.Second
+	getTimeout   = 10 * time.Second
 )
 
 // MesosStats Collector for mesos leader stats.
