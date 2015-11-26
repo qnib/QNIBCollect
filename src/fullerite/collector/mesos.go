@@ -14,14 +14,14 @@ import (
 	l "github.com/Sirupsen/logrus"
 )
 
-// DI
+// Dependency injection: Makes writing unit tests much easier, by being able to override these values in the *_test.go files.
 var (
 	externalIP = util.ExternalIP
 
 	sendMetrics = (*MesosStats).sendMetrics
 	getMetrics  = (*MesosStats).getMetrics
 
-	newMLE        = func() MesosLeaderElectInterface { return new(MesosLeaderElect) }
+	newMLE        = func() util.MesosLeaderElectInterface { return new(util.MesosLeaderElect) }
 	getMetricsURL = func(ip string) string { return fmt.Sprintf("http://%s:5050/metrics/snapshot", ip) }
 )
 
@@ -35,7 +35,7 @@ type MesosStats struct {
 	baseCollector
 	IP         string
 	client     http.Client
-	mesosCache MesosLeaderElectInterface
+	mesosCache util.MesosLeaderElectInterface
 }
 
 // NewMesosStats Simple constructor to set properties for the embedded baseCollector.
@@ -49,7 +49,7 @@ func NewMesosStats(channel chan metric.Metric, intialInterval int, log *l.Entry)
 	m.client = http.Client{Timeout: getTimeout}
 
 	if ip, err := externalIP(); err != nil {
-		m.log.Error("Cannot determine internal IP")
+		m.log.Error("Cannot determine IP: ", err.Error())
 	} else {
 		m.IP = ip
 	}
@@ -62,28 +62,23 @@ func (m *MesosStats) Configure(configMap map[string]interface{}) {
 	m.configureCommonParams(configMap)
 
 	c := config.GetAsMap(configMap)
-	mesosNodes, exists := c["mesosNodes"]
-
-	if !exists || len(mesosNodes) == 0 {
+	if mesosNodes, exists := c["mesosNodes"]; exists && len(mesosNodes) > 0 {
+		m.mesosCache = newMLE()
+		m.mesosCache.Configure(mesosNodes, cacheTimeout)
+	} else {
 		m.log.Error("Require configuration not found: mesosNodes")
 		return
 	}
-
-	m.mesosCache = newMLE()
-	m.mesosCache.Configure(mesosNodes, cacheTimeout)
 }
 
 // Collect Compares box IP against leader IP and if true, sends data.
 func (m *MesosStats) Collect() {
-	switch m.mesosCache {
-	case nil:
+	if m.mesosCache == nil {
 		m.log.Error("No mesosCache, Configure() probably failed.")
 		return
-	default:
-		if m.mesosCache.Get() != m.IP {
-			m.log.Warn("Not the leader; skipping.")
-			return
-		}
+	} else if m.mesosCache.Get() != m.IP {
+		m.log.Warn("Not the leader; skipping.")
+		return
 	}
 
 	go sendMetrics(m)
@@ -118,7 +113,12 @@ func (m *MesosStats) getMetrics(ip string) map[string]float64 {
 	raw := strings.Replace(string(contents), "\\/", ".", -1)
 
 	var snapshot map[string]float64
-	json.Unmarshal([]byte(raw), &snapshot)
+	decodeErr := json.Unmarshal([]byte(raw), &snapshot)
+
+	if decodeErr != nil {
+		m.log.Error("Unable to decode mesos metrics JSON: ", decodeErr.Error())
+		return nil
+	}
 
 	return snapshot
 }

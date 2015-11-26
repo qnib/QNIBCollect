@@ -5,7 +5,7 @@ import (
 	"net"
 )
 
-// DI
+// Dependency injection: Makes writing unit tests much easier, by being able to override these values in the *_test.go files.
 var (
 	interfaces = net.Interfaces
 	getAddrs   = (*net.Interface).Addrs

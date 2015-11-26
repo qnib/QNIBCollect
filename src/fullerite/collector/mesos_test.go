@@ -8,13 +8,15 @@ import (
 	"time"
 
 	"fullerite/metric"
+	"fullerite/util"
 
 	l "github.com/Sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
 
-// MockMLE Mock for MesosLeaderElectInterface that encapsulate functionality to check if the interface methods have been called/not.
+// MockMLE Mock for MesosLeaderElectInterface that encapsulate functionality to check if the interface methods have been called/not. We embed the interface for the case of the test because this interface has unexported methods (set()). And since the interface comes from a different package, we cannot provide a concrete implementation for it.
 type MockMLE struct {
+	util.MesosLeaderElectInterface
 	ConfigureCalled bool
 }
 
@@ -25,8 +27,6 @@ func (m *MockMLE) Configure(nodes string, ttl time.Duration) {
 func (m *MockMLE) Get() string {
 	return httptest.DefaultRemoteAddr
 }
-
-func (m *MockMLE) set() {}
 
 // mockExternalIP Injectable mock for externalIP, for test assertions.
 func mockExternalIP() (string, error) {
@@ -56,7 +56,7 @@ func TestMesosStatsConfigure(t *testing.T) {
 	oldNewMLE := newMLE
 	defer func() { newMLE = oldNewMLE }()
 
-	newMLE = func() MesosLeaderElectInterface { return &MockMLE{} }
+	newMLE = func() util.MesosLeaderElectInterface { return &MockMLE{} }
 
 	tests := []struct {
 		config map[string]interface{}
@@ -98,7 +98,7 @@ func TestMesosStatsCollect(t *testing.T) {
 		sendMetrics = oldSendMetrics
 	}()
 
-	newMLE = func() MesosLeaderElectInterface { return &MockMLE{} }
+	newMLE = func() util.MesosLeaderElectInterface { return &MockMLE{} }
 
 	sendMetricsCalled := false
 	c := make(chan bool)
@@ -163,20 +163,30 @@ func TestMesosStatsGetMetrics(t *testing.T) {
 		getMetricsURL = oldGetMetricsURL
 	}()
 
-	expected := map[string]float64{
-		"frameworks.chronos.messages_processed": 6784068,
+	tests := []struct {
+		rawResponse string
+		expected    map[string]float64
+		msg         string
+	}{
+		{"{\"frameworks\\/chronos\\/messages_processed\":6784068}", map[string]float64{"frameworks.chronos.messages_processed": 6784068}, "Valid JSON should return valid metrics."},
+		{"{\"frameworks\\/chronos\\/messages_processed6784068}", nil, "Invalid JSON should return nil."},
 	}
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintln(w, `{"frameworks\/chronos\/messages_processed":6784068}`)
-	}))
-	defer ts.Close()
 
-	getMetricsURL = func(ip string) string { return ts.URL }
+	for _, test := range tests {
+		expected := test.expected
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			fmt.Fprintln(w, test.rawResponse)
+		}))
+		defer ts.Close()
 
-	actual := getMetrics(&MesosStats{}, httptest.DefaultRemoteAddr)
+		getMetricsURL = func(ip string) string { return ts.URL }
 
-	assert.Equal(t, expected, actual)
+		sut := NewMesosStats(nil, 10, defaultLog)
+		actual := getMetrics(sut, httptest.DefaultRemoteAddr)
+
+		assert.Equal(t, expected, actual)
+	}
 }
 
 func TestMesosStatsGetMetricsHandleErrors(t *testing.T) {

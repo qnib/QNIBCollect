@@ -1,7 +1,7 @@
-package collector
+package util
 
 import (
-	"fmt"
+	"errors"
 	"math"
 	"net/url"
 	"strings"
@@ -13,8 +13,9 @@ import (
 )
 
 const (
-	testHosts = "http://127.0.0.1:80/,http://some.other.ip:80/,http://some.external.ip:8080/"
-	testTTL   = 5 * time.Second
+	testHosts    = "http://127.0.0.1:80/,http://some.other.ip:80/,http://some.external.ip:8080/"
+	testHostsBad = "http://[fe80::%31%25en0]:8080/,http://[fe80::%31%25en0]/"
+	testTTL      = 5 * time.Second
 )
 
 type MockSUT struct {
@@ -23,7 +24,6 @@ type MockSUT struct {
 }
 
 func (sut *MockSUT) set() {
-	fmt.Println("I am in")
 	sut.setCalled = true
 	sut.leader = "testLeader"
 }
@@ -56,7 +56,24 @@ func TestMesosLeaderElectParseUrls(t *testing.T) {
 	}
 
 	mle := new(MesosLeaderElect)
-	assert.Equal(t, strings.Split(testHosts, ","), extract(mle.parseUrls(testHosts)))
+
+	tests := []struct {
+		testUrls    string
+		doesSucceed bool
+		msg         string
+	}{
+		{testHosts, true, "Valid hosts string; should pass."},
+		{testHostsBad, false, "Valid hosts string; should pass."},
+	}
+
+	for _, test := range tests {
+		switch test.doesSucceed {
+		case true:
+			assert.Equal(t, strings.Split(test.testUrls, ","), extract(mle.parseUrls(test.testUrls)), test.msg)
+		case false:
+			assert.Empty(t, mle.parseUrls(test.testUrls), test.msg)
+		}
+	}
 }
 
 func TestMesosLeaderElectGet(t *testing.T) {
@@ -99,17 +116,35 @@ func TestMesosLeaderElectSet(t *testing.T) {
 	var oldDetermineLeader = determineLeader
 	defer func() { determineLeader = oldDetermineLeader }()
 
-	determineLeader = func(c *megos.Client) (*megos.Pid, error) {
-		ret := megos.Pid{"", "testLeader", 8080}
-		return &ret, nil
+	tests := []struct {
+		err          error
+		expectLeader bool
+		msg          string
+	}{
+		{nil, true, "Leader returned without error, all should be ok."},
+		{errors.New("Test error"), false, "Leader returned without error, all should be ok."},
 	}
 
-	mle := new(MesosLeaderElect)
-	mle.Configure("http://1.2.3.4/", 5*time.Second)
+	for _, test := range tests {
+		determineLeader = func(c *megos.Client) (*megos.Pid, error) {
+			ret := megos.Pid{"", "testLeader", 8080}
+			return &ret, test.err
+		}
 
-	assert.Equal(t, true, time.Time.IsZero(mle.expire), "When the struct is just initialized, expire should not be set to anything.")
+		sut := new(MesosLeaderElect)
+		sut.Configure("http://1.2.3.4/", 5*time.Second)
 
-	mle.set()
+		assert.Equal(t, true, time.Time.IsZero(sut.expire), "When the struct is just initialized, expire should not be set to anything.")
 
-	assert.Equal(t, math.Ceil(testTTL.Seconds()), math.Ceil(mle.expire.Sub(time.Now()).Seconds()), "After the struct's set method's called, expire should be set to now + ttl.")
+		sut.set()
+
+		assert.Equal(t, math.Ceil(testTTL.Seconds()), math.Ceil(sut.expire.Sub(time.Now()).Seconds()), "After the struct's set method's called, expire should be set to now + ttl.")
+
+		switch test.expectLeader {
+		case true:
+			assert.Equal(t, "testLeader", sut.leader, test.msg)
+		case false:
+			assert.Empty(t, sut.leader, test.msg)
+		}
+	}
 }

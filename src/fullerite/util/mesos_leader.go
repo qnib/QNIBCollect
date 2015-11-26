@@ -1,22 +1,19 @@
-package collector
+package util
 
 import (
 	"net/url"
 	"strings"
 	"time"
 
+	l "github.com/Sirupsen/logrus"
 	"github.com/andygrunwald/megos"
 )
 
-// Make sure that the interface contracts are met
-var (
-	_ MesosLeaderElectInterface = (*MesosLeaderElect)(nil)
-)
-
-// DI
+// Dependency injection: Makes writing unit tests much easier, by being able to override these values in the *_test.go files.
 var (
 	createMesos     = megos.NewClient
 	determineLeader = (*megos.Client).DetermineLeader
+	defaultLog      = l.WithFields(l.Fields{"app": "fullerite", "pkg": "util"})
 )
 
 // MesosLeaderElectInterface Interface to allow injecting MesosLeaderElect, for easier testing
@@ -44,7 +41,7 @@ func (mle *MesosLeaderElect) Configure(nodes string, ttl time.Duration) {
 
 // Get get the IP of the leader; calls *MesosLeaderElect.set() on the first call or if the TTL has expired.
 func (mle *MesosLeaderElect) Get() string {
-	if len(mle.leader) == 0 || time.Since(mle.expire) > mle.ttl {
+	if len(mle.leader) == 0 || time.Now().After(mle.expire) {
 		mle.set()
 	}
 
@@ -54,11 +51,15 @@ func (mle *MesosLeaderElect) Get() string {
 // parseUrls Conver the provided string of masters ("http://1.2.3.4:5050/,http://5.6.7.8:5050/") via *MesosLeaderElect.Configure() into an array of url.URLs, which is understood by the megos package.
 func (mle *MesosLeaderElect) parseUrls(nodes string) []*url.URL {
 	n := strings.Split(nodes, ",")
-	hosts := make([]*url.URL, len(n), len(n))
+	hosts := make([]*url.URL, 0, len(n))
 
-	for k, v := range n {
-		nodeURL, _ := url.Parse(v)
-		hosts[k] = nodeURL
+	for i, el := range n {
+		if nodeURL, err := url.Parse(el); err == nil {
+			hosts = hosts[0 : i+1]
+			hosts[i] = nodeURL
+		} else {
+			defaultLog.Error("URL specified (", el, ") is invalid and cannot be parsed: ", err.Error())
+		}
 	}
 
 	return hosts
@@ -68,7 +69,9 @@ func (mle *MesosLeaderElect) parseUrls(nodes string) []*url.URL {
 func (mle *MesosLeaderElect) set() {
 	defer func() { mle.expire = time.Now().Add(mle.ttl) }()
 
-	leader, _ := determineLeader(mle.mesos)
-
-	mle.leader = leader.Host
+	if leader, err := determineLeader(mle.mesos); err != nil {
+		defaultLog.Error("Unable to determine mesos leader", err.Error())
+	} else {
+		mle.leader = leader.Host
+	}
 }
