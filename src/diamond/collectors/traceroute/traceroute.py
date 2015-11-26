@@ -29,16 +29,17 @@ class TracerouteCollector(diamond.collector.ProcessCollector):
         """
         config = super(TracerouteCollector, self).get_default_config()
         config.update({
-            'path':             'traceroute',
-            'bin':              '/usr/bin/mtr',
+            'path':     'traceroute',
+            'bin':      '/usr/bin/mtr',
+            'hosts':    { "yelp":"yelp.com" }
         })
         return config
 
     def collect(self):
 
         for pseudo_hostname, address in self.config.get('hosts', {}).iteritems():
-            traceroute = None
 
+            traceroute = None
             try:
                 cmd = [self.config['bin'], '-nrc 1', address]
                 process = Popen(cmd, stdout=PIPE, stderr=PIPE)
