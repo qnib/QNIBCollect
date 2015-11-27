@@ -11,8 +11,9 @@ PKGS           := \
 	$(FULLERITE)/collector \
 	$(FULLERITE)/config \
 	$(FULLERITE)/handler \
-	$(FULLERITE)/internalserver\
-	$(FULLERITE)/metric
+	$(FULLERITE)/internalserver \
+	$(FULLERITE)/metric \
+	$(FULLERITE)/util
 
 SOURCES        := $(foreach pkg, $(PKGS), $(wildcard $(SRCDIR)/$(pkg)/*.go))
 SOURCES        := $(filter-out $(GEN_PROTO_SFX), $(SOURCES))
