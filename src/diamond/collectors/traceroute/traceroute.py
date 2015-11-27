@@ -20,6 +20,8 @@ class TracerouteCollector(diamond.collector.ProcessCollector):
         config_help.update({
             'bin':          "The path to the mtr (Matt's traceroute) binary",
             'hosts':        "Hosts to run the traceroute command on",
+            'protocol':     "The protocol to use for the traceroute pings (icmp, udp, tcp)",
+            'tcpport':      "The target port number for tcp traces",
         })
         return config_help
 
@@ -31,7 +33,8 @@ class TracerouteCollector(diamond.collector.ProcessCollector):
         config.update({
             'path':     'traceroute',
             'bin':      '/usr/bin/mtr',
-            'hosts':    { "yelp":"yelp.com" }
+            'hosts':    { "yelp":"yelp.com" },
+            'protocol': 'icmp',
         })
         return config
 
@@ -41,9 +44,19 @@ class TracerouteCollector(diamond.collector.ProcessCollector):
 
             traceroute = None
             try:
-                cmd = [self.config['bin'], '-nrc 1', address]
-                process = Popen(cmd, stdout=PIPE, stderr=PIPE)
+                protocol = self.config.get('protocol', '').lower()
+                protocol_args = ''
 
+                if protocol == 'udp':
+                    protocol_args = '-u'
+                elif protocol == 'tcp':
+                    tcpport = self.config.get('tcpport', 80)
+                    protocol_args = '-TP {0!s}'.format(tcpport)
+
+                args = ' '.join(['-nrc 1', protocol_args])
+                cmd = [self.config['bin'], args, address]
+
+                process = Popen(cmd, stdout=PIPE, stderr=PIPE)
                 traceroute, errors = process.communicate()
                 if errors:
                     self.log.error(
