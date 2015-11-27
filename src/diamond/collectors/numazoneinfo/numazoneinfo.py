@@ -55,7 +55,7 @@ class NUMAZoneInfoCollector(diamond.collector.Collector):
 
                         node = match.group('node') or ''
                         zone = match.group('zone') or ''
-                        metric = "node{0!s}-zone-{0!s}-".format(node, zone)
+                        metric = "node{0!s}-zone-{1!s}-".format(node, zone)
 
                         # We get 4 lines afterwards for free, min, low, and high
                         # page thresholds
