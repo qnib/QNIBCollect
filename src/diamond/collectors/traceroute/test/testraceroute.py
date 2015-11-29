@@ -20,6 +20,7 @@ class TestTracerouteCollector(CollectorTestCase):
         })
 
         self.collector = TracerouteCollector(config, None)
+        self.collector.config['bin'] = 'dummy'
 
     def test_import(self):
         self.assertTrue(TracerouteCollector)
@@ -29,7 +30,7 @@ class TestTracerouteCollector(CollectorTestCase):
 
         with patch('traceroute.Popen') as process_mock:
             with patch.object(process_mock.return_value, 'communicate') as comm_mock:
-                comm_mock.return_value = [self.getFixture('mtr').getvalue(), '']
+                comm_mock.return_value = [self.getFixture('traceroute').getvalue(), '']
                 self.collector.collect()
 
         rtts = self.getFixture('rtts').getvalue().split('\n')
@@ -45,7 +46,7 @@ class TestTracerouteCollector(CollectorTestCase):
 
         with patch('traceroute.Popen') as process_mock:
             with patch.object(process_mock.return_value, 'communicate') as comm_mock:
-                comm_mock.return_value = [self.getFixture('mtr').getvalue(), '']
+                comm_mock.return_value = [self.getFixture('traceroute').getvalue(), '']
                 self.collector.collect()
 
         hops = self.getFixture('hops').getvalue().split('\n')
@@ -67,7 +68,7 @@ class TestTracerouteCollector(CollectorTestCase):
                     comm_mock.return_value = [None, 'Failed to run collector']
                     self.collector.collect()
 
-        error_logger.assert_called_once_with('Error running mtr process: Failed to run collector')
+        error_logger.assert_called_once_with('Error running traceroute process')
         self.assertPublishedMany(publish_mock, {})
 
 
