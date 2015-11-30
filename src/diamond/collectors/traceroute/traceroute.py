@@ -41,36 +41,31 @@ class TracerouteCollector(diamond.collector.ProcessCollector):
 
     def collect(self):
 
+        protocol_args = self._protocol_config()
+        if not protocol_args:
+            self.log.error(
+                "Please specify a protocol for the traceroute,\n"
+                + " options (icmp, tcp, udp)"
+            )
+            return None
+
         for pseudo_hostname, address in self.config.get('hosts', {}).iteritems():
 
-            traceroute = None
-            protocol = self.config.get('protocol', '').lower()
-            destport = self.config.get('destport', 80)
-
-            protocol_args = ''
-            if protocol == 'udp':
-                protocol_args = '-U'
-            elif protocol == 'tcp':
-                protocol_args = '-Tp{0!s}'.format(destport)
-            elif protocol == 'icmp':
-                protocol_args = '-I'
+            metric_name = '.'.join([
+                pseudo_hostname,
+                'RoundTripTime',
+            ])
 
             cmd = [self.config['bin'], '-nq1', '-w1', protocol_args, address]
 
             try:
                 process = Popen(cmd, stdout=PIPE, stderr=PIPE)
-
                 errors = process.stderr.readline()
                 if errors:
                     self.log.error(
-                        "Error running traceroute process"
+                        "Error running traceroute process: {0!s}".format(errors)
                     )
                     continue
-
-                metric_name = '.'.join([
-                    pseudo_hostname,
-                    'RoundTripTime',
-                ])
 
                 while True:
                     line = process.stdout.readline()
@@ -110,3 +105,19 @@ class TracerouteCollector(diamond.collector.ProcessCollector):
                     "Error running TracerouteCollector: {0!s}".format(e)
                 )
                 continue
+
+    def _protocol_config(self):
+
+        protocol = self.config['protocol'].lower()
+        destport = self.config.get('destport', 80)
+
+        if protocol == 'udp':
+            protocol_args = '-U'
+        elif protocol == 'tcp':
+            protocol_args = '-Tp{0!s}'.format(destport)
+        elif protocol == 'icmp':
+            protocol_args = '-I'
+        else:
+            return None
+
+        return protocol_args

@@ -21,6 +21,7 @@ class TestTracerouteCollector(CollectorTestCase):
 
         self.collector = TracerouteCollector(config, None)
         self.collector.config['bin'] = 'dummy'
+        self.collector.config['protocol'] = 'icmp'
 
     def test_import(self):
         self.assertTrue(TracerouteCollector)
@@ -29,9 +30,11 @@ class TestTracerouteCollector(CollectorTestCase):
     def test_should_work_with_real_data(self, publish_mock):
 
         with patch('traceroute.Popen') as process_mock:
-            with patch.object(process_mock.return_value, 'communicate') as comm_mock:
-                comm_mock.return_value = [self.getFixture('traceroute').getvalue(), '']
-                self.collector.collect()
+            with patch.object(process_mock.return_value, 'stdout') as out_mock:
+                with patch.object(process_mock.return_value, 'stderr') as err_mock:
+                    out_mock.readline = self.getFixture('traceroute').readline
+                    err_mock.readline.return_value = None
+                    self.collector.collect()
 
         rtts = self.getFixture('rtts').getvalue().split('\n')
         for idx, call in enumerate(publish_mock.mock_calls):
@@ -45,30 +48,38 @@ class TestTracerouteCollector(CollectorTestCase):
     def test_sent_dimensions(self, publish_metric_mock):
 
         with patch('traceroute.Popen') as process_mock:
-            with patch.object(process_mock.return_value, 'communicate') as comm_mock:
-                comm_mock.return_value = [self.getFixture('traceroute').getvalue(), '']
-                self.collector.collect()
+            with patch.object(process_mock.return_value, 'stdout') as out_mock:
+                with patch.object(process_mock.return_value, 'stderr') as err_mock:
+                    out_mock.readline = self.getFixture('traceroute').readline
+                    err_mock.readline.return_value = None
+                    self.collector.collect()
 
         hops = self.getFixture('hops').getvalue().split('\n')
         for idx, call in enumerate(publish_metric_mock.mock_calls):
             name, args, kwargs = call
             metric = args[0]
             hop, ip = hops[idx].strip().split('|')
-            self.assertEquals(metric.dimensions, {
-               'hop': hop,
-               'ip': ip,
-            })
+            if '*' not in ip:
+                self.assertEquals(metric.dimensions, {
+                   'hop': hop,
+                   'ip': ip,
+                })
+            else:
+                self.assertEquals(metric.dimensions, {
+                   'hop': hop,
+                })
 
     @patch.object(Collector, 'publish')
     def test_should_fail_gracefully(self, publish_mock):
 
         with patch('traceroute.Popen') as process_mock:
-            with patch.object(process_mock.return_value, 'communicate') as comm_mock:
-                with patch.object(self.collector.log, 'error') as error_logger:
-                    comm_mock.return_value = [None, 'Failed to run collector']
-                    self.collector.collect()
+            with patch.object(process_mock.return_value, 'stdout') as out_mock:
+                with patch.object(process_mock.return_value, 'stderr') as err_mock:
+                    with patch.object(self.collector.log, 'error') as error_logger:
+                        err_mock.readline.return_value = 'Failed to run collector'
+                        self.collector.collect()
 
-        error_logger.assert_called_once_with('Error running traceroute process')
+        error_logger.assert_called_once_with('Error running traceroute process: Failed to run collector')
         self.assertPublishedMany(publish_mock, {})
 
 
