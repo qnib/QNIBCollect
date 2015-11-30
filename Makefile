@@ -1,6 +1,6 @@
 FULLERITE      := fullerite
 BEATIT         := beatit
-VERSION        := 0.1.16
+VERSION        := 0.1.17
 SRCDIR         := src
 HANDLER_DIR    := $(SRCDIR)/fullerite/handler
 PROTO_SFX      := $(HANDLER_DIR)/signalfx.proto
@@ -11,8 +11,9 @@ PKGS           := \
 	$(FULLERITE)/collector \
 	$(FULLERITE)/config \
 	$(FULLERITE)/handler \
-	$(FULLERITE)/internalserver\
-	$(FULLERITE)/metric
+	$(FULLERITE)/internalserver \
+	$(FULLERITE)/metric \
+	$(FULLERITE)/util
 
 SOURCES        := $(foreach pkg, $(PKGS), $(wildcard $(SRCDIR)/$(pkg)/*.go))
 SOURCES        := $(filter-out $(GEN_PROTO_SFX), $(SOURCES))

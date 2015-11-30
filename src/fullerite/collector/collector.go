@@ -50,6 +50,8 @@ func New(name string) Collector {
 		collector = NewDockerStats(channel, DefaultCollectionInterval, collectorLog)
 	case "CpuInfo":
 		collector = NewCpuInfo(channel, DefaultCollectionInterval, collectorLog)
+	case "MesosStats":
+		collector = NewMesosStats(channel, DefaultCollectionInterval, collectorLog)
 	default:
 		defaultLog.Error("Cannot create collector", name)
 		return nil

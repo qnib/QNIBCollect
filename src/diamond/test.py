@@ -282,6 +282,12 @@ if __name__ == "__main__":
                       default=1,
                       action="count",
                       help="verbose")
+    parser.add_option("-d",
+                      "--diamond-only",
+                      action="store_true",
+                      dest="diamond_only",
+                      default=False,
+                      help="Run diamond tests only")
 
     # Parse Command Line Args
     (options, args) = parser.parse_args()
@@ -289,8 +295,12 @@ if __name__ == "__main__":
     cPath = os.path.abspath(os.path.join(os.path.dirname(__file__),
                                          'collectors',
                                          options.collector))
-
-    getCollectorTests(cPath)
+    dPath = os.path.abspath(os.path.join(os.path.dirname(__file__),
+                                         'tests',))
+    if options.diamond_only:
+        getCollectorTests(dPath)
+    else:
+        getCollectorTests(cPath)
 
     loader = unittest.TestLoader()
     tests = []
