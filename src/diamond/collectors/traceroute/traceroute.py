@@ -56,6 +56,12 @@ class TracerouteCollector(diamond.collector.ProcessCollector):
                 'RoundTripTime',
             ])
 
+            if 'bin' not in self.config:
+                self.log.error(
+                    "Please specify the path of the canonical binary"
+                )
+                return None
+
             cmd = [self.config['bin'], '-nq1', '-w1', protocol_args, address]
 
             try:
