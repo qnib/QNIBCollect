@@ -112,11 +112,9 @@ func (d *Diamond) Collect() {
 	}
 
 	for line := range d.incoming {
-		metric, ok := d.parseMetric(line)
-		if !ok {
-			continue
+		if metric, ok := d.parseMetric(line); ok {
+			d.Channel() <- metric
 		}
-		d.Channel() <- metric
 	}
 }
 

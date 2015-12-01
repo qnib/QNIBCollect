@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	l "github.com/Sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -66,7 +67,7 @@ func TestDiamondCollect(t *testing.T) {
 	}
 }
 
-func TestparseMetric(t *testing.T) {
+func TestparseJsonToMetric(t *testing.T) {
 	rawData := []byte(`
 {
    "name": "foobar",
@@ -81,6 +82,22 @@ func TestparseMetric(t *testing.T) {
 	metric, ok := d.parseMetric(rawData)
 	assert.True(t, ok)
 	assert.Equal(t, "gauge", metric.MetricType)
+}
+
+func TestInvalidJsonToMetric(t *testing.T) {
+	rawData := []byte(`
+{
+   "name": "foobar",
+   "type":  "GAUGE",
+   "value": "100.0",
+   "dimensions": {
+      "host": "windrunner"
+}
+        `)
+	l := defaultLog.WithFields(l.Fields{"collector": "diamond"})
+	d := NewDiamond(nil, 12, l)
+	_, ok := d.parseMetric(rawData)
+	assert.False(t, ok)
 }
 
 func connectToDiamondCollector(d *Diamond) (net.Conn, error) {
