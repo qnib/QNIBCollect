@@ -338,7 +338,7 @@ class Collector(object):
         if not success:
             self.log.warn("After %d attempts failed to write payload %s", (FULLERITE_RETRY_COUNT, payloadStr))
 
-    def publish_cum_counter(self, name, value, precision=0, instance=None):
+    def publish_cumulative_counter(self, name, value, precision=0, instance=None):
         return self.publish(name, value, precision=precision,
                             metric_type='CUMCOUNTER', instance=instance)
 
