@@ -8,7 +8,7 @@ from error import DiamondException
 
 class Metric(object):
 
-    _METRIC_TYPES = ['COUNTER', 'GAUGE']
+    _METRIC_TYPES = ['COUNTER', 'GAUGE', 'CUMCOUNTER']
 
     def __init__(self, path, value, raw_value=None, timestamp=None, precision=0,
                  metric_type='COUNTER', ttl=None, host="ignored", dimensions=None):
