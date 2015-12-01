@@ -112,12 +112,23 @@ func (d *Diamond) Collect() {
 	}
 
 	for line := range d.incoming {
-		var metric metric.Metric
-		if err := json.Unmarshal(line, &metric); err != nil {
-			d.log.Error("Cannot unmarshal metric line from diamond:", line)
+		metric, ok := d.parseMetric(line)
+		if !ok {
 			continue
 		}
-		metric.AddDimension("diamond", "yes")
 		d.Channel() <- metric
 	}
+}
+
+func (d *Diamond) parseMetric(line []byte) (metric.Metric, bool) {
+	var metric metric.Metric
+	if err := json.Unmarshal(line, &metric); err != nil {
+		d.log.Error("Cannot unmarshal metric line from diamond:", line)
+		return metric, false
+	}
+	// All diamond metric_types are reported in uppercase, lets make them
+	// fullerite compatible
+	metric.MetricType = strings.ToLower(metric.MetricType)
+	metric.AddDimension("diamond", "yes")
+	return metric, true
 }

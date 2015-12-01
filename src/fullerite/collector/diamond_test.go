@@ -66,6 +66,23 @@ func TestDiamondCollect(t *testing.T) {
 	}
 }
 
+func TestparseMetric(t *testing.T) {
+	rawData := []byte(`
+{
+   "name": "foobar",
+   "type":  "GAUGE",
+   "value": "100.0",
+   "dimensions": {
+      "host": "windrunner"
+   }
+}
+        `)
+	d := NewDiamond(nil, 12, nil)
+	metric, ok := d.parseMetric(rawData)
+	assert.True(t, ok)
+	assert.Equal(t, "gauge", metric.MetricType)
+}
+
 func connectToDiamondCollector(d *Diamond) (net.Conn, error) {
 	// emit a Diamond metric
 	var (
