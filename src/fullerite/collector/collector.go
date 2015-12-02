@@ -10,6 +10,7 @@ import (
 const (
 	// DefaultCollectionInterval the interval to collect on unless overridden by a collectors config
 	DefaultCollectionInterval = 10
+	CpuInfoCollectionInterval = 3600
 )
 
 var defaultLog = l.WithFields(l.Fields{"app": "fullerite", "pkg": "collector"})
@@ -49,7 +50,7 @@ func New(name string) Collector {
 	case "DockerStats":
 		collector = NewDockerStats(channel, DefaultCollectionInterval, collectorLog)
 	case "CpuInfo":
-		collector = NewCpuInfo(channel, DefaultCollectionInterval, collectorLog)
+		collector = NewCpuInfo(channel, CpuInfoCollectionInterval, collectorLog)
 	case "MesosStats":
 		collector = NewMesosStats(channel, DefaultCollectionInterval, collectorLog)
 	default:
