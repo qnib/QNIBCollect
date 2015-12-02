@@ -25,7 +25,7 @@ func TestCpuInfoCollect(t *testing.T) {
 	select {
 	case m := <-cpuInfo.Channel():
 		assert.Equal(t, 2.0, m.Value)
-		assert.Equal(t, "Intel(R) Xeon(R) CPU E5-2630 0 @ 2.30GHz", m.Dimensions["model"])
+		assert.Equal(t, "Xeon(R) CPU E5-2630 0 @ 2.30GHz", m.Dimensions["model"])
 		return
 	case <-time.After(2 * time.Second):
 		t.Fail()

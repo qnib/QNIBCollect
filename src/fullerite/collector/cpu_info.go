@@ -16,6 +16,8 @@ const (
 	defaultProcPath = "/proc/cpuinfo"
 )
 
+var knownManufacturers = [...]string{"AMD", "Processor", "Intel(R)", "CPU"}
+
 type CpuInfo struct {
 	baseCollector
 	metricName string
@@ -86,10 +88,23 @@ func (c CpuInfo) getCpuInfo() (float64, string, error) {
 	if err != nil {
 		c.log.Error("Error while trying to scan through file: ", err)
 	}
+	model_name = removeCommonManufacturersName(model_name)
 	return float64(len(phys_ids)), model_name, err
 }
 
 func getValueFromLine(line string) string {
 	elems := strings.Split(line, ":")
 	return strings.TrimSpace(elems[1])
+}
+
+func removeCommonManufacturersName(line string) string {
+	elems := strings.Fields(line)
+	if len(elems) != 0 {
+		for _, manufacturer := range knownManufacturers {
+			if elems[0] == manufacturer {
+				return strings.Join(elems[1:], " ")
+			}
+		}
+	}
+	return line
 }
