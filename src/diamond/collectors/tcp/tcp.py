@@ -172,6 +172,8 @@ transmitted octets.</td></tr>
 example, bad TCP checksums).</td></tr>
 <tr><td>OutRsts</td><td>The number of TCP segments sent containing the RST
 flag.</td></tr>
+<tr><td>RetransSegs</td><td>The total no. of TCP segments that have been
+transmitted containing one or more previously transmitted octets</td></tr>
 </table>
 
 """
@@ -215,7 +217,7 @@ class TCPCollector(diamond.collector.Collector):
             + 'TCPTimeouts, TCPFastRetrans, TCPLostRetransmit, '
             + 'TCPForwardRetrans, TCPSlowStartRetrans, CurrEstab, '
             + 'TCPAbortOnMemory, TCPBacklogDrop, AttemptFails, '
-            + 'EstabResets, InErrs, ActiveOpens, PassiveOpens',
+            + 'EstabResets, InErrs, ActiveOpens, PassiveOpens, RetransSegs',
         })
         return config
 
