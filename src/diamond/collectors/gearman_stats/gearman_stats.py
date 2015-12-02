@@ -74,4 +74,3 @@ class GearmanCollector(diamond.collector.Collector):
             self.publish('gearman_fds', get_fds(self.config['gearman_pid_path']))
         except Exception, e:
             self.log.error("GearmanCollector Error: %s", e)
-            print e
