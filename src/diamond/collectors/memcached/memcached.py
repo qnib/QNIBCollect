@@ -156,12 +156,15 @@ class MemcachedCollector(diamond.collector.Collector):
             # for everything we want
             for stat in desired:
                 if stat in stats:
-
+                    self.dimensions = {
+                        'memcache_host': alias,
+                    }
+                    metric_name = '.'.join(['memcache', stat])
                     # we have it
                     if stat in self.GAUGES:
-                        self.publish_gauge(alias + "." + stat, stats[stat])
+                        self.publish_gauge(metric_name, stats[stat])
                     else:
-                        self.publish_counter(alias + "." + stat, stats[stat])
+                        self.publish_counter(metric_name, stats[stat])
 
                 else:
 

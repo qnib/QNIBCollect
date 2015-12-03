@@ -88,4 +88,5 @@ class ConnTrackCollector(diamond.collector.Collector):
             if collected.get('nf_conntrack_max', None) and collected.get('nf_conntrack_buckets', None):
                 collected['nf_hash_ratio'] = collected['nf_conntrack_max'] / collected['nf_conntrack_buckets']
             for key in collected.keys():
-                self.publish(key, collected[key])
+                metric_name = '.'.join(['conntrack', key])
+                self.publish(metric_name, collected[key])

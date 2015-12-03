@@ -21,7 +21,7 @@ class ScribeCollector(diamond.collector.Collector):
         config_help = super(ScribeCollector, self).get_default_config_help()
         config_help.update({
             'exclude_pattern': 'Exclude items from scribe buffer that match this pattern',
-            'path': 'Path to scribe buffer',
+            'buffer_path': 'Path to scribe buffer',
             'scribe_ctrl_bin': 'Path to scribe_ctrl binary',
             'scribe_port': 'Scribe port',
         })
@@ -31,6 +31,7 @@ class ScribeCollector(diamond.collector.Collector):
         config = super(ScribeCollector, self).get_default_config()
         config.update({
             'exclude_pattern': None,
+            'buffer_path': None,
             'path': 'scribe',
             'scribe_ctrl_bin': self.find_binary('/usr/sbin/scribe_ctrl'),
             'scribe_port': None,
@@ -74,8 +75,8 @@ class ScribeCollector(diamond.collector.Collector):
             metric = self.key_to_metric(key)
             data[metric] = int(val)
 
-        if self.config['path']:
-            cmd = ['du', '-sb', '--apparent-size', self.config['path']]
+        if self.config['buffer_path']:
+            cmd = ['du', '-sb', '--apparent-size', self.config['buffer_path']]
             if self.config['exclude_pattern']:
                 cmd.append(
                     "--exclude={0!s}".format(self.config['exclude_pattern'])
@@ -102,4 +103,5 @@ class ScribeCollector(diamond.collector.Collector):
             self.log.debug(
                 "Publishing: {0} {1}".format(stat, val)
             )
-            self.publish(stat, val)
+            metric_name = '.'.join(['scribe', stat])
+            self.publish(metric_name, val)

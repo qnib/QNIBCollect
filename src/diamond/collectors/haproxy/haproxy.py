@@ -8,6 +8,74 @@ Collect HAProxy Stats
  * urlparse
  * urllib2
 
+haproxy?stats returns:
+ act: server is active (server), number of active servers (backend)
+ bck: server is backup (server), number of backup servers (backend)
+ bin: bytes in
+ bout: bytes out
+ check_code: layer5-7 code, if available
+ check_duration: time in ms took to finish last health check
+ check_status: status of last health check, one of:
+        UNK     -> unknown
+        INI     -> initializing
+        SOCKERR -> socket error
+        L4OK    -> check passed on layer 4, no upper layers testing enabled
+        L4TMOUT -> layer 1-4 timeout
+        L4CON   -> layer 1-4 connection problem, for example
+                   "Connection refused" (tcp rst) or "No route to host" (icmp)
+        L6OK    -> check passed on layer 6
+        L6TOUT  -> layer 6 (SSL) timeout
+        L6RSP   -> layer 6 invalid response - protocol error
+        L7OK    -> check passed on layer 7
+        L7OKC   -> check conditionally passed on layer 7, for example 404 with
+                   disable-on-404
+        L7TOUT  -> layer 7 (HTTP/SMTP) timeout
+        L7RSP   -> layer 7 invalid response - protocol error
+        L7STS   -> layer 7 response error, for example HTTP 5xx
+ chkdown: number of UP->DOWN transitions
+ chkfail: number of failed checks
+ cli_abrt: number of data transfers aborted by the client
+ downtime: total downtime (in seconds)
+ dreq: denied requests
+ dresp: denied responses
+ econ: connection errors
+ ereq: request errors
+ eresp: response errors (among which srv_abrt)
+ hanafail: failed health checks details
+ hrsp_1xx: http responses with 1xx code
+ hrsp_2xx: http responses with 2xx code
+ hrsp_3xx: http responses with 3xx code
+ hrsp_4xx: http responses with 4xx code
+ hrsp_5xx: http responses with 5xx code
+ hrsp_other: http responses with other codes (protocol error)
+ iid: unique proxy id
+ lastchg: last status change (in seconds)
+ lbtot: total number of times a server was selected
+ pid: process id (0 for first instance, 1 for second, ...)
+ pxname: proxy name
+ qcur: current queued requests
+ qlimit: queue limit
+ qmax: max queued requests
+ rate_lim: limit on new sessions per second
+ rate_max: max number of new sessions per second
+ rate: number of sessions per second over last elapsed second
+ req_rate: HTTP requests per second over last elapsed second
+ req_rate_max: max number of HTTP requests per second observed
+ req_tot: total number of HTTP requests received
+ scur: current sessions
+ sid: service id (unique inside a proxy)
+ slim: sessions limit
+ smax: max sessions
+ srv_abrt: number of data transfers aborted by the server (inc. in eresp)
+ status: status (UP/DOWN/NOLB/MAINT/MAINT(via)...)
+ stot: total sessions
+ svname: service name (FRONTEND for frontend, BACKEND for backend, any name for server)
+ throttle: warm up status
+ tracked: id of proxy/server if tracking is enabled
+ type (0=frontend, 1=backend, 2=server, 3=socket)
+ weight: server weight (server), total weight (backend)
+ wredis: redispatches (warning)
+ wretr: retries (warning)
 """
 
 import re
@@ -123,10 +191,8 @@ class HAProxyCollector(diamond.collector.Collector):
             if (self._get_config_value(section, 'ignore_servers')
                     and row[1].lower() not in ['frontend', 'backend']):
                 continue
-
-            part_one = self._sanitize(row[0].lower())
-            part_two = self._sanitize(row[1].lower())
-            metric_name = '%s%s.%s' % (section_name, part_one, part_two)
+            proxy_name = self._sanitize(row[0].lower())
+            server_name = self._sanitize(row[1].lower())
 
             for index, metric_string in enumerate(row):
                 try:
@@ -134,8 +200,14 @@ class HAProxyCollector(diamond.collector.Collector):
                 except ValueError:
                     continue
 
-                stat_name = '%s.%s' % (metric_name, headings[index])
-                self.publish(stat_name, metric_value, metric_type='GAUGE')
+                self.dimensions = {
+                    'proxy_name': proxy_name,
+                    'server_name': server_name,
+                }
+                metric_name = '.'.join(['haproxy', headings[index]])
+                if section_name:
+                    metric_name = '.'.join([section_name, metric_name])
+                self.publish(metric_name, metric_value, metric_type='GAUGE')
 
     def collect(self):
         if 'servers' in self.config:
