@@ -13,6 +13,7 @@ import subprocess
 import string
 
 import diamond.collector
+from diamond.collector import str_to_bool
 
 
 class ScribeCollector(diamond.collector.Collector):
@@ -22,6 +23,7 @@ class ScribeCollector(diamond.collector.Collector):
         config_help.update({
             'exclude_pattern': 'Exclude items from scribe buffer that match this pattern',
             'buffer_path': 'Path to scribe buffer',
+            'scribe_leaf': 'Is this a scribe leaf?',
             'scribe_ctrl_bin': 'Path to scribe_ctrl binary',
             'scribe_port': 'Scribe port',
         })
@@ -33,6 +35,7 @@ class ScribeCollector(diamond.collector.Collector):
             'exclude_pattern': None,
             'buffer_path': None,
             'path': 'scribe',
+            'scribe_leaf': None,
             'scribe_ctrl_bin': self.find_binary('/usr/sbin/scribe_ctrl'),
             'scribe_port': None,
         })
@@ -66,9 +69,10 @@ class ScribeCollector(diamond.collector.Collector):
         return stdout
 
     def get_scribe_stats(self):
+        data = {}
+
         output = self.get_scribe_ctrl_output()
 
-        data = {}
 
         for line in output.splitlines():
             key, val = line.rsplit(':', 1)
@@ -103,5 +107,8 @@ class ScribeCollector(diamond.collector.Collector):
             self.log.debug(
                 "Publishing: {0} {1}".format(stat, val)
             )
-            metric_name = '.'.join(['scribe', stat])
+            if str_to_bool(self.config['scribe_leaf']):
+                metric_name = '.'.join(['scribe_leaf', stat])
+            else:
+                metric_name = '.'.join(['scribe', stat])
             self.publish(metric_name, val)
