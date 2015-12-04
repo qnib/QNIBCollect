@@ -41,7 +41,7 @@ class NetworkCollector(diamond.collector.Collector):
         config.update({
             'path':         'network',
             'interfaces':   ['eth', 'bond', 'em', 'p1p', 'tun'],
-            'byte_unit':    ['byte'],
+            'byte_unit':    ['bit', 'byte'],
             'greedy':       'true',
         })
         return config
