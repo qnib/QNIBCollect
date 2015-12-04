@@ -41,7 +41,7 @@ class NetworkCollector(diamond.collector.Collector):
         config.update({
             'path':         'network',
             'interfaces':   ['eth', 'bond', 'em', 'p1p', 'tun'],
-            'byte_unit':    ['bit', 'byte'],
+            'byte_unit':    ['byte'],
             'greedy':       'true',
         })
         return config
@@ -109,7 +109,7 @@ class NetworkCollector(diamond.collector.Collector):
             stats = results[device]
             for s, v in stats.items():
                 # Get Metric Name
-                metric_name = '.'.join([device, s])
+                metric_name = '.'.join(['network', s])
                 # Get Metric Value
                 metric_value = self.derivative(metric_name,
                                                long(v),
@@ -122,10 +122,16 @@ class NetworkCollector(diamond.collector.Collector):
 
                     for u in self.config['byte_unit']:
                         # Public Converted Metric
+                        self.dimensions = {
+                            'iface': device
+                        }
                         self.publish(metric_name.replace('bytes', u),
                                      convertor.get(unit=u), precision=2)
                 else:
                     # Publish Metric Derivative
+                    self.dimensions = {
+                        'iface': device
+                    }
                     self.publish(metric_name, metric_value)
 
         return None
