@@ -84,7 +84,7 @@ def collector_process(collector, log):
             collector.dimensions = {
                 'interval': interval,
             }
-            collector.publish_cumulative_counter('fullerite.collection_time_exceeded', 1)
+            collector.publish('fullerite.collection_time_exceeded', 1)
 
         except SIGHUPException:
             # Reload the config if requested
