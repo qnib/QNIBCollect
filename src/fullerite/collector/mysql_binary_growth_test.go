@@ -3,6 +3,7 @@ package collector
 import (
 	"io/ioutil"
 	"os"
+	"strings"
 	"testing"
 
 	"fullerite/metric"
@@ -170,7 +171,7 @@ func TestgetBinlogSize(t *testing.T) {
 	defer func() { getFileSize = oldGetFileSize }()
 	getFileSize = func(m *MySQLBinlogGrowth, filePath string) int64 { return int64(123) }
 
-	file, _ := ioutil.TempFile("", "binlog"+binLogFileSuffix)
+	file, _ := ioutil.TempFile("", strings.Join([]string{"binlog", binLogFileSuffix}, "."))
 	file.WriteString("../log1")
 	file.WriteString("../log2")
 	defer os.Remove(file.Name())

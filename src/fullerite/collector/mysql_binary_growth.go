@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"strings"
 
 	"fullerite/metric"
 
@@ -15,7 +16,7 @@ import (
 
 const (
 	defaultCnfPath   = "/etc/my.cnf"
-	binLogFileSuffix = ".index"
+	binLogFileSuffix = "index"
 )
 
 // MySQLBinlogGrowth collector
@@ -32,7 +33,7 @@ var (
 )
 
 // The MySQLBinlogGrowth collector emits the current size of all the binlog files as cumulative counter. This will show
-// up in SignalFx as the rate of growth.
+// up in the graph as the rate of growth.
 //
 // The my.cnf config file contains the path to the binlog files (if it's not absolute, then it's relative to the
 // datadir directory). The <binlog>.index file contains the list of the log files and their path.
@@ -44,6 +45,7 @@ var (
 
 // NewMySQLBinlogGrowth creates a new MySQLBinlogGrowth collector.
 func NewMySQLBinlogGrowth(channel chan metric.Metric, initialInterval int, log *l.Entry) *MySQLBinlogGrowth {
+	// Initialize the collector struct with the default values
 	d := &MySQLBinlogGrowth{
 		baseCollector: baseCollector{
 			name:     "MySQLBinlogGrowth",
@@ -65,8 +67,7 @@ func (m *MySQLBinlogGrowth) Configure(configMap map[string]interface{}) {
 	}
 }
 
-// Collect computes the difference between the current bin-log size and the one at the previous run and
-// emits the rate of change per second
+// Collect emits the tota size of the mysql binary logs
 func (m *MySQLBinlogGrowth) Collect() {
 	// read the bin-log and datadir values from my.cnf
 	binLog, dataDir := getBinlogPath(m)
@@ -74,14 +75,14 @@ func (m *MySQLBinlogGrowth) Collect() {
 		return
 	}
 
-	size, err := getBinlogSize(m, binLog+binLogFileSuffix, dataDir)
+	size, err := getBinlogSize(m, strings.Join([]string{binLog, binLogFileSuffix}, "."), dataDir)
 
 	if err == nil {
 		metric := metric.Metric{
 			Name:       "mysql.binlog_growth_rate",
 			MetricType: metric.CumulativeCounter,
 			Value:      float64(size),
-			Dimensions: map[string]string{},
+			Dimensions: make(map[string]string),
 		}
 
 		m.Channel() <- metric
@@ -104,7 +105,17 @@ func (m *MySQLBinlogGrowth) getBinlogPath() (binLog string, dataDir string) {
 	}
 
 	binLog = section.ValueOf("log-bin")
+	if binLog == "" {
+		m.log.Error("log-bin value missing from ", m.myCnfPath)
+		return "", ""
+	}
+
 	dataDir = section.ValueOf("datadir")
+	if dataDir == "" {
+		m.log.Error("datadir value missing from ", m.myCnfPath)
+		return "", ""
+	}
+
 	// If the log-bin value is a relative path then it's based on datadir
 	if !path.IsAbs(binLog) {
 		binLog = path.Join(dataDir, binLog)
@@ -114,11 +125,7 @@ func (m *MySQLBinlogGrowth) getBinlogPath() (binLog string, dataDir string) {
 
 // getFileSize returns the size in bytes of the specified file
 func (m *MySQLBinlogGrowth) getFileSize(filePath string) int64 {
-	file, err := os.Open(filePath)
-	if err != nil {
-		return 0
-	}
-	fi, err := file.Stat()
+	fi, err := os.Stat(filePath)
 	if err != nil {
 		return 0
 	}
