@@ -53,6 +53,8 @@ func New(name string) Collector {
 		collector = NewCpuInfo(channel, CpuInfoCollectionInterval, collectorLog)
 	case "MesosStats":
 		collector = NewMesosStats(channel, DefaultCollectionInterval, collectorLog)
+	case "MySQLBinlogGrowth":
+		collector = NewMySQLBinlogGrowth(channel, DefaultCollectionInterval, collectorLog)
 	default:
 		defaultLog.Error("Cannot create collector", name)
 		return nil
