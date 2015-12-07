@@ -46,7 +46,7 @@ class NUMAZoneInfoCollector(diamond.collector.Collector):
                     if numlines_to_process > 0:
                         numlines_to_process -= 1
                         statname, metric_value = line.split('pages')[-1].split()
-                        metric_name = '.'.join(['numastats', statname])
+                        metric_name = '.'.join(['numa', statname])
 
                         self.dimensions = {}
                         if node:
