@@ -81,6 +81,10 @@ def collector_process(collector, log):
 
             max_time = int(max(interval - stagger_offset, 1))
             log.debug('Max collection time: %s seconds', max_time)
+            collector.dimensions = {
+                'interval': interval,
+            }
+            collector.publish('fullerite.collection_time_exceeded', 1)
 
         except SIGHUPException:
             # Reload the config if requested
