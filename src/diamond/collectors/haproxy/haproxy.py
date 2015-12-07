@@ -185,7 +185,7 @@ class HAProxyCollector(diamond.collector.Collector):
         csv_data = self.get_csv_data(section)
         data = list(csv.reader(csv_data))
         headings = self._generate_headings(data[0])
-        section_name = section and self._sanitize(section.lower()) + '.' or ''
+        section_name = section and self._sanitize(section.lower()) or ''
 
         for row in data:
             if (self._get_config_value(section, 'ignore_servers')
@@ -206,7 +206,7 @@ class HAProxyCollector(diamond.collector.Collector):
                 }
                 metric_name = '.'.join(['haproxy', headings[index]])
                 if section_name:
-                    metric_name = '.'.join([section_name, metric_name])
+                    self.dimensions['section_server'] = section_name
                 self.publish(metric_name, metric_value, metric_type='GAUGE')
 
     def collect(self):
