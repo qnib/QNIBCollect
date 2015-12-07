@@ -11,21 +11,24 @@ import (
 )
 
 const (
-	collectorName   = "CpuInfo"
+	collectorName   = "CPUInfo"
 	metricName      = "cpu_info"
 	defaultProcPath = "/proc/cpuinfo"
 )
 
 var knownManufacturers = [...]string{"AMD", "Processor", "Intel(R)", "CPU"}
 
-type CpuInfo struct {
+// CPUInfo collector type
+// Collect the CPU count and model name
+type CPUInfo struct {
 	baseCollector
 	metricName string
 	procPath   string
 }
 
-func NewCpuInfo(channel chan metric.Metric, initialInterval int, log *l.Entry) *CpuInfo {
-	c := new(CpuInfo)
+// NewCPUInfo Simple constructor for CPUInfo collector
+func NewCPUInfo(channel chan metric.Metric, initialInterval int, log *l.Entry) *CPUInfo {
+	c := new(CPUInfo)
 	c.channel = channel
 	c.interval = initialInterval
 	c.log = log
@@ -36,15 +39,17 @@ func NewCpuInfo(channel chan metric.Metric, initialInterval int, log *l.Entry) *
 	return c
 }
 
-func (c *CpuInfo) Configure(configMap map[string]interface{}) {
+// Configure Override default parameters
+func (c *CPUInfo) Configure(configMap map[string]interface{}) {
 	if procPath, exists := configMap["procPath"]; exists == true {
 		c.procPath = procPath.(string)
 	}
 	c.configureCommonParams(configMap)
 }
 
-func (c CpuInfo) Collect() {
-	value, model, err := c.getCpuInfo()
+// Collect Emits the no of CPUs and ModelName
+func (c CPUInfo) Collect() {
+	value, model, err := c.getCPUInfo()
 	if err != nil {
 		c.log.Error("Error while collecting metrics: ", err)
 		return
@@ -56,7 +61,7 @@ func (c CpuInfo) Collect() {
 	c.log.Debug(metric)
 }
 
-func (c CpuInfo) getCpuInfo() (float64, string, error) {
+func (c CPUInfo) getCPUInfo() (float64, string, error) {
 
 	// Prepare to read file
 	file, err := os.Open(c.procPath)
@@ -67,19 +72,19 @@ func (c CpuInfo) getCpuInfo() (float64, string, error) {
 	defer file.Close()
 
 	// Read file contents and gather metrics
-	phys_ids := map[string]bool{}
-	model_name := ""
+	physIds := map[string]bool{}
+	modelName := ""
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		line := scanner.Text()
 		if strings.HasPrefix(line, "physical id") {
-			phys_ids[getValueFromLine(line)] = true
+			physIds[getValueFromLine(line)] = true
 		} else if strings.HasPrefix(line, "model name") {
 			val := getValueFromLine(line)
-			if model_name == "" {
-				model_name = val
-			} else if model_name != val {
-				model_name = "mixed"
+			if modelName == "" {
+				modelName = val
+			} else if modelName != val {
+				modelName = "mixed"
 			}
 		}
 	}
@@ -88,8 +93,8 @@ func (c CpuInfo) getCpuInfo() (float64, string, error) {
 	if err != nil {
 		c.log.Error("Error while trying to scan through file: ", err)
 	}
-	model_name = removeCommonManufacturersName(model_name)
-	return float64(len(phys_ids)), model_name, err
+	modelName = removeCommonManufacturersName(modelName)
+	return float64(len(physIds)), modelName, err
 }
 
 func getValueFromLine(line string) string {
