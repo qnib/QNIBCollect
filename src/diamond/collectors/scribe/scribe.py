@@ -104,11 +104,12 @@ class ScribeCollector(diamond.collector.Collector):
 
     def collect(self):
         for stat, val in self.get_scribe_stats():
+            metric_name = '.'.join(['scribe', stat])
             self.log.debug(
                 "Publishing: {0} {1}".format(stat, val)
             )
             if str_to_bool(self.config['scribe_leaf']):
-                metric_name = '.'.join(['scribe_leaf', stat])
+                self.dimensions = { 'node_type': 'leaf' }
             else:
-                metric_name = '.'.join(['scribe', stat])
+                self.dimensions = { 'node_type': 'aggregator' }
             self.publish(metric_name, val)
