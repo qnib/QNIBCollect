@@ -63,14 +63,14 @@ class GearmanCollector(diamond.collector.Collector):
         try:
             if gearman is None:
                 self.log.error("Unable to import python gearman client")
-                return 
-                
+                return
+
             # Collect and Publish Metrics
             self.log.debug("Using pid file: %s & gearman endpoint : %s",
                     self.config['gearman_pid_path'], self.config['url'])
             gm_admin_client = gearman.GearmanAdminClient([self.config['url']])
-            self.publish('gearman_ping', gearman_ping(gm_admin_client))
-            self.publish('gearman_queued', gearman_queued(gm_admin_client))
-            self.publish('gearman_fds', get_fds(self.config['gearman_pid_path']))
+            self.publish('gearman.ping', gearman_ping(gm_admin_client))
+            self.publish('gearman.queued', gearman_queued(gm_admin_client))
+            self.publish('gearman.fds', get_fds(self.config['gearman_pid_path']))
         except Exception, e:
             self.log.error("GearmanCollector Error: %s", e)

@@ -36,7 +36,8 @@ class NUMAZoneInfoCollector(diamond.collector.Collector):
             filepath = self.config['proc_path']
 
             with open(filepath, 'r') as file_handle:
-                metric = ''
+                node = ''
+                zone = ''
                 numlines_to_process = 0
 
                 for line in file_handle:
@@ -45,7 +46,13 @@ class NUMAZoneInfoCollector(diamond.collector.Collector):
                     if numlines_to_process > 0:
                         numlines_to_process -= 1
                         statname, metric_value = line.split('pages')[-1].split()
-                        metric_name = ''.join([metric, statname])
+                        metric_name = '.'.join(['numa', statname])
+
+                        self.dimensions = {}
+                        if node:
+                            self.dimensions['node'] = node
+                        if zone:
+                            self.dimensions['zone'] = zone
 
                         self.publish(metric_name, metric_value)
 
@@ -55,7 +62,6 @@ class NUMAZoneInfoCollector(diamond.collector.Collector):
 
                         node = match.group('node') or ''
                         zone = match.group('zone') or ''
-                        metric = "node{0!s}-zone-{1!s}-".format(node, zone)
 
                         # We get 4 lines afterwards for free, min, low, and high
                         # page thresholds

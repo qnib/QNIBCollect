@@ -273,6 +273,8 @@ class TCPCollector(diamond.collector.Collector):
 
             # Publish the metric
             if metric_name in self.GAUGES:
+                metric_name = '.'.join(['tcp', metric_name])
                 self.publish_gauge(metric_name, value, 0)
             else:
+                metric_name = '.'.join(['tcp', metric_name])
                 self.publish_counter(metric_name, value, 0)

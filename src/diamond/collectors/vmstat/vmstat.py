@@ -64,4 +64,5 @@ class VMStatCollector(diamond.collector.Collector):
         file.close()
 
         for key, value in results.items():
-            self.publish(key, value, precision=2)
+            metric_name = '.'.join(['vm', key])
+            self.publish(metric_name, value, precision=2)

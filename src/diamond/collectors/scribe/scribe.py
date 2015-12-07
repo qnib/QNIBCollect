@@ -13,6 +13,7 @@ import subprocess
 import string
 
 import diamond.collector
+from diamond.collector import str_to_bool
 
 
 class ScribeCollector(diamond.collector.Collector):
@@ -21,7 +22,8 @@ class ScribeCollector(diamond.collector.Collector):
         config_help = super(ScribeCollector, self).get_default_config_help()
         config_help.update({
             'exclude_pattern': 'Exclude items from scribe buffer that match this pattern',
-            'path': 'Path to scribe buffer',
+            'buffer_path': 'Path to scribe buffer',
+            'scribe_leaf': 'Is this a scribe leaf?',
             'scribe_ctrl_bin': 'Path to scribe_ctrl binary',
             'scribe_port': 'Scribe port',
         })
@@ -31,7 +33,9 @@ class ScribeCollector(diamond.collector.Collector):
         config = super(ScribeCollector, self).get_default_config()
         config.update({
             'exclude_pattern': None,
+            'buffer_path': None,
             'path': 'scribe',
+            'scribe_leaf': None,
             'scribe_ctrl_bin': self.find_binary('/usr/sbin/scribe_ctrl'),
             'scribe_port': None,
         })
@@ -65,17 +69,18 @@ class ScribeCollector(diamond.collector.Collector):
         return stdout
 
     def get_scribe_stats(self):
+        data = {}
+
         output = self.get_scribe_ctrl_output()
 
-        data = {}
 
         for line in output.splitlines():
             key, val = line.rsplit(':', 1)
             metric = self.key_to_metric(key)
             data[metric] = int(val)
 
-        if self.config['path']:
-            cmd = ['du', '-sb', '--apparent-size', self.config['path']]
+        if self.config['buffer_path']:
+            cmd = ['du', '-sb', '--apparent-size', self.config['buffer_path']]
             if self.config['exclude_pattern']:
                 cmd.append(
                     "--exclude={0!s}".format(self.config['exclude_pattern'])
@@ -99,7 +104,12 @@ class ScribeCollector(diamond.collector.Collector):
 
     def collect(self):
         for stat, val in self.get_scribe_stats():
+            metric_name = '.'.join(['scribe', stat])
             self.log.debug(
                 "Publishing: {0} {1}".format(stat, val)
             )
-            self.publish(stat, val)
+            if str_to_bool(self.config['scribe_leaf']):
+                self.dimensions = { 'node_type': 'leaf' }
+            else:
+                self.dimensions = { 'node_type': 'aggregator' }
+            self.publish(metric_name, val)

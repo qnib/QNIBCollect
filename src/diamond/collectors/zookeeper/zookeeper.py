@@ -125,6 +125,9 @@ class ZookeeperCollector(diamond.collector.Collector):
             hostname = matches.group(3)
             port = matches.group(5)
 
+            if alias is None:
+                alias = hostname
+
             stats = self.get_stats(hostname, port)
 
             # figure out what we're configured to get, defaulting to everything
@@ -133,12 +136,10 @@ class ZookeeperCollector(diamond.collector.Collector):
             # for everything we want
             for stat in desired:
                 if stat in stats:
-
-                    # we have it
-                    if alias is not None:
-                        self.publish(alias + "." + stat, stats[stat])
-                    else:
-                        self.publish(stat, stats[stat])
+                    self.dimensions = {
+                        'zookeeper_host': alias,
+                    }
+                    self.publish(stat, stats[stat])
                 else:
 
                     # we don't, must be somehting configured in publish so we

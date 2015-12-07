@@ -280,6 +280,9 @@ class DiskUsageCollector(diamond.collector.Collector):
             # Only publish when we have io figures
             if (metrics['io'] > 0 or self.config['send_zero']):
                 for key in metrics:
-                    metric_name = '.'.join([info['device'], key]).replace(
+                    self.dimensions = {
+                        'device': info['device']
+                    }
+                    metric_name = '.'.join(['iostat', key]).replace(
                         '/', '_')
                     self.publish(metric_name, metrics[key])
