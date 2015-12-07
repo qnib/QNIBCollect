@@ -95,25 +95,25 @@ func (m *MySQLBinlogGrowth) getBinlogPath() (binLog string, dataDir string) {
 	config, err := configparser.Read(m.myCnfPath)
 	if err != nil {
 		m.log.Error(err)
-		return "", ""
+		return
 	}
 
 	section, err := config.Section("mysqld")
 	if err != nil {
 		m.log.Error("mysqld section missing in ", m.myCnfPath)
-		return "", ""
+		return
 	}
 
 	binLog = section.ValueOf("log-bin")
 	if binLog == "" {
 		m.log.Error("log-bin value missing from ", m.myCnfPath)
-		return "", ""
+		return
 	}
 
 	dataDir = section.ValueOf("datadir")
 	if dataDir == "" {
 		m.log.Error("datadir value missing from ", m.myCnfPath)
-		return "", ""
+		return
 	}
 
 	// If the log-bin value is a relative path then it's based on datadir
@@ -142,7 +142,8 @@ func (m *MySQLBinlogGrowth) getBinlogSize(binLog string, dataDir string) (size i
 	file, err := os.Open(binLog)
 	if err != nil {
 		m.log.Warn("Cannot open index file ", binLog)
-		return 0, fmt.Errorf("Cannot open index file %s", binLog)
+		err = fmt.Errorf("Cannot open index file %s", binLog)
+		return
 	}
 	defer file.Close()
 
@@ -158,9 +159,10 @@ func (m *MySQLBinlogGrowth) getBinlogSize(binLog string, dataDir string) (size i
 		size += getFileSize(m, fileName)
 	}
 
-	if err := scanner.Err(); err != nil {
+	if scanErr := scanner.Err(); scanErr != nil {
 		m.log.Warn("There was an error reading the index file")
-		return 0, errors.New("There was an error reading the index file")
+		err = errors.New("There was an error reading the index file")
+		return
 	}
 	return
 }
