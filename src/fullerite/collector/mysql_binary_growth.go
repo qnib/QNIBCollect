@@ -2,13 +2,12 @@ package collector
 
 import (
 	"bufio"
-	"errors"
-	"fmt"
 	"os"
 	"path"
 	"strings"
 
 	"fullerite/metric"
+	"fullerite/util"
 
 	l "github.com/Sirupsen/logrus"
 	"github.com/alyu/configparser"
@@ -29,7 +28,7 @@ type MySQLBinlogGrowth struct {
 var (
 	getBinlogPath = (*MySQLBinlogGrowth).getBinlogPath
 	getBinlogSize = (*MySQLBinlogGrowth).getBinlogSize
-	getFileSize   = (*MySQLBinlogGrowth).getFileSize
+	getFileSize   = util.GetFileSize
 )
 
 // The MySQLBinlogGrowth collector emits the current size of all the binlog files as cumulative counter. This will show
@@ -123,26 +122,13 @@ func (m *MySQLBinlogGrowth) getBinlogPath() (binLog string, dataDir string) {
 	return
 }
 
-// getFileSize returns the size in bytes of the specified file
-func (m *MySQLBinlogGrowth) getFileSize(filePath string) int64 {
-	fi, err := os.Stat(filePath)
-	if err != nil {
-		return 0
-	}
-	return fi.Size()
-}
-
 // getBinlogSize returns the total size of the binlog files
 func (m *MySQLBinlogGrowth) getBinlogSize(binLog string, dataDir string) (size int64, err error) {
-	size = 0
-	err = nil
-
 	// Read the binlog.index file
 	// It contains a list of log files, one per line
 	file, err := os.Open(binLog)
 	if err != nil {
 		m.log.Warn("Cannot open index file ", binLog)
-		err = fmt.Errorf("Cannot open index file %s", binLog)
 		return
 	}
 	defer file.Close()
@@ -156,12 +142,15 @@ func (m *MySQLBinlogGrowth) getBinlogSize(binLog string, dataDir string) (size i
 			fileName = path.Join(dataDir, fileName)
 		}
 
-		size += getFileSize(m, fileName)
+		file_size, err := getFileSize(fileName)
+		if err != nil {
+			m.log.Warn(err)
+		}
+		size += file_size
 	}
 
 	if scanErr := scanner.Err(); scanErr != nil {
 		m.log.Warn("There was an error reading the index file")
-		err = errors.New("There was an error reading the index file")
 		return
 	}
 	return

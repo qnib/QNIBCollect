@@ -15,7 +15,7 @@ import (
 func newMockMySQLBinlogGrowth() *MySQLBinlogGrowth {
 	c := make(chan metric.Metric, 2)
 	i := 10
-	l := defaultLog.WithFields(l.Fields{"collector": "MySQLBinlog"})
+	l := defaultLog
 	return NewMySQLBinlogGrowth(c, i, l)
 }
 
@@ -81,7 +81,7 @@ func TestMySQLBinlogGrowthCollectNoMyCnf(t *testing.T) {
 	m.Collect()
 
 	select {
-	case _ = <-m.Channel():
+	case <-m.Channel():
 		t.Fatal("The collect method shoudln't emit anything")
 	default:
 	}
@@ -93,8 +93,8 @@ func TestGetBinlogPathNoConfig(t *testing.T) {
 	m.Configure(config)
 
 	binLog, dataDir := m.getBinlogPath()
-	assert.Equal(t, binLog, "")
-	assert.Equal(t, dataDir, "")
+	assert.Empty(t, binLog)
+	assert.Empty(t, dataDir)
 }
 
 func TestGetBinlogPathNoSection(t *testing.T) {
@@ -145,31 +145,12 @@ func TestGetBinlogPathAbsolute(t *testing.T) {
 	assert.Equal(t, "/usr/local/data", dataDir)
 }
 
-func TestGetFileSizeMissing(t *testing.T) {
-	m := newMockMySQLBinlogGrowth()
-
-	size := m.getFileSize("/random/file")
-	assert.Equal(t, int64(0), size)
-}
-
-func TestGetFileSize(t *testing.T) {
-	m := newMockMySQLBinlogGrowth()
-
-	file, _ := ioutil.TempFile("", "my.cnf")
-	defer os.Remove(file.Name())
-
-	file.Write([]byte("abcdef"))
-
-	size := m.getFileSize(file.Name())
-	assert.Equal(t, int64(6), size)
-}
-
 func TestgetBinlogSize(t *testing.T) {
 	m := newMockMySQLBinlogGrowth()
 
 	oldGetFileSize := getFileSize
 	defer func() { getFileSize = oldGetFileSize }()
-	getFileSize = func(m *MySQLBinlogGrowth, filePath string) int64 { return int64(123) }
+	getFileSize = func(filePath string) (int64, error) { return int64(123), nil }
 
 	file, _ := ioutil.TempFile("", strings.Join([]string{"binlog", binLogFileSuffix}, "."))
 	file.WriteString("../log1")
