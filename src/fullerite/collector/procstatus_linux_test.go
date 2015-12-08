@@ -39,6 +39,36 @@ func TestProcStatusCollect(t *testing.T) {
 	}
 }
 
+func TestProcStatusCollectMetricTypes(t *testing.T) {
+	config := make(map[string]interface{})
+	config["interval"] = 9999
+
+	dims := map[string]string{
+		"module": "(.*)",
+	}
+
+	config["generatedDimensions"] = dims
+
+	channel := make(chan metric.Metric)
+
+	testLog := test_utils.BuildLogger()
+	ps := NewProcStatus(channel, 12, testLog)
+	ps.Configure(config)
+
+	go ps.Collect()
+
+	select {
+	case <-ps.Channel():
+		for _, m := range ps.procStatusMetrics() {
+			if m.Name == "CPUTime" {
+				assert.Equal(t, m.MetricType, metric.CumulativeCounter, "CPUTime is a CumulativeCounter")
+			} else {
+				assert.Equal(t, m.MetricType, metric.Gauge, "All others are a Gauge")
+			}
+		}
+	}
+}
+
 func TestProcStatusExtractDimensions(t *testing.T) {
 	testLog := test_utils.BuildLogger()
 

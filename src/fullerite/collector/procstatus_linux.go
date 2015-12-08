@@ -18,11 +18,12 @@ func (ps ProcStatus) Collect() {
 	}
 }
 
-func procStatusPoint(name string, value float64, dimensions map[string]string) (m metric.Metric) {
+func procStatusPoint(name string, value float64, dimensions map[string]string, metricType string) (m metric.Metric) {
 	m = metric.New(name)
 	m.Value = value
 	m.AddDimension("collector", "ProcStatus")
 	m.AddDimensions(dimensions)
+	m.MetricType = metricType
 	return m
 }
 
@@ -41,9 +42,9 @@ func (ps ProcStatus) getMetrics(proc procfs.Proc, cmdOutput []string) []metric.M
 	}
 
 	ret := []metric.Metric{
-		procStatusPoint("VirtualMemory", float64(stat.VirtualMemory()), dim),
-		procStatusPoint("ResidentMemory", float64(stat.ResidentMemory()), dim),
-		procStatusPoint("CPUTime", float64(stat.CPUTime()), dim),
+		procStatusPoint("VirtualMemory", float64(stat.VirtualMemory()), dim, metric.Gauge),
+		procStatusPoint("ResidentMemory", float64(stat.ResidentMemory()), dim, metric.Gauge),
+		procStatusPoint("CPUTime", float64(stat.CPUTime()), dim, metric.CumulativeCounter),
 	}
 
 	if len(cmdOutput) > 0 {
