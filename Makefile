@@ -57,7 +57,9 @@ $(BEATIT): $(BEATIT_SOURCES)
 test: tests
 tests: deps
 	@echo Testing $(FULLERITE)
-	@$(foreach pkg, $(PKGS), go test -cover $(pkg);)
+	@for pkg in $(PKGS); do \
+		go test -cover $$pkg || exit 1;\
+	done
 
 coverage_report: deps
 	@echo Creating a coverage rport for $(FULLERITE)
