@@ -55,7 +55,7 @@ func New(name string) Collector {
 	case "MesosStats":
 		collector = NewMesosStats(channel, DefaultCollectionInterval, collectorLog)
 	default:
-		defaultLog.Error("Cannot create collector", name)
+		defaultLog.Error("Cannot create collector: ", name)
 		return nil
 	}
 	return collector

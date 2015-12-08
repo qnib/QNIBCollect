@@ -10,7 +10,10 @@ import (
 func startCollectors(c config.Config) (collectors []collector.Collector) {
 	log.Info("Starting collectors...")
 	for name, config := range c.Collectors {
-		collectors = append(collectors, startCollector(name, c, config))
+		collectorInst := startCollector(name, c, config)
+		if collectorInst != nil {
+			collectors = append(collectors, collectorInst)
+		}
 	}
 	return collectors
 }
