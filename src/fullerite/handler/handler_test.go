@@ -94,17 +94,18 @@ func TestRecordTimings(t *testing.T) {
 	base.log = l.WithField("testing", "basehandler")
 	base.interval = 2
 
-	minusTwoSec := -1 * 2 * time.Second
-	minusThreeSec := -1 * 3 * time.Second
+	minusFiveSec := -1 * 5 * time.Second
+	minusSixSec := -1 * 6 * time.Second
 	someDur := time.Duration(5)
+	now := time.Now()
 
 	// create a list of emissions in order with some older than 1 second
 	timingsChannel := make(chan emissionTiming)
-	base.emissionTimes.PushBack(emissionTiming{time.Now().Add(minusThreeSec), someDur, 0})
-	base.emissionTimes.PushBack(emissionTiming{time.Now().Add(minusTwoSec), someDur, 0})
+	base.emissionTimes.PushBack(emissionTiming{now.Add(minusSixSec), someDur, 0})
+	base.emissionTimes.PushBack(emissionTiming{now.Add(minusFiveSec), someDur, 0})
 
 	go base.recordEmissions(timingsChannel)
-	timingsChannel <- emissionTiming{time.Now(), someDur, 0}
+	timingsChannel <- emissionTiming{now, someDur, 0}
 
 	assert.Equal(t, 1, base.emissionTimes.Len())
 }
