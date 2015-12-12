@@ -157,7 +157,7 @@ class MemcachedCollector(diamond.collector.Collector):
             for stat in desired:
                 if stat in stats:
                     self.dimensions = {
-                        'memcache_host': alias,
+                        'memcache_host': str(alias),
                     }
                     metric_name = '.'.join(['memcache', stat])
                     # we have it
