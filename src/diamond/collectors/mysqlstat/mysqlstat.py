@@ -414,7 +414,7 @@ class MySQLCollector(diamond.collector.Collector):
                                 'metric_name': 'MySQL_idle_threads',
                                 'metric_value': time,
                                 'dimensions': {
-                                    'user': user,
+                                    'user': str(user),
                                 }
                             }
                     elif user not in self.config['ignore_users'] and time > self.config['query_threshold']:
@@ -422,8 +422,8 @@ class MySQLCollector(diamond.collector.Collector):
                             'metric_name': 'MySQL_long_queries',
                             'metric_value': time,
                             'dimensions': {
-                                'user': user,
-                                'query': query,
+                                'user': str(user),
+                                'query': str(query),
                             }
                         }
             except:
