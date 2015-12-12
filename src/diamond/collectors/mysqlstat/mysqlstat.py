@@ -28,10 +28,12 @@ GRANT PROCESS ON *.* TO 'user'@'hostname' IDENTIFIED BY
 
 """
 
-import diamond.collector
-from diamond.collector import str_to_bool
+import os
 import re
 import time
+
+import diamond.collector
+from diamond.collector import str_to_bool
 
 try:
     import MySQLdb
@@ -78,6 +80,7 @@ class MySQLCollector(diamond.collector.Collector):
         'Innodb_bp_pending_writes_single_page', 'Innodb_bp_size',
         'Innodb_bp_total_alloc', 'Innodb_bp_unzip_lru_len',
         'Innodb_bp_young_hit_rate',
+        'Innodb_rseg_curr_size', 'Innodb_rseg_max_size',
         'Innodb_hash_searches_per_sec',
         'Innodb_io_syncs_per_sec',
         'Innodb_log_io_per_sec',
@@ -99,10 +102,12 @@ class MySQLCollector(diamond.collector.Collector):
         'Innodb_log_pending_checkpoint_writes', 'Innodb_log_pending_log_writes',
         'Innodb_row_queries_inside', 'Innodb_row_queries_queue',
         'Innodb_trx_history_list_length', 'Innodb_trx_total_lock_structs',
-        'Innodb_status_process_time', ]
+        'Innodb_status_process_time',
+        'MySQL_temptable_size',
+        ]
     _IGNORE_KEYS = [
         'Master_Port', 'Master_Server_Id',
-        'Last_Errno', 'Last_IO_Errno', 'Last_SQL_Errno', ]
+        'Last_Errno', 'Last_IO_Errno', 'Last_SQL_Errno', 'Binlog Dump']
 
     innodb_status_keys = {
         'Innodb_bp_total_alloc,Innodb_bp_add_alloc':
@@ -241,6 +246,8 @@ class MySQLCollector(diamond.collector.Collector):
         self.config['master'] = str_to_bool(self.config['master'])
         self.config['slave'] = str_to_bool(self.config['slave'])
         self.config['innodb'] = str_to_bool(self.config['innodb'])
+        self.config['innodb_rseg'] = str_to_bool(self.config['innodb_rseg'])
+        self.config['processlist'] = str_to_bool(self.config['processlist'])
 
         self.db = None
 
@@ -253,6 +260,12 @@ class MySQLCollector(diamond.collector.Collector):
             'slave': 'Collect SHOW SLAVE STATUS',
             'master': 'Collect SHOW MASTER STATUS',
             'innodb': 'Collect SHOW ENGINE INNODB STATUS',
+            'innodb_rseg': 'Collect SELECT * FROM information_schema.innodb_rseg',
+            'ignore_users': 'Skip query stats for these users',
+            'idle_threshold': 'Threshold for identifying a thread as idle',
+            'processlist': 'Collect SHOW PROCESSLIST',
+            'temp_tables': 'Collect temp tables total size on disk according to this regex',
+            'query_threshold': 'Threshold for identifying a query as long-running',
             'hosts': 'List of hosts to collect from. Format is '
             + 'yourusername:yourpassword@host:port/db[/nickname]'
             + 'use db "None" to avoid connecting to a particular db'
@@ -277,6 +290,12 @@ class MySQLCollector(diamond.collector.Collector):
             'slave':    False,
             'master':   False,
             'innodb':   False,
+            'innodb_rseg':  False,
+            'ignore_users': [],
+            'idle_threshold': 30,
+            'processlist':  False,
+            'query_threshold': 10,
+            'temp_tables': None,
         })
         return config
 
@@ -313,6 +332,12 @@ class MySQLCollector(diamond.collector.Collector):
 
     def get_db_innodb_status(self):
         return self.get_db_stats('SHOW ENGINE INNODB STATUS')
+
+    def get_db_innodb_rollback_segment(self):
+        return self.get_db_stats('SELECT * FROM information_schema.innodb_rseg')
+
+    def get_db_processlist(self):
+        return self.get_db_stats('SHOW PROCESSLIST')
 
     def get_stats(self, params):
         metrics = {'status': {}}
@@ -357,6 +382,70 @@ class MySQLCollector(diamond.collector.Collector):
                             pass
             except:
                 self.log.error('MySQLCollector: Couldnt get slave status')
+                pass
+
+        if self.config['innodb_rseg']:
+            metrics['innodb_rseg'] = {}
+            try:
+                rows = self.get_db_innodb_rollback_segment()
+                for row_rseg in rows:
+                    metrics['innodb_rseg']['Innodb_rseg_curr_size'] = float(row_rseg['curr_size'])
+                    metrics['innodb_rseg']['Innodb_rseg_max_size'] = float(row_rseg['max_size'])
+            except:
+                self.log.error('MySQLCollector: Couldnt get InnoDB rollback segment stats')
+                pass
+
+        if self.config['processlist']:
+            metrics['processlist'] = {}
+            try:
+                rows = self.get_db_processlist()
+                for idx, row_processlist in enumerate(rows):
+                    cmd = str(row_processlist['Command'])
+                    if cmd in self._IGNORE_KEYS:
+                        continue
+
+                    query = str(row_processlist['Info'])
+                    user = str(row_processlist['User'])
+                    time = float(row_processlist['Time'])
+
+                    if cmd == "Sleep":
+                        if time > self.config['idle_threshold']:
+                            metrics['processlist'][idx] = {
+                                'metric_name': 'MySQL_idle_threads',
+                                'metric_value': time,
+                                'dimensions': {
+                                    'user': user,
+                                }
+                            }
+                    elif user not in self.config['ignore_users'] and time > self.config['query_threshold']:
+                        metrics['processlist'][idx] = {
+                            'metric_name': 'MySQL_long_queries',
+                            'metric_value': time,
+                            'dimensions': {
+                                'user': user,
+                                'query': query,
+                            }
+                        }
+            except:
+                self.log.error('MySQLCollector: Couldnt get processlist')
+                pass
+
+        if self.config['temp_tables']:
+            file_match = re.compile(self.config['temp_tables'])
+            metrics['temp_tables'] = {}
+            try:
+                tmpdir = self.config.get('tmpdir', False)
+                if tmpdir:
+                    for idx, tmp_file in enumerate(os.listdir(tmpdir)):
+                        if file_match.match(tmp_file):
+                            metrics['temp_tables'][idx] = {
+                                'metric_name': 'MySQL_temptable_size',
+                                'metric_value': float(os.stat(os.path.join(tmpdir, tmp_file)).st_size),
+                            }
+                else:
+                    self.log.error("MySQLCollector: tempdir not defined in config")
+            except:
+                self.log.error('MySQLCollector: Couldnt get temp_table sizes')
                 pass
 
         if self.config['innodb']:
@@ -412,6 +501,12 @@ class MySQLCollector(diamond.collector.Collector):
         for key in metrics:
             for metric_name in metrics[key]:
                 metric_value = metrics[key][metric_name]
+
+                if type(metric_value) is dict:
+                    self.dimensions = metric_value.get('dimensions', {})
+
+                    self.publish(nickname + metric_value['metric_name'], metric_value['metric_value'])
+                    continue
 
                 if type(metric_value) is not float:
                     continue
