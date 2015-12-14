@@ -113,7 +113,7 @@ class CPUCollector(diamond.collector.Collector):
                 cpu = elements[0]
 
                 if cpu == 'cpu':
-                    continue
+                   cpu = 'cpu.total'
                 elif not str_to_bool(self.config['percore']):
                     continue
 
@@ -184,13 +184,15 @@ class CPUCollector(diamond.collector.Collector):
             # Publish Metric Derivative
             for metric_name in metrics.keys():
                 metric_value = metrics[metric_name]
-                metric_name, stat = metric_name.split('.')
-                core = metric_name[3:]
-                metric_name = '.'.join(['cpu', stat])
+                if 'cpu.total' not in metric_name:
+                    metric_name, stat = metric_name.split('.')
+                    core = metric_name[3:]
+                    metric_name = '.'.join(['cpu', stat])
 
-                self.dimensions = {
-                    'core' : str(core),
-                }
+                    self.dimensions = {
+                        'core' : str(core),
+                    }
+                self.log.info("{0} {1} {2}".format(metric_name, metric_value, self.dimensions))
                 self.publish(metric_name, metric_value)
             return True
 
@@ -236,6 +238,29 @@ class CPUCollector(diamond.collector.Collector):
                              self.derivative(metric_name + '.idle',
                                              cpu_time[i].idle,
                                              self.MAX_VALUES['idle']))
+
+                metric_name = 'cpu.total'
+                self.publish(metric_name + '.user',
+                             self.derivative(metric_name + '.user',
+                                             total_time.user,
+                                             self.MAX_VALUES['user'])
+                             / cpu_count)
+                if hasattr(total_time, 'nice'):
+                    self.publish(metric_name + '.nice',
+                                 self.derivative(metric_name + '.nice',
+                                                 total_time.nice,
+                                                 self.MAX_VALUES['nice'])
+                                 / cpu_count)
+                self.publish(metric_name + '.system',
+                             self.derivative(metric_name + '.system',
+                                             total_time.system,
+                                             self.MAX_VALUES['system'])
+                             / cpu_count)
+                self.publish(metric_name + '.idle',
+                             self.derivative(metric_name + '.idle',
+                                             total_time.idle,
+                                             self.MAX_VALUES['idle'])
+                             / cpu_count)
             return True
 
         return None
