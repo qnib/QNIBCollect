@@ -47,18 +47,29 @@ class GearmanCollector(diamond.collector.Collector):
         """
         Collector gearman stats
         """
-        def gearman_ping(gm_admin_client):
-            return gm_admin_client.ping_server()
-
-        def gearman_queued(gm_admin_client):
-            return sum(entry['queued'] 
-                    for entry in gm_admin_client.get_status())
 
         def get_fds(gearman_pid_path):
             with open(gearman_pid_path) as fp:
                 gearman_pid = fp.read().strip()
             proc_path = os.path.join('/proc', gearman_pid, 'fd')
             return len(os.listdir(proc_path))
+
+        def publish_server_stats(gm_admin_client):
+            #  Publish idle/running worker counts
+            #  and no. of tasks queued per task
+            for entry in gm_admin_client.get_status():
+                total = entry['workers']
+                running = entry['running']
+                idle = total-running
+
+                self.dimensions = {'task': entry['task']} # Internally, this dict is cleared on self.publish
+                self.publish('gearman.queued', entry['queued'])
+
+                self.dimensions = {'type': 'running'}
+                self.publish('gearman.workers', running)
+
+                self.dimensions = {'type': 'idle'}
+                self.publish('gearman.workers', idle)
 
         try:
             if gearman is None:
@@ -68,9 +79,10 @@ class GearmanCollector(diamond.collector.Collector):
             # Collect and Publish Metrics
             self.log.debug("Using pid file: %s & gearman endpoint : %s",
                     self.config['gearman_pid_path'], self.config['url'])
+
             gm_admin_client = gearman.GearmanAdminClient([self.config['url']])
-            self.publish('gearman.ping', gearman_ping(gm_admin_client))
-            self.publish('gearman.queued', gearman_queued(gm_admin_client))
+            self.publish('gearman.ping', gm_admin_client.ping_server())
             self.publish('gearman.fds', get_fds(self.config['gearman_pid_path']))
+            publish_server_stats(gm_admin_client)
         except Exception, e:
             self.log.error("GearmanCollector Error: %s", e)
