@@ -507,7 +507,7 @@ class MySQLCollector(diamond.collector.Collector):
 
                 if type(metric_value) is dict:
                     self.dimensions = metric_value.get('dimensions', {})
-                    self.log.info("{0} {1}".format(nickname + metric_value['metric_name'], metric_value['metric_value']))
+
                     self.publish(nickname + metric_value['metric_name'], metric_value['metric_value'])
                     continue
 
@@ -520,10 +520,8 @@ class MySQLCollector(diamond.collector.Collector):
                 if key == 'status':
                     if ('publish' not in self.config
                             or metric_name in self.config['publish']):
-                        self.log.info("{0} {1}".format(nickname + metric_name, metric_value))
                         self.publish(nickname + metric_name, metric_value)
                 else:
-                    self.log.info("{0} {1}".format(nickname + metric_name, metric_value))
                     self.publish(nickname + metric_name, metric_value)
 
     def collect(self):
