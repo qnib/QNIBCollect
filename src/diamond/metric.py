@@ -64,7 +64,7 @@ class Metric(object):
             else:
                 dimensions = dict(
                     (k, str(v)) for k, v in dimensions.iteritems()
-                    if v is not None and isinstance(v, (int, float, str)) and k is not None and isinstance(k, str)
+                    if v is not None and isinstance(v, (int, float, str, unicode)) and k is not None and isinstance(k, str)
                 )
 
         self.dimensions = dimensions

@@ -142,11 +142,12 @@ func (m *MySQLBinlogGrowth) getBinlogSize(binLog string, dataDir string) (size i
 			fileName = path.Join(dataDir, fileName)
 		}
 
-		file_size, err := getFileSize(fileName)
+		fileSize, err := getFileSize(fileName)
 		if err != nil {
 			m.log.Warn(err)
 		}
-		size += file_size
+		size += fileSize
+
 	}
 
 	if scanErr := scanner.Err(); scanErr != nil {

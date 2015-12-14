@@ -164,7 +164,7 @@ class MemcachedCollector(diamond.collector.Collector):
                     if stat in self.GAUGES:
                         self.publish_gauge(metric_name, stats[stat])
                     else:
-                        self.publish_counter(metric_name, stats[stat])
+                        self.publish_cumulative_counter(metric_name, stats[stat])
 
                 else:
 
