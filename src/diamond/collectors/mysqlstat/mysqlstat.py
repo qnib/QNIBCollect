@@ -304,9 +304,12 @@ class MySQLCollector(diamond.collector.Collector):
 
         try:
             cursor.execute(query)
-            return cursor.fetchall()
+            result = cursor.fetchall()
+            cursor.close()
+            return result
         except MySQLError, e:
             self.log.error('MySQLCollector could not get db stats', e)
+            cursor.close()
             return ()
 
     def connect(self, params):
@@ -504,7 +507,7 @@ class MySQLCollector(diamond.collector.Collector):
 
                 if type(metric_value) is dict:
                     self.dimensions = metric_value.get('dimensions', {})
-
+                    self.log.info("{0} {1}".format(nickname + metric_value['metric_name'], metric_value['metric_value']))
                     self.publish(nickname + metric_value['metric_name'], metric_value['metric_value'])
                     continue
 
@@ -517,8 +520,10 @@ class MySQLCollector(diamond.collector.Collector):
                 if key == 'status':
                     if ('publish' not in self.config
                             or metric_name in self.config['publish']):
+                        self.log.info("{0} {1}".format(nickname + metric_name, metric_value))
                         self.publish(nickname + metric_name, metric_value)
                 else:
+                    self.log.info("{0} {1}".format(nickname + metric_name, metric_value))
                     self.publish(nickname + metric_name, metric_value)
 
     def collect(self):
@@ -560,7 +565,8 @@ class MySQLCollector(diamond.collector.Collector):
             except Exception, e:
                 try:
                     self.disconnect()
-                except MySQLdb.ProgrammingError:
+                except MySQLdb.ProgrammingError as ee:
+                    self.log.error('Collection errored for %s %s', nickname, ee)
                     pass
                 self.log.error('Collection failed for %s %s', nickname, e)
                 continue
