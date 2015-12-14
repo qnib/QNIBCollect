@@ -192,7 +192,6 @@ class CPUCollector(diamond.collector.Collector):
                     self.dimensions = {
                         'core' : str(core),
                     }
-                self.log.info("{0} {1} {2}".format(metric_name, metric_value, self.dimensions))
                 self.publish(metric_name, metric_value)
             return True
 
