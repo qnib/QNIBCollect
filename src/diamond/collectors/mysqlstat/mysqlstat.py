@@ -409,21 +409,21 @@ class MySQLCollector(diamond.collector.Collector):
 
                     query = str(row_processlist['Info'])
                     user = str(row_processlist['User'])
-                    time = float(row_processlist['Time'])
+                    running_time = float(row_processlist['Time'])
 
                     if cmd == "Sleep":
-                        if time > self.config['idle_threshold']:
+                        if running_time > self.config['idle_threshold']:
                             metrics['processlist'][idx] = {
                                 'metric_name': 'MySQL_idle_threads',
-                                'metric_value': time,
+                                'metric_value': running_time,
                                 'dimensions': {
                                     'user': str(user),
                                 }
                             }
-                    elif user not in self.config['ignore_users'] and time > self.config['query_threshold']:
+                    elif user not in self.config['ignore_users'] and running_time > self.config['query_threshold']:
                         metrics['processlist'][idx] = {
                             'metric_name': 'MySQL_long_queries',
-                            'metric_value': time,
+                            'metric_value': running_time,
                             'dimensions': {
                                 'user': str(user),
                                 'query': str(query),
