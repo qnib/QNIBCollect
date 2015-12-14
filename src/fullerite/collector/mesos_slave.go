@@ -27,20 +27,20 @@ var (
 	getSlaveMetricsURL = func(m *MesosSlaveStats, ip string) string {
 		return fmt.Sprintf("http://%s:%d/metrics/snapshot", ip, m.snapshotPort)
 	}
-
-	// All mesos metrics are gauges except the ones in this list
-	mesosSlaveCountersList = map[string]int{
-		"slave/executors_terminated":       0,
-		"slave/tasks_failed":               0,
-		"slave/tasks_finished":             0,
-		"slave/tasks_killed":               0,
-		"slave/tasks_lost":                 0,
-		"slave/invalid_framework_messages": 0,
-		"slave/invalid_status_udpates":     0,
-		"slave/valid_framework_messages":   0,
-		"slave/valid_status_udpates":       0,
-	}
 )
+
+// All mesos metrics are gauges except the ones in this list
+var mesosSlaveCumulativeCountersList = map[string]int{
+	"slave/executors_terminated":       0,
+	"slave/tasks_failed":               0,
+	"slave/tasks_finished":             0,
+	"slave/tasks_killed":               0,
+	"slave/tasks_lost":                 0,
+	"slave/invalid_framework_messages": 0,
+	"slave/invalid_status_udpates":     0,
+	"slave/valid_framework_messages":   0,
+	"slave/valid_status_udpates":       0,
+}
 
 // MesosSlaveStats Collector for mesos leader stats.
 type MesosSlaveStats struct {
@@ -96,8 +96,7 @@ func (m *MesosSlaveStats) Collect() {
 // sendMetrics Send to baseCollector channel.
 func (m *MesosSlaveStats) sendMetrics() {
 	for metricName, value := range getSlaveMetrics(m, m.IP) {
-		s := metric.New(metricName)
-		s.Value = value
+		s := m.buildMetric(metricName, value)
 
 		m.Channel() <- s
 	}
@@ -138,7 +137,7 @@ func (m *MesosSlaveStats) getSlaveMetrics(ip string) map[string]float64 {
 func (m *MesosSlaveStats) buildMetric(name string, value float64) metric.Metric {
 	s := metric.New(name)
 	s.Value = value
-	if _, exists := mesosSlaveCountersList[name]; exists {
+	if _, exists := mesosSlaveCumulativeCountersList[name]; exists {
 		s.MetricType = metric.CumulativeCounter
 	}
 	return s
