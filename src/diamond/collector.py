@@ -317,7 +317,6 @@ class Collector(object):
             metric.dimensions or {}
         )
         payloadStr = "%s\n" % json.dumps(payload)
-        return
         success = False
 
         for i in range(FULLERITE_RETRY_COUNT):
