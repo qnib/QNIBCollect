@@ -159,7 +159,7 @@ func getServiceDimensions(container *docker.Container) map[string]string {
 			tmp["instance_name"] = instance
 			break
 		} else if envArray[0] == serviceNameLabel {
-			tmp["service_name"] = envArray[1]
+			tmp["service_name"] = strings.Replace(envArray[1], "\n", "", -1)
 		}
 	}
 	return tmp
