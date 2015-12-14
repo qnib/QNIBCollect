@@ -300,11 +300,10 @@ class MySQLCollector(diamond.collector.Collector):
         return config
 
     def get_db_stats(self, query):
-        cursor = self.db.cursor(cursorclass=MySQLdb.cursors.DictCursor)
-
         try:
-            cursor.execute(query)
-            return cursor.fetchall()
+            with self.db.cursor(cursorclass=MySQLdb.cursors.DictCursor) as cursor:
+                cursor.execute(query)
+                return cursor.fetchall()
         except MySQLError, e:
             self.log.error('MySQLCollector could not get db stats', e)
             return ()
