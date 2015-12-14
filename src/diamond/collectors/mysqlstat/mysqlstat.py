@@ -305,12 +305,12 @@ class MySQLCollector(diamond.collector.Collector):
         try:
             cursor.execute(query)
             result = cursor.fetchall()
-            cursor.close()
             return result
         except MySQLError, e:
             self.log.error('MySQLCollector could not get db stats', e)
-            cursor.close()
             return ()
+        finally:
+            cursor.close()
 
     def connect(self, params):
         try:
