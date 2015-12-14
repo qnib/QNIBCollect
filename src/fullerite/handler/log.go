@@ -1,0 +1,61 @@
+package handler
+
+import (
+	"encoding/json"
+	"fmt"
+	"fullerite/metric"
+
+	l "github.com/Sirupsen/logrus"
+)
+
+// Log type
+type Log struct {
+	BaseHandler
+}
+
+// NewLog returns a new Debug handler.
+func NewLog(
+	channel chan metric.Metric,
+	initialInterval int,
+	initialBufferSize int,
+	log *l.Entry) *Log {
+
+	inst := new(Log)
+	inst.name = "Log"
+
+	inst.interval = initialInterval
+	inst.maxBufferSize = initialBufferSize
+	inst.log = log
+	inst.channel = channel
+
+	return inst
+}
+
+// Configure accepts the different configuration options for the Log handler
+func (h *Log) Configure(configMap map[string]interface{}) {
+	h.configureCommonParams(configMap)
+}
+
+// Run runs the handler main loop
+func (h *Log) Run() {
+	h.run(h.emitMetrics)
+}
+
+func (h *Log) convertToLog(incomingMetric metric.Metric) string {
+	jsonOut, _ := json.Marshal(incomingMetric)
+	return string(jsonOut)
+}
+
+func (h *Log) emitMetrics(metrics []metric.Metric) bool {
+	h.log.Info("Starting to emit ", len(metrics), " metrics")
+
+	if len(metrics) == 0 {
+		h.log.Warn("Skipping send because of an empty payload")
+		return false
+	}
+
+	for _, m := range metrics {
+		h.log.Info(fmt.Sprintf(h.convertToLog(m)))
+	}
+	return true
+}
