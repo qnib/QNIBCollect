@@ -33,7 +33,7 @@ export PATH
 all: clean fmt lint $(FULLERITE) $(BEATIT) test
 
 .PHONY: clean
-clean:
+clean: gom_install
 	@echo Cleaning $(FULLERITE)...
 	@rm -f $(FULLERITE) bin/$(FULLERITE)
 	@rm -f $(BEATIT) bin/$(BEATIT)
@@ -42,7 +42,11 @@ clean:
 # Let's keep the generated file in the repo for ease of development.
 #	@rm -f $(GEN_PROTO_SFX)
 
-deps:
+gom_install:
+	@echo Installing gom...
+	@go get github.com/mattn/gom
+
+deps: gom_install
 	@echo Getting dependencies...
 	@gom install
 
@@ -82,7 +86,7 @@ protobuf: $(PROTO_SFX)
 	@go get -u github.com/golang/protobuf/protoc-gen-go
 	@protoc --go_out=. $(PROTO_SFX)
 
-lint: $(SOURCES)
+lint: deps $(SOURCES)
 	@echo Linting $(FULLERITE) sources...
 	@$(foreach src, $(SOURCES), _vendor/bin/golint $(src);)
 
