@@ -55,7 +55,7 @@ func (h *Log) emitMetrics(metrics []metric.Metric) bool {
 	}
 
 	for _, m := range metrics {
-		if dpString, err := h.convertToLog(m); err == nil {
+		if dpString, err := h.convertToLog(m); err != nil {
 			h.log.Error(fmt.Sprintf("Cannot convert metric %q to JSON: %s", m, err))
 			continue
 		} else {
