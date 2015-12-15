@@ -10,3 +10,4 @@ src/golang.org/*
 *.DS_Store
 .project
 src/fullerite/collector/collector.test
+_vendor/
