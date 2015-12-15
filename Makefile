@@ -33,7 +33,7 @@ export PATH
 all: clean fmt lint $(FULLERITE) $(BEATIT) test
 
 .PHONY: clean
-clean: gom_install
+clean:
 	@echo Cleaning $(FULLERITE)...
 	@rm -f $(FULLERITE) bin/$(FULLERITE)
 	@rm -f $(BEATIT) bin/$(BEATIT)
@@ -72,15 +72,15 @@ coverage_report: deps
 
 
 
-fmt: $(SOURCES)
+fmt: deps $(SOURCES)
 	@$(foreach pkg, $(PKGS), gom fmt $(pkg);)
 
-vet: $(SOURCES)
+vet: deps $(SOURCES)
 	@echo Vetting $(FULLERITE) sources...
 	@$(foreach pkg, $(PKGS), gom vet $(pkg);)
 
 proto: protobuf
-protobuf: $(PROTO_SFX)
+protobuf: deps $(PROTO_SFX)
 	@echo Compiling protobuf
 	@go get -u github.com/golang/protobuf/proto
 	@go get -u github.com/golang/protobuf/protoc-gen-go
@@ -90,7 +90,7 @@ lint: deps $(SOURCES)
 	@echo Linting $(FULLERITE) sources...
 	@$(foreach src, $(SOURCES), _vendor/bin/golint $(src);)
 
-cyclo: $(SOURCES)
+cyclo: deps $(SOURCES)
 	@echo Checking code complexity...
 	@_vendor/bin/gocyclo $(SOURCES)
 
