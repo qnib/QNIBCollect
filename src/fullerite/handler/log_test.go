@@ -35,3 +35,16 @@ func TestLogConfigure(t *testing.T) {
 	assert.Equal(t, 10, h.Interval())
 	assert.Equal(t, 100, h.MaxBufferSize())
 }
+
+func TestConvertToLog(t *testing.T) {
+
+	h := getTestLogHandler(12, 13)
+	m := metric.New("TestMetric")
+
+	dpString, err := h.convertToLog(m)
+	if err != nil {
+		t.Errorf("convertToLog failed to convert %q: err", m, err)
+	}
+
+	assert.Equal(t, "{\"name\":\"TestMetric\",\"type\":\"gauge\",\"value\":0,\"dimensions\":{}}", dpString)
+}

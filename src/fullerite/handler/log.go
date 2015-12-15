@@ -41,9 +41,9 @@ func (h *Log) Run() {
 	h.run(h.emitMetrics)
 }
 
-func (h *Log) convertToLog(incomingMetric metric.Metric) string {
-	jsonOut, _ := json.Marshal(incomingMetric)
-	return string(jsonOut)
+func (h *Log) convertToLog(incomingMetric metric.Metric) (string, error) {
+	jsonOut, err := json.Marshal(incomingMetric)
+	return string(jsonOut), err
 }
 
 func (h *Log) emitMetrics(metrics []metric.Metric) bool {
@@ -55,7 +55,12 @@ func (h *Log) emitMetrics(metrics []metric.Metric) bool {
 	}
 
 	for _, m := range metrics {
-		h.log.Info(fmt.Sprintf(h.convertToLog(m)))
+		if dpString, err := h.convertToLog(m); err == nil {
+			h.log.Error(fmt.Sprintf("Cannot convert metric %q to JSON: %s", m, err))
+			continue
+		} else {
+			h.log.Info(dpString)
+		}
 	}
 	return true
 }
