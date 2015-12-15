@@ -153,15 +153,9 @@ class CPUCollector(diamond.collector.Collector):
                     # Get actual data
                     if (str_to_bool(self.config['normalize'])
                             and cpu == 'total' and ncpus > 0):
-                        metrics[metric_name] = self.derivative(
-                            metric_name,
-                            long(stats[s]),
-                            self.MAX_VALUES[s]) / ncpus
+                        metrics[metric_name] = long(stats[s]) / ncpus
                     else:
-                        metrics[metric_name] = self.derivative(
-                            metric_name,
-                            long(stats[s]),
-                            self.MAX_VALUES[s])
+                        metrics[metric_name] = long(stats[s])
 
             # Check for a bug in xen where the idle time is doubled for guest
             # See https://bugzilla.redhat.com/show_bug.cgi?id=624756
@@ -181,7 +175,6 @@ class CPUCollector(diamond.collector.Collector):
                 else:
                     self.config['xenfix'] = False
 
-            # Publish Metric Derivative
             for metric_name in metrics.keys():
                 metric_value = metrics[metric_name]
                 if 'cpu.total' not in metric_name:
@@ -192,7 +185,7 @@ class CPUCollector(diamond.collector.Collector):
                     self.dimensions = {
                         'core' : str(core),
                     }
-                self.publish(metric_name, metric_value)
+                self.publish_cumulative_counter(metric_name, metric_value)
             return True
 
         else:
@@ -203,63 +196,45 @@ class CPUCollector(diamond.collector.Collector):
 
             cpu_time = psutil.cpu_times(True)
             cpu_count = len(cpu_time)
+            total_time = psutil.cpu_times()
+
             for i in range(0, len(cpu_time)):
                 metric_name = 'cpu'
 
                 self.dimensions = {
                     'core': str(i),
                 }
-                self.publish(metric_name + '.user',
-                             self.derivative(metric_name + '.user',
-                                             cpu_time[i].user,
-                                             self.MAX_VALUES['user']))
+                self.publish_cumulative_counter(metric_name + '.user',
+                                             cpu_time[i].user)
                 if hasattr(cpu_time[i], 'nice'):
                     self.dimensions = {
                         'core': str(i),
                     }
-                    self.publish(metric_name + '.nice',
-                                 self.derivative(metric_name + '.nice',
-                                                 cpu_time[i].nice,
-                                                 self.MAX_VALUES['nice']))
+                    self.publish_cumulative_counter(metric_name + '.nice',
+                                                 cpu_time[i].nice)
 
                 self.dimensions = {
                     'core': str(i),
                 }
-                self.publish(metric_name + '.system',
-                             self.derivative(metric_name + '.system',
-                                             cpu_time[i].system,
-                                             self.MAX_VALUES['system']))
+                self.publish_cumulative_counter(metric_name + '.system',
+                                             cpu_time[i].system)
 
                 self.dimensions = {
                     'core': str(i),
                 }
-                self.publish(metric_name + '.idle',
-                             self.derivative(metric_name + '.idle',
-                                             cpu_time[i].idle,
-                                             self.MAX_VALUES['idle']))
+                self.publish_cumulative_counter(metric_name + '.idle',
+                                             cpu_time[i].idle)
 
-                metric_name = 'cpu.total'
-                self.publish(metric_name + '.user',
-                             self.derivative(metric_name + '.user',
-                                             total_time.user,
-                                             self.MAX_VALUES['user'])
-                             / cpu_count)
-                if hasattr(total_time, 'nice'):
-                    self.publish(metric_name + '.nice',
-                                 self.derivative(metric_name + '.nice',
-                                                 total_time.nice,
-                                                 self.MAX_VALUES['nice'])
-                                 / cpu_count)
-                self.publish(metric_name + '.system',
-                             self.derivative(metric_name + '.system',
-                                             total_time.system,
-                                             self.MAX_VALUES['system'])
-                             / cpu_count)
-                self.publish(metric_name + '.idle',
-                             self.derivative(metric_name + '.idle',
-                                             total_time.idle,
-                                             self.MAX_VALUES['idle'])
-                             / cpu_count)
+            metric_name = 'cpu.total'
+            self.publish_cumulative_counter(metric_name + '.user',
+                                         total_time.user / cpu_count)
+            if hasattr(total_time, 'nice'):
+                self.publish_cumulative_counter(metric_name + '.nice',
+                                             total_time.nice / cpu_count)
+            self.publish_cumulative_counter(metric_name + '.system',
+                                         total_time.system / cpu_count)
+            self.publish_cumulative_counter(metric_name + '.idle',
+                                         total_time.idle / cpu_count)
             return True
 
         return None
