@@ -58,8 +58,8 @@ class GearmanCollector(diamond.collector.Collector):
             #  Publish idle/running worker counts
             #  and no. of tasks queued per task
             for entry in gm_admin_client.get_status():
-                total = entry['workers']
-                running = entry['running']
+                total = entry.get('workers', 0)
+                running = entry.get('running', 0)
                 idle = total-running
 
                 self.dimensions = {'task': entry['task']} # Internally, this dict is cleared on self.publish
