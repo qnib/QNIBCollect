@@ -9,5 +9,6 @@ src/golang.org/*
 *.pyc
 *.DS_Store
 .project
+.vagrant
 src/fullerite/collector/collector.test
 _vendor/
