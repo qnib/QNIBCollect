@@ -114,9 +114,7 @@ class NetworkCollector(diamond.collector.Collector):
                 # Get Metric Name
                 metric_name = '.'.join(['net', s])
                 # Get Metric Value
-                metric_value = self.derivative(metric_name,
-                                               long(v),
-                                               diamond.collector.MAX_COUNTER)
+                metric_value = long(v)
 
                 # Convert rx_bytes and tx_bytes
                 if s == 'rx_bytes' or s == 'tx_bytes':
@@ -128,13 +126,13 @@ class NetworkCollector(diamond.collector.Collector):
                         self.dimensions = {
                             'iface': device
                         }
-                        self.publish(metric_name.replace('bytes', u),
+                        self.publish_cumulative_counter(metric_name.replace('bytes', u),
                                      convertor.get(unit=u), precision=2)
                 else:
                     # Publish Metric Derivative
                     self.dimensions = {
                         'iface': device
                     }
-                    self.publish(metric_name, metric_value)
+                    self.publish_cumulative_counter(metric_name, metric_value)
 
         return None

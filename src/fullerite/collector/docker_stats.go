@@ -122,11 +122,11 @@ func (d DockerStats) getDockerContainerInfo(container *docker.Container) {
 // buildMetrics creates the actual metrics for the given container.
 func (d DockerStats) buildMetrics(container *docker.Container, containerStats *docker.Stats, cpuPercentage float64) []metric.Metric {
 	ret := []metric.Metric{
-		buildDockerMetric("DockerRxBytes", float64(containerStats.Network.RxBytes)),
-		buildDockerMetric("DockerTxBytes", float64(containerStats.Network.TxBytes)),
-		buildDockerMetric("DockerMemoryUsed", float64(containerStats.MemoryStats.Usage)),
-		buildDockerMetric("DockerMemoryLimit", float64(containerStats.MemoryStats.Limit)),
-		buildDockerMetric("DockerCpuPercentage", cpuPercentage),
+		buildDockerMetric("DockerRxBytes", metric.CumulativeCounter, float64(containerStats.Network.RxBytes)),
+		buildDockerMetric("DockerTxBytes", metric.CumulativeCounter, float64(containerStats.Network.TxBytes)),
+		buildDockerMetric("DockerMemoryUsed", metric.Gauge, float64(containerStats.MemoryStats.Usage)),
+		buildDockerMetric("DockerMemoryLimit", metric.Gauge, float64(containerStats.MemoryStats.Limit)),
+		buildDockerMetric("DockerCpuPercentage", metric.Gauge, cpuPercentage),
 	}
 	additionalDimensions := map[string]string{
 		"container_id":   container.ID,
@@ -170,8 +170,9 @@ func getInfoFromMesosTaskID(taskID string) (serviceName, instance string) {
 	return strings.Replace(varArray[0], "--", "_", -1), strings.Replace(varArray[1], "--", "_", -1)
 }
 
-func buildDockerMetric(name string, value float64) (m metric.Metric) {
+func buildDockerMetric(name string, metricType string, value float64) (m metric.Metric) {
 	m = metric.New(name)
+	m.MetricType = metricType
 	m.Value = value
 	m.AddDimension("collector", "DockerStats")
 	return m

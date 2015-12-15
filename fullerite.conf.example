@@ -45,7 +45,7 @@
               "superregion": "norcal-dev",
               "region": "uswest1-dev",
               "ecosystem": "devc",
-              "habitat":"uswest1devc",
+              "habitat":"uswest1devc"
             }
         },
         "SignalFx": {

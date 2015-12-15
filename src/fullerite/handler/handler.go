@@ -37,6 +37,8 @@ func New(name string) Handler {
 		base = NewDatadog(channel, DefaultInterval, DefaultBufferSize, timeout, handlerLog)
 	case "Kairos":
 		base = NewKairos(channel, DefaultInterval, DefaultBufferSize, timeout, handlerLog)
+	case "Log":
+		base = NewLog(channel, DefaultInterval, DefaultBufferSize, handlerLog)
 	default:
 		defaultLog.Error("Cannot create handler ", name)
 		return nil

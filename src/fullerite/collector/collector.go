@@ -54,6 +54,8 @@ func New(name string) Collector {
 		collector = NewCPUInfo(channel, CPUInfoCollectionInterval, collectorLog)
 	case "MesosStats":
 		collector = NewMesosStats(channel, DefaultCollectionInterval, collectorLog)
+	case "MesosSlaveStats":
+		collector = NewMesosSlaveStats(channel, DefaultCollectionInterval, collectorLog)
 	case "MySQLBinlogGrowth":
 		collector = NewMySQLBinlogGrowth(channel, DefaultCollectionInterval, collectorLog)
 	default:

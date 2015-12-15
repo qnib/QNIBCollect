@@ -83,8 +83,8 @@ func TestDockerStatsBuildMetrics(t *testing.T) {
 		"collector":      "DockerStats",
 	}
 	expectedMetrics := []metric.Metric{
-		metric.Metric{"DockerRxBytes", "gauge", 10, expectedDims},
-		metric.Metric{"DockerTxBytes", "gauge", 20, expectedDims},
+		metric.Metric{"DockerRxBytes", "cumcounter", 10, expectedDims},
+		metric.Metric{"DockerTxBytes", "cumcounter", 20, expectedDims},
 		metric.Metric{"DockerMemoryUsed", "gauge", 50, expectedDims},
 		metric.Metric{"DockerMemoryLimit", "gauge", 70, expectedDims},
 		metric.Metric{"DockerCpuPercentage", "gauge", 0.5, expectedDims},

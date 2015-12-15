@@ -1,6 +1,6 @@
 FULLERITE      := fullerite
 BEATIT         := beatit
-VERSION        := 0.1.19
+VERSION        := 0.1.22
 SRCDIR         := src
 HANDLER_DIR    := $(SRCDIR)/fullerite/handler
 PROTO_SFX      := $(HANDLER_DIR)/signalfx.proto
@@ -42,56 +42,57 @@ clean:
 # Let's keep the generated file in the repo for ease of development.
 #	@rm -f $(GEN_PROTO_SFX)
 
-deps:
+gom_install:
+	@echo Installing gom...
+	@go get github.com/mattn/gom
+
+deps: gom_install
 	@echo Getting dependencies...
-	@$(foreach pkg, $(PKGS), go get -t $(pkg);)
+	@gom install
 
 $(FULLERITE): $(SOURCES) deps
 	@echo Building $(FULLERITE)...
-	@go build -o bin/$(FULLERITE) $@
+	@gom build -o bin/$(FULLERITE) $@
 
 $(BEATIT): $(BEATIT_SOURCES)
 	@echo Building $(BEATIT)...
-	@go build -o bin/$(BEATIT) $@
+	@gom build -o bin/$(BEATIT) $@
 
 test: tests
 tests: deps
 	@echo Testing $(FULLERITE)
 	@for pkg in $(PKGS); do \
-		go test -cover $$pkg || exit 1;\
+		gom test -cover $$pkg || exit 1;\
 	done
 
 coverage_report: deps
 	@echo Creating a coverage rport for $(FULLERITE)
-	@$(foreach pkg, $(PKGS), go test -coverprofile=coverage.out -coverpkg=$(subst $(space),$(comma),$(PKGS)) $(pkg);)
-	@go tool cover -html=coverage.out
+	@$(foreach pkg, $(PKGS), gom test -coverprofile=coverage.out -coverpkg=$(subst $(space),$(comma),$(PKGS)) $(pkg);)
+	@gom tool cover -html=coverage.out
 
 
 
-fmt: $(SOURCES)
-	@$(foreach pkg, $(PKGS), go fmt $(pkg);)
+fmt: deps $(SOURCES)
+	@$(foreach pkg, $(PKGS), gom fmt $(pkg);)
 
-vet: $(SOURCES)
+vet: deps $(SOURCES)
 	@echo Vetting $(FULLERITE) sources...
-	@go get -d -u golang.org/x/tools/cmd/vet
-	@$(foreach pkg, $(PKGS), go vet $(pkg);)
+	@$(foreach pkg, $(PKGS), gom vet $(pkg);)
 
 proto: protobuf
-protobuf: $(PROTO_SFX)
+protobuf: deps $(PROTO_SFX)
 	@echo Compiling protobuf
 	@go get -u github.com/golang/protobuf/proto
 	@go get -u github.com/golang/protobuf/protoc-gen-go
 	@protoc --go_out=. $(PROTO_SFX)
 
-lint: $(SOURCES)
+lint: deps $(SOURCES)
 	@echo Linting $(FULLERITE) sources...
-	@go get -u github.com/golang/lint/golint
-	@$(foreach src, $(SOURCES), bin/golint $(src);)
+	@$(foreach src, $(SOURCES), _vendor/bin/golint $(src);)
 
-cyclo: $(SOURCES)
+cyclo: deps $(SOURCES)
 	@echo Checking code complexity...
-	@go get -u github.com/fzipp/gocyclo
-	@bin/gocyclo $(SOURCES)
+	@_vendor/bin/gocyclo $(SOURCES)
 
 pkg: package
 package: clean $(FULLERITE) $(BEATIT)
