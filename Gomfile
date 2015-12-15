@@ -1,0 +1,17 @@
+gom 'github.com/Sirupsen/logrus', :commit => '446d1c146faa8ed3f4218f056fcd165f6bcfda81'
+
+gom 'github.com/alyu/configparser', :commit => '26b2fe18bee125de2a3090d6fadb7e280e63eba6'
+
+gom 'github.com/andygrunwald/megos', :commit => 'd6fb0031a1e9431aac72df5e8c8f28116b05551b'
+gom 'github.com/codegangsta/cli', :commit => 'b5232bb2934f606f9f27a1305f1eea224e8e8b88'
+gom 'github.com/prometheus/procfs'
+gom 'github.com/davecheney/profile', :commit => 'c29d1a1565bca9fbeed5eed0e5d52ba78469a16b'
+gom 'github.com/fsouza/go-dockerclient', :commit => '7177a9e3543b0891a5d91dbf7051e0f71455c8ef'
+gom 'github.com/fzipp/gocyclo', :commit => '6acd4345c835499920e8426c7e4e8d7a34f1bb83'
+gom 'github.com/golang/lint', :commit => '32a87160691b3c96046c0c678fe57c5bef761456'
+gom 'github.com/golang/lint/golint', :commit => '32a87160691b3c96046c0c678fe57c5bef761456'
+gom 'github.com/golang/protobuf/proto', :commit => '68415e7123da32b07eab49c96d2c4d6158360e9b'
+gom 'golang.org/x/tools/go/exact', :commit => '1cdaff4a02c554c9fb39dda0b56241c5f0949d91'
+gom 'golang.org/x/tools/go/gcimporter', :commit => '1cdaff4a02c554c9fb39dda0b56241c5f0949d91'
+gom 'golang.org/x/tools/go/types', :commit => '1cdaff4a02c554c9fb39dda0b56241c5f0949d91'
+gom "github.com/stretchr/testify/assert"
