@@ -96,6 +96,47 @@ func TestDockerStatsBuildMetrics(t *testing.T) {
 	assert.Equal(t, ret, expectedMetrics)
 }
 
+func TestDockerStatsBuildMetricsWithNameAsEnvVariable(t *testing.T) {
+	stats := new(docker.Stats)
+	stats.Network.RxBytes = 10
+	stats.Network.TxBytes = 20
+	stats.MemoryStats.Usage = 50
+	stats.MemoryStats.Limit = 70
+
+	containerJSON := []byte(`
+	{
+		"ID": "test-id",
+		"Name": "test-container",
+		"Config": {
+			"Env": [
+				"SERVICE_NAME=my_service"
+			]
+		}
+	}`)
+	var container *docker.Container
+	err := json.Unmarshal(containerJSON, &container)
+	assert.Equal(t, err, nil)
+
+	expectedDims := map[string]string{
+		"container_id":   "test-id",
+		"container_name": "test-container",
+		"service_name":   "my_service",
+		"collector":      "DockerStats",
+	}
+	expectedMetrics := []metric.Metric{
+		metric.Metric{"DockerRxBytes", "cumcounter", 10, expectedDims},
+		metric.Metric{"DockerTxBytes", "cumcounter", 20, expectedDims},
+		metric.Metric{"DockerMemoryUsed", "gauge", 50, expectedDims},
+		metric.Metric{"DockerMemoryLimit", "gauge", 70, expectedDims},
+		metric.Metric{"DockerCpuPercentage", "gauge", 0.5, expectedDims},
+	}
+
+	d := getSUT()
+	ret := d.buildMetrics(container, stats, 0.5)
+
+	assert.Equal(t, ret, expectedMetrics)
+}
+
 func TestDockerStatsCalculateCPUPercent(t *testing.T) {
 	var previousTotalUsage = uint64(0)
 	var previousSystem = uint64(0)

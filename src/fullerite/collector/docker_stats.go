@@ -13,8 +13,9 @@ import (
 )
 
 const (
-	mesosTaskID = "MESOS_TASK_ID"
-	endpoint    = "unix:///var/run/docker.sock"
+	mesosTaskID      = "MESOS_TASK_ID"
+	endpoint         = "unix:///var/run/docker.sock"
+	serviceNameLabel = "SERVICE_NAME"
 )
 
 // DockerStats collector type.
@@ -157,6 +158,8 @@ func getServiceDimensions(container *docker.Container) map[string]string {
 			tmp["service_name"] = serviceName
 			tmp["instance_name"] = instance
 			break
+		} else if envArray[0] == serviceNameLabel {
+			tmp["service_name"] = strings.Replace(envArray[1], "\n", "", -1)
 		}
 	}
 	return tmp
