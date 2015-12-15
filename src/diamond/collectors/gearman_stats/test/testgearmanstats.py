@@ -48,8 +48,7 @@ class TestGearmanCollector(CollectorTestCase):
         client = Mock()
         ping_server_mock_return = 0.1
         gearman_stats_mock_return = [
-            {"queued": 5},
-            {"queued": 5},
+                {"workers": 10 , "running": 10, "task": "test", "queued": 5},
         ]
 
         gearman_mock.return_value = client
@@ -58,17 +57,11 @@ class TestGearmanCollector(CollectorTestCase):
         
         self.collector.collect()
 
-        metrics = {
-            "gearman_ping": ping_server_mock_return,
-            "gearman_queued": sum(entry['queued'] for entry in gearman_stats_mock_return),
-            "gearman_fds": 3,
-        }
-
-        self.setDocExample(collector=self.collector.__class__.__name__,
-                metrics=metrics,
-                defaultpath=self.collector.config['path'])
-        self.assertPublishedMany(publish_mock, metrics)
-
+        # Dimensions are not tested since Fullerite diamond test suite does not support it.
+        self.assertPublished(publish_mock, 'gearman.ping', ping_server_mock_return)
+        self.assertPublished(publish_mock, 'gearman.fds', 3)
+        self.assertPublished(publish_mock, 'gearman.workers', 10, 2)
+        self.assertPublished(publish_mock, 'gearman.queued', 5)
     
     @run_only_if_gearman_is_available
     @patch('gearman.GearmanAdminClient')
@@ -83,7 +76,7 @@ class TestGearmanCollector(CollectorTestCase):
         self.collector.collect()
 
         self.assertPublishedMany(publish_mock, {})
-    
+
 
 #######################################################################
 if __name__ == "__main__":
