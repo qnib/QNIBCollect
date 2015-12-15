@@ -25,6 +25,45 @@ var (
 	getMetricsURL = func(ip string) string { return fmt.Sprintf("http://%s:5050/metrics/snapshot", ip) }
 )
 
+// All mesos metrics are gauges except the ones in this list
+var mesosMasterCumulativeCountersList = map[string]int{
+	"master.slave_registrations":                    0,
+	"master.slave_removals":                         0,
+	"master.slave_reregistrations":                  0,
+	"master.slave_shutdowns_scheduled":              0,
+	"master.slave_shutdowns_cancelled":              0,
+	"master.slave_shutdowns_completed":              0,
+	"master.tasks_error":                            0,
+	"master.tasks_failed":                           0,
+	"master.tasks_finished":                         0,
+	"master.tasks_killed":                           0,
+	"master.tasks_lost":                             0,
+	"master.invalid_framework_to_executor_messages": 0,
+	"master.invalid_status_update_acknowledgements": 0,
+	"master.invalid_status_updates":                 0,
+	"master.dropped_messages":                       0,
+	"master.messages_authenticate":                  0,
+	"master.messages_deactivate_framework":          0,
+	"master.messages_exited_executor":               0,
+	"master.messages_framework_to_executor":         0,
+	"master.messages_kill_task":                     0,
+	"master.messages_launch_tasks":                  0,
+	"master.messages_reconcile_tasks":               0,
+	"master.messages_register_framework":            0,
+	"master.messages_register_slave":                0,
+	"master.messages_reregister_framework":          0,
+	"master.messages_reregister_slave":              0,
+	"master.messages_resource_request":              0,
+	"master.messages_revive_offers":                 0,
+	"master.messages_status_udpate":                 0,
+	"master.messages_status_update_acknowledgement": 0,
+	"master.messages_unregister_framework":          0,
+	"master.messages_unregister_slave":              0,
+	"master.valid_framework_to_executor_messages":   0,
+	"master.valid_status_update_acknowledgements":   0,
+	"master.valid_status_updates":                   0,
+}
+
 const (
 	cacheTimeout = 5 * time.Minute
 	getTimeout   = 10 * time.Second
@@ -127,6 +166,10 @@ func (m *MesosStats) getMetrics(ip string) map[string]float64 {
 func buildMetric(k string, v float64) metric.Metric {
 	m := metric.New(k)
 	m.Value = v
+
+	if _, exists := mesosMasterCumulativeCountersList[k]; exists {
+		m.MetricType = metric.CumulativeCounter
+	}
 
 	return m
 }

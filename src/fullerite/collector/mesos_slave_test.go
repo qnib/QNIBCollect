@@ -158,8 +158,8 @@ func TestMesosSlaveStatsBuildMetric(t *testing.T) {
 		name       string
 		MetricType string
 	}{
-		{"slave/mem_used", metric.Gauge},
-		{"slave/tasks_killed", metric.CumulativeCounter},
+		{"slave.mem_used", metric.Gauge},
+		{"slave.tasks_killed", metric.CumulativeCounter},
 	}
 
 	for _, test := range tests {

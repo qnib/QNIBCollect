@@ -31,15 +31,15 @@ var (
 
 // All mesos metrics are gauges except the ones in this list
 var mesosSlaveCumulativeCountersList = map[string]int{
-	"slave/executors_terminated":       0,
-	"slave/tasks_failed":               0,
-	"slave/tasks_finished":             0,
-	"slave/tasks_killed":               0,
-	"slave/tasks_lost":                 0,
-	"slave/invalid_framework_messages": 0,
-	"slave/invalid_status_udpates":     0,
-	"slave/valid_framework_messages":   0,
-	"slave/valid_status_udpates":       0,
+	"slave.executors_terminated":       0,
+	"slave.tasks_failed":               0,
+	"slave.tasks_finished":             0,
+	"slave.tasks_killed":               0,
+	"slave.tasks_lost":                 0,
+	"slave.invalid_framework_messages": 0,
+	"slave.invalid_status_udpates":     0,
+	"slave.valid_framework_messages":   0,
+	"slave.valid_status_udpates":       0,
 }
 
 // MesosSlaveStats Collector for mesos leader stats.

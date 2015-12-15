@@ -230,3 +230,11 @@ func TestMesosStatsBuildMetric(t *testing.T) {
 
 	assert.Equal(t, expected, actual)
 }
+
+func TestMesosStatsBuildMetricCumCounter(t *testing.T) {
+	expected := metric.Metric{"master.slave_reregistrations", metric.CumulativeCounter, 0.1, map[string]string{}}
+
+	actual := buildMetric("master.slave_reregistrations", 0.1)
+
+	assert.Equal(t, expected, actual)
+}
