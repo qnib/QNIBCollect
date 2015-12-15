@@ -196,6 +196,8 @@ class CPUCollector(diamond.collector.Collector):
 
             cpu_time = psutil.cpu_times(True)
             cpu_count = len(cpu_time)
+            total_time = psutil.cpu_times()
+
             for i in range(0, len(cpu_time)):
                 metric_name = 'cpu'
 
