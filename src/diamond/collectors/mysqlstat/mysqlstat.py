@@ -508,10 +508,7 @@ class MySQLCollector(diamond.collector.Collector):
                 if type(metric_value) is dict:
                     self.dimensions = metric_value.get('dimensions', {})
 
-                    if metric_name in self._GAUGE_KEYS:
-                        self.publish(nickname + metric_value['metric_name'], metric_value['metric_value'])
-                    else:
-                        self.publish_cumulative_counter(nickname + metric_value['metric_name'], metric_value['metric_value'])
+                    self.publish(nickname + metric_value['metric_name'], metric_value['metric_value'])
                     continue
 
                 if type(metric_value) is not float:
