@@ -225,16 +225,16 @@ class CPUCollector(diamond.collector.Collector):
                 self.publish_cumulative_counter(metric_name + '.idle',
                                              cpu_time[i].idle)
 
-                metric_name = 'cpu.total'
-                self.publish_cumulative_counter(metric_name + '.user',
-                                             total_time.user / cpu_count)
-                if hasattr(total_time, 'nice'):
-                    self.publish_cumulative_counter(metric_name + '.nice',
-                                                 total_time.nice / cpu_count)
-                self.publish_cumulative_counter(metric_name + '.system',
-                                             total_time.system / cpu_count)
-                self.publish_cumulative_counter(metric_name + '.idle',
-                                             total_time.idle / cpu_count)
+            metric_name = 'cpu.total'
+            self.publish_cumulative_counter(metric_name + '.user',
+                                         total_time.user / cpu_count)
+            if hasattr(total_time, 'nice'):
+                self.publish_cumulative_counter(metric_name + '.nice',
+                                             total_time.nice / cpu_count)
+            self.publish_cumulative_counter(metric_name + '.system',
+                                         total_time.system / cpu_count)
+            self.publish_cumulative_counter(metric_name + '.idle',
+                                         total_time.idle / cpu_count)
             return True
 
         return None
