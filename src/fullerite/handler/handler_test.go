@@ -29,6 +29,7 @@ func TestNewHandler(t *testing.T) {
 		assert.Equal(t, 0, len(h.DefaultDimensions()))
 		assert.Equal(t, DefaultBufferSize, h.MaxBufferSize())
 		assert.Equal(t, DefaultInterval, h.Interval())
+		assert.Equal(t, time.Duration(DefaultBufferFlushInterval)*time.Second, h.BufferFlushInterval())
 		assert.Equal(t, name+"Handler", fmt.Sprintf("%s", h), "String() should append Handler to the name for "+name)
 
 		// Test Set* functions
@@ -108,6 +109,34 @@ func TestRecordTimings(t *testing.T) {
 	timingsChannel <- emissionTiming{now, someDur, 0}
 
 	assert.Equal(t, 1, base.emissionTimes.Len())
+}
+
+func TestHandlerRunFlushInterval(t *testing.T) {
+	base := BaseHandler{}
+	base.log = l.WithField("testing", "basehandler")
+	base.interval = 5
+	base.maxBufferSize = 2
+	base.bufferFlushInterval = time.Duration(1) * time.Second
+	base.channel = make(chan metric.Metric)
+
+	emitCalled := false
+	emitFunc := func(metrics []metric.Metric) bool {
+		assert.Equal(t, 1, len(metrics))
+		emitCalled = true
+		return true
+	}
+
+	// now we are waiting for some metrics
+	go base.run(emitFunc)
+
+	base.channel <- metric.New("testMetric")
+	time.Sleep(2 * time.Second)
+	assert.True(t, emitCalled)
+	assert.Equal(t, 1, base.emissionTimes.Len())
+	assert.Equal(t, uint64(1), base.metricsSent)
+	assert.Equal(t, uint64(0), base.metricsDropped)
+	assert.Equal(t, uint64(1), base.totalEmissions)
+	assertEmpty(t, base.channel)
 }
 
 func TestHandlerRun(t *testing.T) {

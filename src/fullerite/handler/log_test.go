@@ -2,21 +2,25 @@ package handler
 
 import (
 	"fullerite/metric"
+
+	"time"
+
 	l "github.com/Sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
-func getTestLogHandler(interval int, buffsize int) *Log {
+func getTestLogHandler(interval int, buffsize int, bufferflushinterval int) *Log {
 	testChannel := make(chan metric.Metric)
 	testLog := l.WithField("testing", "log_handler")
+	flush := time.Duration(bufferflushinterval) * time.Second
 
-	return NewLog(testChannel, interval, buffsize, testLog)
+	return NewLog(testChannel, interval, buffsize, flush, testLog)
 }
 
 func TestLogConfigureEmptyConfig(t *testing.T) {
 	config := make(map[string]interface{})
-	h := getTestLogHandler(12, 13)
+	h := getTestLogHandler(12, 13, 1)
 	h.Configure(config)
 
 	assert.Equal(t, 12, h.Interval())
@@ -29,7 +33,7 @@ func TestLogConfigure(t *testing.T) {
 		"max_buffer_size": "100",
 	}
 
-	h := getTestLogHandler(12, 13)
+	h := getTestLogHandler(12, 13, 1)
 	h.Configure(config)
 
 	assert.Equal(t, 10, h.Interval())
@@ -38,7 +42,7 @@ func TestLogConfigure(t *testing.T) {
 
 func TestConvertToLog(t *testing.T) {
 
-	h := getTestLogHandler(12, 13)
+	h := getTestLogHandler(12, 13, 1)
 	m := metric.New("TestMetric")
 
 	dpString, err := h.convertToLog(m)

@@ -1,9 +1,11 @@
 package handler
 
 import (
+	"fullerite/metric"
+
 	"encoding/json"
 	"fmt"
-	"fullerite/metric"
+	"time"
 
 	l "github.com/Sirupsen/logrus"
 )
@@ -18,6 +20,7 @@ func NewLog(
 	channel chan metric.Metric,
 	initialInterval int,
 	initialBufferSize int,
+	initialBufferFlushInterval time.Duration,
 	log *l.Entry) *Log {
 
 	inst := new(Log)
@@ -25,6 +28,7 @@ func NewLog(
 
 	inst.interval = initialInterval
 	inst.maxBufferSize = initialBufferSize
+	inst.bufferFlushInterval = initialBufferFlushInterval
 	inst.log = log
 	inst.channel = channel
 

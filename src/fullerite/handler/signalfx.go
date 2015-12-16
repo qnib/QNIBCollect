@@ -25,6 +25,7 @@ func NewSignalFx(
 	channel chan metric.Metric,
 	initialInterval int,
 	initialBufferSize int,
+	initialBufferFlushInterval time.Duration,
 	initialTimeout time.Duration,
 	log *l.Entry) *SignalFx {
 
@@ -33,6 +34,7 @@ func NewSignalFx(
 
 	inst.interval = initialInterval
 	inst.maxBufferSize = initialBufferSize
+	inst.bufferFlushInterval = initialBufferFlushInterval
 	inst.timeout = initialTimeout
 	inst.log = log
 	inst.channel = channel
@@ -71,7 +73,9 @@ func (s *SignalFx) convertToProto(incomingMetric metric.Metric) *DataPoint {
 	outname := s.Prefix() + incomingMetric.Name
 	value := incomingMetric.Value
 
+	now := time.Now().UnixNano() / int64(time.Millisecond)
 	datapoint := new(DataPoint)
+	datapoint.Timestamp = &now
 	datapoint.Metric = &outname
 	datapoint.Value = &Datum{
 		DoubleValue: &value,
