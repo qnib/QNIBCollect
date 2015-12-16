@@ -268,7 +268,6 @@ func (base *BaseHandler) run(emitFunc func([]metric.Metric) bool) {
 		select {
 		case incomingMetric := <-base.Channel():
 			base.log.Debug(base.name, " metric: ", incomingMetric)
-			base.log.Info("Calling from Reg $$$$$$$$$$$$$$$")
 			metrics = append(metrics, incomingMetric)
 
 			emitIntervalPassed := time.Since(lastEmission).Seconds() >= float64(base.interval)
@@ -282,7 +281,6 @@ func (base *BaseHandler) run(emitFunc func([]metric.Metric) bool) {
 			}
 		case <-flusher:
 			if len(metrics) > 0 {
-				base.log.Info("Calling from Flush ###########")
 				go base.emitAndTime(metrics, emitFunc, emissionResults)
 				// will get copied into this call, meaning it's ok to clear it
 				metrics = make([]metric.Metric, 0, base.maxBufferSize)
