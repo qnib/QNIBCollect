@@ -9,9 +9,14 @@ If you want to add new external dependency to fullerite, please make sure it is 
 Do not forget to specify `TAG` or `commit_id` of external git repository.  More information about
 `Gomfile` can be found from https://github.com/mattn/gom.
 
-## Ensure code is formatted and linted.
+## Ensure code is formatted, tested and passes golint.
 
-Running `make` should do that out of box.
+Running `make` should do all of the above. If you see any failures or errors while running `make`,
+please fix them before opening pull request.
+
+## Building and compiling
+
+Running `make` should build fullerite binary and place it in `bin` directory.
 
 ## Building package fails or gom install fails
 
