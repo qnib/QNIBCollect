@@ -250,12 +250,12 @@ func (base *BaseHandler) run(emitFunc func([]metric.Metric) bool) {
 				go base.emitAndTime(metrics, emitFunc, emissionResults)
 
 				// will get copied into this call, meaning it's ok to clear it
-				metrics = nil
+				metrics = make([]metric.Metric, 0, base.maxBufferSize)
 			}
 		case <-flusher:
 			if len(metrics) > 0 {
 				go base.emitAndTime(metrics, emitFunc, emissionResults)
-				metrics = nil
+				metrics = make([]metric.Metric, 0, base.maxBufferSize)
 			}
 		}
 	}
