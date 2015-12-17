@@ -261,8 +261,7 @@ func (base *BaseHandler) run(emitFunc func([]metric.Metric) bool) {
 	lastEmission := time.Now()
 	emissionResults := make(chan emissionTiming)
 
-	flusher := make(chan bool)
-	defer close(flusher)
+	flusher := time.NewTicker(base.bufferFlushInterval).C
 
 	go base.recordEmissions(emissionResults)
 	for {
@@ -276,18 +275,15 @@ func (base *BaseHandler) run(emitFunc func([]metric.Metric) bool) {
 
 			if emitIntervalPassed || bufferSizeLimitReached {
 				go base.emitAndTime(metrics, emitFunc, emissionResults)
-				// will get copied into this call, meaning it's ok to clear it
-				metrics = make([]metric.Metric, 0, base.maxBufferSize)
 
-				if bufferSizeLimitReached {
-					go base.bufferFlusher(flusher)
-				}
+				// will get copied into this call, meaning it's ok to clear it
+				metrics = nil
 				lastEmission = time.Now()
 			}
 		case <-flusher:
 			if len(metrics) > 0 {
 				go base.emitAndTime(metrics, emitFunc, emissionResults)
-				metrics = make([]metric.Metric, 0, base.maxBufferSize)
+				metrics = nil
 			}
 		}
 	}
@@ -316,12 +312,6 @@ func (base *BaseHandler) recordEmissions(timingsChannel chan emissionTiming) {
 		}
 		base.log.Debug("We removed ", len(toRemove), " entries and now have ", base.emissionTimes.Len())
 	}
-}
-
-//Manages flushing buffer after configurable interval
-func (base *BaseHandler) bufferFlusher(flusherChannel chan bool) {
-	time.Sleep(base.bufferFlushInterval)
-	flusherChannel <- true
 }
 
 func (base *BaseHandler) emitAndTime(
