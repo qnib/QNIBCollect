@@ -75,4 +75,4 @@ Running `make` should build the fullerite go binary and place it in the `bin` di
 If you have vendored external dependencies in `src/` directory or `pkg` directory from old build configuration, you should
 delete `src/github.com`, `pkg` and `src/golang.org` before running `gom install` or attempting to build the package.
 
-Aforementioned directories are arifacts of old build configuration before we moved to using `gom` for managing dependencies.
+Aforementioned directories are artifacts of old build configuration before we moved to using `gom` for managing dependencies.
