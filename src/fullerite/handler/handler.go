@@ -234,7 +234,8 @@ func (base *BaseHandler) run(emitFunc func([]metric.Metric) bool) {
 
 	emissionResults := make(chan emissionTiming)
 
-	flusher := time.NewTicker(time.Duration(base.interval) * time.Second).C
+	ticker := time.NewTicker(time.Duration(base.interval) * time.Second)
+	flusher := ticker.C
 
 	go base.recordEmissions(emissionResults)
 	for {
@@ -258,6 +259,7 @@ func (base *BaseHandler) run(emitFunc func([]metric.Metric) bool) {
 			}
 		}
 	}
+	ticker.Stop()
 }
 
 // manages the rolling window of emissions
