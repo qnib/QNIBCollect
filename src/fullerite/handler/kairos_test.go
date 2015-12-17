@@ -16,18 +16,17 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func getTestKairosHandler(interval, buffsize, bufferflushinterval, timeoutsec int) *Kairos {
+func getTestKairosHandler(interval, buffsize, timeoutsec int) *Kairos {
 	testChannel := make(chan metric.Metric)
 	testLog := l.WithField("testing", "kairos_handler")
 	timeout := time.Duration(timeoutsec) * time.Second
-	flush := time.Duration(bufferflushinterval) * time.Second
 
-	return NewKairos(testChannel, interval, buffsize, flush, timeout, testLog)
+	return NewKairos(testChannel, interval, buffsize, timeout, testLog)
 }
 
 func TestKairosConfigureEmptyConfig(t *testing.T) {
 	config := make(map[string]interface{})
-	k := getTestKairosHandler(12, 13, 14, 14)
+	k := getTestKairosHandler(12, 13, 14)
 	k.Configure(config)
 
 	assert.Equal(t, 12, k.Interval())
@@ -42,7 +41,7 @@ func TestKairosConfigure(t *testing.T) {
 		"port":            "10101",
 	}
 
-	k := getTestKairosHandler(12, 13, 14, 14)
+	k := getTestKairosHandler(12, 13, 14)
 	k.Configure(config)
 
 	assert.Equal(t, 10, k.Interval())
@@ -60,7 +59,7 @@ func TestKairosConfigureIntPort(t *testing.T) {
 		"port":            10101,
 	}
 
-	k := getTestKairosHandler(12, 13, 14, 14)
+	k := getTestKairosHandler(12, 13, 14)
 	k.Configure(config)
 
 	assert.Equal(t, 10, k.Interval())
@@ -98,7 +97,7 @@ func TestKairosRun(t *testing.T) {
 		"port":            urlParts[1],
 	}
 
-	k := getTestKairosHandler(12, 13, 14, 14)
+	k := getTestKairosHandler(12, 13, 14)
 	k.Configure(config)
 
 	go k.Run()
@@ -115,7 +114,7 @@ func TestKairosRun(t *testing.T) {
 }
 
 func TestKairosServerErrorParse(t *testing.T) {
-	k := getTestKairosHandler(12, 13, 14, 14)
+	k := getTestKairosHandler(12, 13, 14)
 
 	metrics := make([]metric.Metric, 0, 3)
 

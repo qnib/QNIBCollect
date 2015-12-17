@@ -29,7 +29,6 @@ func TestNewHandler(t *testing.T) {
 		assert.Equal(t, 0, len(h.DefaultDimensions()))
 		assert.Equal(t, DefaultBufferSize, h.MaxBufferSize())
 		assert.Equal(t, DefaultInterval, h.Interval())
-		assert.Equal(t, time.Duration(DefaultBufferFlushInterval)*time.Second, h.BufferFlushInterval())
 		assert.Equal(t, name+"Handler", fmt.Sprintf("%s", h), "String() should append Handler to the name for "+name)
 
 		// Test Set* functions
@@ -116,9 +115,8 @@ func TestRecordTimings(t *testing.T) {
 func TestHandlerRunFlushInterval(t *testing.T) {
 	base := BaseHandler{}
 	base.log = l.WithField("testing", "basehandler")
-	base.interval = 5
+	base.interval = 1
 	base.maxBufferSize = 2
-	base.bufferFlushInterval = time.Duration(1) * time.Second
 	base.channel = make(chan metric.Metric)
 
 	emitCalledOnce := false
@@ -145,7 +143,7 @@ func TestHandlerRunFlushInterval(t *testing.T) {
 	assert.True(t, emitCalledOnce)
 	assert.True(t, emitCalledTwice)
 	assert.False(t, emitCalledThrice)
-	assert.Equal(t, 2, base.emissionTimes.Len())
+	assert.Equal(t, 1, base.emissionTimes.Len())
 	assert.Equal(t, uint64(3), base.metricsSent)
 	assert.Equal(t, uint64(0), base.metricsDropped)
 	assert.Equal(t, uint64(2), base.totalEmissions)
@@ -158,7 +156,6 @@ func TestHandlerRun(t *testing.T) {
 	base.log = l.WithField("testing", "basehandler")
 	base.interval = 1
 	base.maxBufferSize = 1
-	base.bufferFlushInterval = time.Duration(3) * time.Second
 	base.channel = make(chan metric.Metric)
 
 	emitCalled := false

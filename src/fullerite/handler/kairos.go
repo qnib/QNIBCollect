@@ -37,7 +37,6 @@ func NewKairos(
 	channel chan metric.Metric,
 	initialInterval int,
 	initialBufferSize int,
-	initialBufferFlushInterval time.Duration,
 	initialTimeout time.Duration,
 	log *l.Entry) *Kairos {
 
@@ -46,7 +45,6 @@ func NewKairos(
 
 	inst.interval = initialInterval
 	inst.maxBufferSize = initialBufferSize
-	inst.bufferFlushInterval = initialBufferFlushInterval
 	inst.timeout = initialTimeout
 	inst.log = log
 	inst.channel = channel

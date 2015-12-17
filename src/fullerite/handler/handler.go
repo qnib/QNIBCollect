@@ -13,12 +13,9 @@ import (
 
 // Some sane values to default things to
 const (
-	DefaultBufferSize          = 100
-	DefaultBufferFlushInterval = 1
-	DefaultInterval            = 10
-	DefaultTimeoutSec          = 2
-
-	MaxInt = 1<<32 - 1
+	DefaultBufferSize = 100
+	DefaultInterval   = 10
+	DefaultTimeoutSec = 2
 )
 
 var defaultLog = l.WithFields(l.Fields{"app": "fullerite", "pkg": "handler"})
@@ -30,19 +27,18 @@ func New(name string) Handler {
 	channel := make(chan metric.Metric)
 	handlerLog := defaultLog.WithFields(l.Fields{"handler": name})
 	timeout := time.Duration(DefaultTimeoutSec * time.Second)
-	defaultBufferFlushInterval := time.Duration(DefaultBufferFlushInterval) * time.Second
 
 	switch name {
 	case "Graphite":
-		base = NewGraphite(channel, DefaultInterval, DefaultBufferSize, defaultBufferFlushInterval, timeout, handlerLog)
+		base = NewGraphite(channel, DefaultInterval, DefaultBufferSize, timeout, handlerLog)
 	case "SignalFx":
-		base = NewSignalFx(channel, DefaultInterval, DefaultBufferSize, defaultBufferFlushInterval, timeout, handlerLog)
+		base = NewSignalFx(channel, DefaultInterval, DefaultBufferSize, timeout, handlerLog)
 	case "Datadog":
-		base = NewDatadog(channel, DefaultInterval, DefaultBufferSize, defaultBufferFlushInterval, timeout, handlerLog)
+		base = NewDatadog(channel, DefaultInterval, DefaultBufferSize, timeout, handlerLog)
 	case "Kairos":
-		base = NewKairos(channel, DefaultInterval, DefaultBufferSize, defaultBufferFlushInterval, timeout, handlerLog)
+		base = NewKairos(channel, DefaultInterval, DefaultBufferSize, timeout, handlerLog)
 	case "Log":
-		base = NewLog(channel, DefaultInterval, DefaultBufferSize, defaultBufferFlushInterval, handlerLog)
+		base = NewLog(channel, DefaultInterval, DefaultBufferSize, handlerLog)
 	default:
 		defaultLog.Error("Cannot create handler ", name)
 		return nil
@@ -81,8 +77,6 @@ type Handler interface {
 	Interval() int
 	SetInterval(int)
 
-	BufferFlushInterval() time.Duration
-
 	MaxBufferSize() int
 	SetMaxBufferSize(int)
 
@@ -107,10 +101,9 @@ type BaseHandler struct {
 	defaultDimensions map[string]string
 	log               *l.Entry
 
-	interval            int
-	bufferFlushInterval time.Duration
-	maxBufferSize       int
-	timeout             time.Duration
+	interval      int
+	maxBufferSize int
+	timeout       time.Duration
 
 	// for tracking
 	emissionTimes  list.List
@@ -127,11 +120,6 @@ func (base *BaseHandler) SetMaxBufferSize(size int) {
 // SetInterval : set the interval
 func (base *BaseHandler) SetInterval(val int) {
 	base.interval = val
-}
-
-// SetBufferFlushInterval : set the buffer flush interval
-func (base *BaseHandler) SetBufferFlushInterval(val int) {
-	base.bufferFlushInterval = time.Duration(val) * time.Second
 }
 
 // SetPrefix : any prefix that should be applied to the metrics name as they're sent
@@ -161,11 +149,6 @@ func (base BaseHandler) Name() string {
 // MaxBufferSize : the maximum number of metrics that should be buffered before sending
 func (base BaseHandler) MaxBufferSize() int {
 	return base.maxBufferSize
-}
-
-// BufferFlushInterval : the maximum interval of time to wait before flushing buffer
-func (base BaseHandler) BufferFlushInterval() time.Duration {
-	return base.bufferFlushInterval
 }
 
 // Prefix : the prefix (with punctuation) to use on each emitted metric
@@ -235,15 +218,6 @@ func (base *BaseHandler) configureCommonParams(configMap map[string]interface{})
 		base.maxBufferSize = config.GetAsInt(asInterface, DefaultBufferSize)
 	}
 
-	if asInterface, exists := configMap["buffer_flush_interval"]; exists {
-		bufferFlushInterval := config.GetAsInt(asInterface, DefaultBufferFlushInterval)
-		if bufferFlushInterval > 0 {
-			base.bufferFlushInterval = time.Duration(bufferFlushInterval) * time.Second
-		} else {
-			base.bufferFlushInterval = time.Duration(MaxInt) * time.Second
-		}
-	}
-
 	if asInterface, exists := configMap["interval"]; exists {
 		base.interval = config.GetAsInt(asInterface, DefaultInterval)
 	}
@@ -258,10 +232,9 @@ func (base *BaseHandler) configureCommonParams(configMap map[string]interface{})
 func (base *BaseHandler) run(emitFunc func([]metric.Metric) bool) {
 	metrics := make([]metric.Metric, 0, base.maxBufferSize)
 
-	lastEmission := time.Now()
 	emissionResults := make(chan emissionTiming)
 
-	flusher := time.NewTicker(base.bufferFlushInterval).C
+	flusher := time.NewTicker(time.Duration(base.interval) * time.Second).C
 
 	go base.recordEmissions(emissionResults)
 	for {
@@ -270,15 +243,13 @@ func (base *BaseHandler) run(emitFunc func([]metric.Metric) bool) {
 			base.log.Debug(base.name, " metric: ", incomingMetric)
 			metrics = append(metrics, incomingMetric)
 
-			emitIntervalPassed := time.Since(lastEmission).Seconds() >= float64(base.interval)
 			bufferSizeLimitReached := len(metrics) >= base.maxBufferSize
 
-			if emitIntervalPassed || bufferSizeLimitReached {
+			if bufferSizeLimitReached {
 				go base.emitAndTime(metrics, emitFunc, emissionResults)
 
 				// will get copied into this call, meaning it's ok to clear it
 				metrics = nil
-				lastEmission = time.Now()
 			}
 		case <-flusher:
 			if len(metrics) > 0 {

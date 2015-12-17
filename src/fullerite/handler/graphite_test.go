@@ -10,18 +10,17 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func getTestGraphiteHandler(interval, buffsize, bufferflushinterval, timeoutsec int) *Graphite {
+func getTestGraphiteHandler(interval, buffsize, timeoutsec int) *Graphite {
 	testChannel := make(chan metric.Metric)
 	testLog := l.WithField("testing", "graphite_handler")
 	timeout := time.Duration(timeoutsec) * time.Second
-	flush := time.Duration(bufferflushinterval) * time.Second
 
-	return NewGraphite(testChannel, interval, buffsize, flush, timeout, testLog)
+	return NewGraphite(testChannel, interval, buffsize, timeout, testLog)
 }
 
 func TestGraphiteConfigureEmptyConfig(t *testing.T) {
 	config := make(map[string]interface{})
-	g := getTestGraphiteHandler(12, 13, 14, 14)
+	g := getTestGraphiteHandler(12, 13, 14)
 	g.Configure(config)
 
 	assert.Equal(t, 12, g.Interval())
@@ -36,7 +35,7 @@ func TestGraphiteConfigure(t *testing.T) {
 		"port":            "10101",
 	}
 
-	g := getTestGraphiteHandler(12, 13, 14, 14)
+	g := getTestGraphiteHandler(12, 13, 14)
 	g.Configure(config)
 
 	assert.Equal(t, 10, g.Interval())
@@ -54,7 +53,7 @@ func TestGraphiteConfigureIntPort(t *testing.T) {
 		"port":            10101,
 	}
 
-	g := getTestGraphiteHandler(12, 13, 14, 14)
+	g := getTestGraphiteHandler(12, 13, 14)
 	g.Configure(config)
 
 	assert.Equal(t, 10, g.Interval())

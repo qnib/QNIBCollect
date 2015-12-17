@@ -14,19 +14,18 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func getTestSignalfxHandler(interval, buffsize, bufferflushinterval, timeoutsec int) *SignalFx {
+func getTestSignalfxHandler(interval, buffsize, timeoutsec int) *SignalFx {
 	testChannel := make(chan metric.Metric)
 	testLog := l.WithField("testing", "signalfx_handler")
 	timeout := time.Duration(timeoutsec) * time.Second
-	flush := time.Duration(bufferflushinterval) * time.Second
 
-	return NewSignalFx(testChannel, interval, buffsize, flush, timeout, testLog)
+	return NewSignalFx(testChannel, interval, buffsize, timeout, testLog)
 }
 
 func TestSignalfxConfigureEmptyConfig(t *testing.T) {
 	config := make(map[string]interface{})
 
-	s := getTestSignalfxHandler(12, 13, 14, 14)
+	s := getTestSignalfxHandler(12, 13, 14)
 	s.Configure(config)
 
 	assert.Equal(t, 12, s.Interval())
@@ -42,7 +41,7 @@ func TestSignalfxConfigure(t *testing.T) {
 		"endpoint":        "signalfx.server",
 	}
 
-	s := getTestSignalfxHandler(40, 50, 60, 60)
+	s := getTestSignalfxHandler(40, 50, 60)
 	s.Configure(config)
 
 	assert.Equal(t, 10, s.Interval())
@@ -78,7 +77,7 @@ func TestSignalFxRun(t *testing.T) {
 		"endpoint":        ts.URL,
 	}
 
-	s := getTestSignalfxHandler(12, 12, 12, 12)
+	s := getTestSignalfxHandler(12, 12, 12)
 	s.Configure(config)
 
 	go s.Run()
