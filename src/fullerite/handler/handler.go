@@ -261,8 +261,8 @@ func (base *BaseHandler) run(emitFunc func([]metric.Metric) bool) {
 	lastEmission := time.Now()
 	emissionResults := make(chan emissionTiming)
 	flusher := make(chan bool)
+	defer close(flusher)
 
-	go base.bufferFlusher(flusher)
 	go base.recordEmissions(emissionResults)
 	for {
 		select {
@@ -277,12 +277,15 @@ func (base *BaseHandler) run(emitFunc func([]metric.Metric) bool) {
 				go base.emitAndTime(metrics, emitFunc, emissionResults)
 				// will get copied into this call, meaning it's ok to clear it
 				metrics = make([]metric.Metric, 0, base.maxBufferSize)
+
+				if bufferSizeLimitReached {
+					go base.bufferFlusher(flusher)
+				}
 				lastEmission = time.Now()
 			}
 		case <-flusher:
 			if len(metrics) > 0 {
 				go base.emitAndTime(metrics, emitFunc, emissionResults)
-				// will get copied into this call, meaning it's ok to clear it
 				metrics = make([]metric.Metric, 0, base.maxBufferSize)
 			}
 		}
@@ -318,7 +321,6 @@ func (base *BaseHandler) recordEmissions(timingsChannel chan emissionTiming) {
 func (base *BaseHandler) bufferFlusher(flusherChannel chan bool) {
 	for {
 		time.Sleep(base.bufferFlushInterval)
-		base.log.Debug("Flushing buffer")
 		flusherChannel <- true
 	}
 }

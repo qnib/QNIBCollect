@@ -89,5 +89,7 @@ func TestSignalFxRun(t *testing.T) {
 	select {
 	case <-wait:
 		// noop
+	case <-time.After(2 * time.Second):
+		t.Fatal("Failed to post and handle after 2 seconds")
 	}
 }
