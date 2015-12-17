@@ -237,7 +237,7 @@ func (base *BaseHandler) configureCommonParams(configMap map[string]interface{})
 
 	if asInterface, exists := configMap["buffer_flush_interval"]; exists {
 		bufferFlushInterval := config.GetAsInt(asInterface, DefaultBufferFlushInterval)
-		if bufferFlushInterval <= 0 {
+		if bufferFlushInterval > 0 {
 			base.bufferFlushInterval = time.Duration(bufferFlushInterval) * time.Second
 		} else {
 			base.bufferFlushInterval = time.Duration(MaxInt) * time.Second
@@ -260,6 +260,7 @@ func (base *BaseHandler) run(emitFunc func([]metric.Metric) bool) {
 
 	lastEmission := time.Now()
 	emissionResults := make(chan emissionTiming)
+
 	flusher := make(chan bool)
 	defer close(flusher)
 
@@ -319,10 +320,8 @@ func (base *BaseHandler) recordEmissions(timingsChannel chan emissionTiming) {
 
 //Manages flushing buffer after configurable interval
 func (base *BaseHandler) bufferFlusher(flusherChannel chan bool) {
-	for {
-		time.Sleep(base.bufferFlushInterval)
-		flusherChannel <- true
-	}
+	time.Sleep(base.bufferFlushInterval)
+	flusherChannel <- true
 }
 
 func (base *BaseHandler) emitAndTime(
@@ -341,7 +340,7 @@ func (base *BaseHandler) emitAndTime(
 		duration:    emissionDuration,
 		metricsSent: numMetrics,
 	}
-	base.log.Debug(
+	base.log.Info(
 		fmt.Sprintf("POST of %d metrics to %s took %f seconds",
 			numMetrics,
 			base.name,
