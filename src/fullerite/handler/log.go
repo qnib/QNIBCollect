@@ -1,9 +1,10 @@
 package handler
 
 import (
+	"fullerite/metric"
+
 	"encoding/json"
 	"fmt"
-	"fullerite/metric"
 
 	l "github.com/Sirupsen/logrus"
 )

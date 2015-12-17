@@ -87,6 +87,7 @@ func TestEmissionAndRecord(t *testing.T) {
 	}
 
 	assert.True(t, emitCalled)
+	callbackChannel = nil
 }
 
 func TestRecordTimings(t *testing.T) {
@@ -108,6 +109,46 @@ func TestRecordTimings(t *testing.T) {
 	timingsChannel <- emissionTiming{now, someDur, 0}
 
 	assert.Equal(t, 1, base.emissionTimes.Len())
+	timingsChannel = nil
+}
+
+func TestHandlerRunFlushInterval(t *testing.T) {
+	base := BaseHandler{}
+	base.log = l.WithField("testing", "basehandler")
+	base.interval = 1
+	base.maxBufferSize = 2
+	base.channel = make(chan metric.Metric)
+
+	emitCalledOnce := false
+	emitCalledTwice := false
+	emitCalledThrice := false
+	emitFunc := func(metrics []metric.Metric) bool {
+		if emitCalledOnce && !emitCalledTwice {
+			assert.Equal(t, 1, len(metrics))
+			emitCalledTwice = true
+		} else {
+			assert.Equal(t, 2, len(metrics))
+			emitCalledOnce = true
+		}
+		return true
+	}
+
+	// now we are waiting for some metrics
+	go base.run(emitFunc)
+
+	base.channel <- metric.New("testMetric")
+	base.channel <- metric.New("testMetric1")
+	base.channel <- metric.New("testMetric2")
+	time.Sleep(2 * time.Second)
+	assert.True(t, emitCalledOnce)
+	assert.True(t, emitCalledTwice)
+	assert.False(t, emitCalledThrice)
+	assert.Equal(t, 1, base.emissionTimes.Len())
+	assert.Equal(t, uint64(3), base.metricsSent)
+	assert.Equal(t, uint64(0), base.metricsDropped)
+	assert.Equal(t, uint64(2), base.totalEmissions)
+	assertEmpty(t, base.channel)
+	base.channel = nil
 }
 
 func TestHandlerRun(t *testing.T) {
@@ -135,6 +176,7 @@ func TestHandlerRun(t *testing.T) {
 	assert.Equal(t, uint64(0), base.metricsDropped)
 	assert.Equal(t, uint64(1), base.totalEmissions)
 	assertEmpty(t, base.channel)
+	base.channel = nil
 }
 
 func TestInternalMetrics(t *testing.T) {

@@ -71,7 +71,9 @@ func (s *SignalFx) convertToProto(incomingMetric metric.Metric) *DataPoint {
 	outname := s.Prefix() + incomingMetric.Name
 	value := incomingMetric.Value
 
+	now := time.Now().UnixNano() / int64(time.Millisecond)
 	datapoint := new(DataPoint)
+	datapoint.Timestamp = &now
 	datapoint.Metric = &outname
 	datapoint.Value = &Datum{
 		DoubleValue: &value,

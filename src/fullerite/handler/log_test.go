@@ -2,6 +2,7 @@ package handler
 
 import (
 	"fullerite/metric"
+
 	l "github.com/Sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"testing"

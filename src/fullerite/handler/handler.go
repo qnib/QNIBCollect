@@ -14,8 +14,8 @@ import (
 // Some sane values to default things to
 const (
 	DefaultBufferSize = 100
-	DefaultTimeoutSec = 2
 	DefaultInterval   = 10
+	DefaultTimeoutSec = 2
 )
 
 var defaultLog = l.WithFields(l.Fields{"app": "fullerite", "pkg": "handler"})
@@ -232,24 +232,34 @@ func (base *BaseHandler) configureCommonParams(configMap map[string]interface{})
 func (base *BaseHandler) run(emitFunc func([]metric.Metric) bool) {
 	metrics := make([]metric.Metric, 0, base.maxBufferSize)
 
-	lastEmission := time.Now()
-
 	emissionResults := make(chan emissionTiming)
+
+	ticker := time.NewTicker(time.Duration(base.interval) * time.Second)
+	flusher := ticker.C
+
 	go base.recordEmissions(emissionResults)
-	for incomingMetric := range base.Channel() {
-		base.log.Debug(base.name, " metric: ", incomingMetric)
-		metrics = append(metrics, incomingMetric)
+	for {
+		select {
+		case incomingMetric := <-base.Channel():
+			base.log.Debug(base.name, " metric: ", incomingMetric)
+			metrics = append(metrics, incomingMetric)
 
-		emitIntervalPassed := time.Since(lastEmission).Seconds() >= float64(base.interval)
-		bufferSizeLimitReached := len(metrics) >= base.maxBufferSize
+			bufferSizeLimitReached := len(metrics) >= base.maxBufferSize
 
-		if emitIntervalPassed || bufferSizeLimitReached {
-			go base.emitAndTime(metrics, emitFunc, emissionResults)
-			// will get copied into this call, meaning it's ok to clear it
-			metrics = make([]metric.Metric, 0, base.maxBufferSize)
-			lastEmission = time.Now()
+			if bufferSizeLimitReached {
+				go base.emitAndTime(metrics, emitFunc, emissionResults)
+
+				// will get copied into this call, meaning it's ok to clear it
+				metrics = nil
+			}
+		case <-flusher:
+			if len(metrics) > 0 {
+				go base.emitAndTime(metrics, emitFunc, emissionResults)
+				metrics = nil
+			}
 		}
 	}
+	ticker.Stop()
 }
 
 // manages the rolling window of emissions
