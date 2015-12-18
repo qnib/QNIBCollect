@@ -126,8 +126,8 @@ else ifeq ($(OS),CentOS)
 		--version $(VERSION) \
 		--description "metrics collector" \
 		--depends python \
-		--rpm-user "fullerite" \
-		--rpm-group "fullerite" \
+		--rpm-user "fuller" \
+		--rpm-group "fuller" \
                 --before-install "rpm/before_install.sh" \
 		--before-remove "rpm/before_rm.sh" \
 		-C build . \
