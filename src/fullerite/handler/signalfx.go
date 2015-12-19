@@ -2,6 +2,7 @@ package handler
 
 import (
 	"fullerite/metric"
+	"io"
 
 	"bytes"
 	"io/ioutil"
@@ -18,6 +19,7 @@ type SignalFx struct {
 	BaseHandler
 	endpoint  string
 	authToken string
+	client    *http.Client
 }
 
 // NewSignalFx returns a new SignalFx handler.
@@ -36,6 +38,7 @@ func NewSignalFx(
 	inst.timeout = initialTimeout
 	inst.log = log
 	inst.channel = channel
+	inst.setupHTTPClient()
 
 	return inst
 }
@@ -143,20 +146,17 @@ func (s *SignalFx) emitMetrics(metrics []metric.Metric) bool {
 	req.Header.Set("X-SF-TOKEN", s.authToken)
 	req.Header.Set("Content-Type", "application/x-protobuf")
 
-	transport := http.Transport{
-		Dial: s.dialTimeout,
+	rsp, err := s.client.Do(req)
+	if rsp != nil {
+		defer discardResponseBody(rsp.Body)
 	}
-	client := &http.Client{
-		Transport: &transport,
-	}
-	rsp, err := client.Do(req)
+
 	if err != nil {
 		s.log.Error("Failed to complete POST ", err)
 		return false
 	}
 
-	defer rsp.Body.Close()
-	if rsp.Status != "200 OK" {
+	if rsp.StatusCode != 200 {
 		body, _ := ioutil.ReadAll(rsp.Body)
 		s.log.Error("Failed to post to signalfx @", s.endpoint,
 			" status was ", rsp.Status,
@@ -169,6 +169,24 @@ func (s *SignalFx) emitMetrics(metrics []metric.Metric) bool {
 	return true
 }
 
+func (s *SignalFx) setupHTTPClient() {
+	transport := http.Transport{
+		Dial: (&net.Dialer{
+			Timeout:   s.timeout,
+			KeepAlive: time.Minute,
+		}).Dial,
+	}
+
+	s.client = &http.Client{
+		Transport: &transport,
+	}
+}
+
 func (s *SignalFx) dialTimeout(network, addr string) (net.Conn, error) {
 	return net.DialTimeout(network, addr, s.timeout)
+}
+
+func discardResponseBody(body io.ReadCloser) {
+	io.Copy(ioutil.Discard, body)
+	body.Close()
 }
