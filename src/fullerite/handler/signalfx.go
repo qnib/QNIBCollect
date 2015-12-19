@@ -5,7 +5,6 @@ import (
 	"fullerite/util"
 
 	"bytes"
-	"net"
 	"time"
 
 	l "github.com/Sirupsen/logrus"
@@ -37,7 +36,7 @@ func NewSignalFx(
 	inst.log = log
 	inst.channel = channel
 
-	httpAliveClient = new(util.HTTPAlive)
+	httpAliveClient := new(util.HTTPAlive)
 	httpAliveClient.Configure(inst.timeout)
 	inst.httpClient = httpAliveClient
 
@@ -139,12 +138,12 @@ func (s *SignalFx) emitMetrics(metrics []metric.Metric) bool {
 		return false
 	}
 
-	httpClient.SetHeader(map[string]string{
+	s.httpClient.SetHeader(map[string]string{
 		"X-SF-TOKEN":   s.authToken,
 		"Content-Type": "application/x-protobuf",
 	})
 
-	rsp, err := httpClient.MakeRequest("POST", s.endpoint, bytes.NewBuffer(serialized))
+	rsp, err := s.httpClient.MakeRequest("POST", s.endpoint, bytes.NewBuffer(serialized))
 
 	if err != nil {
 		s.log.Error("Failed to make request ", err,
@@ -162,8 +161,4 @@ func (s *SignalFx) emitMetrics(metrics []metric.Metric) bool {
 
 	s.log.Info("Successfully sent ", len(datapoints), " datapoints to SignalFx")
 	return true
-}
-
-func (s *SignalFx) dialTimeout(network, addr string) (net.Conn, error) {
-	return net.DialTimeout(network, addr, s.timeout)
 }

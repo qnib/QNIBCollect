@@ -17,9 +17,9 @@ type HTTPAlive struct {
 
 // HTTPAliveResponse returns a response
 type HTTPAliveResponse struct {
-	StatusCode  string
-	Body        []byte
-	ContentType string
+	StatusCode int
+	Body       []byte
+	Header     http.Header
 }
 
 // Configure the http connection
@@ -42,8 +42,8 @@ func (connection *HTTPAlive) SetHeader(header map[string]string) {
 }
 
 // MakeRequest make a new http request
-func (connection *HTTPAlive) MakeRequest(string method,
-	string uri, body io.Reader) (*HTTPAliveResponse, error) {
+func (connection *HTTPAlive) MakeRequest(method string,
+	uri string, body io.Reader) (*HTTPAliveResponse, error) {
 
 	defer connection.resetCustomHeader()
 	req, err := http.NewRequest(method, uri, body)
@@ -76,10 +76,10 @@ func (connection *HTTPAlive) submitRequest(req *http.Request) (*HTTPAliveRespons
 		return nil, err
 	}
 
-	httpAliveResponse = new(HTTPAliveResponse)
+	httpAliveResponse := new(HTTPAliveResponse)
 	httpAliveResponse.Body = body
 	httpAliveResponse.StatusCode = rsp.StatusCode
-	httpAliveResponse.ContentType = rsp.ContentType
+	httpAliveResponse.Header = rsp.Header
 	return httpAliveResponse, nil
 }
 
