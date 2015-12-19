@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -70,5 +71,22 @@ func TestStartCollectorsMixedConfig(t *testing.T) {
 
 	for _, c := range collectors {
 		assert.Equal(t, c.Name(), "Test", "Only create valid collectors")
+	}
+}
+
+func TestStartCollectorTooLong(t *testing.T) {
+	logrus.SetLevel(logrus.ErrorLevel)
+	c := make(map[string]interface{})
+	c["interval"] = 1
+	collector := startCollector("Test", config.Config{}, c)
+
+	select {
+	case m := <-collector.Channel():
+		assert.Equal(t, 1.0, m.Value)
+		assert.Equal(t, "fullerite.collection_time_exceeded", m.Name)
+		assert.Equal(t, "1", m.Dimensions["interval"])
+		return
+	case <-time.After(3 * time.Second):
+		t.Fail()
 	}
 }

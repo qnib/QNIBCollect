@@ -4,6 +4,7 @@ import (
 	"fullerite/metric"
 
 	"math/rand"
+	"time"
 
 	l "github.com/Sirupsen/logrus"
 )
@@ -50,4 +51,5 @@ func (t Test) Collect() {
 	metric.AddDimension("testing", "yes")
 	t.Channel() <- metric
 	t.log.Debug(metric)
+	time.Sleep(2 * time.Second)
 }
