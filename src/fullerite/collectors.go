@@ -52,25 +52,31 @@ func runCollector(collector collector.Collector) {
 	terminateChannel := make(chan os.Signal, 1)
 	signal.Notify(terminateChannel, syscall.SIGHUP)
 
+	go func() {
+		for {
+			select {
+			case <-terminateChannel:
+				go func() {
+					if !collector.LongRunning() {
+						defer recoverKilledCollector(collector)
+						panic("Collector took too long to run")
+					}
+				}()
+			}
+		}
+	}()
+
 	for {
 		select {
-		case <-terminateChannel:
-			if !collector.LongRunning() {
-				defer recoverKilledCollector(collector)
-				panic("Collector took too long to run")
-			}
 		case <-collect:
-			countdownTimer := time.AfterFunc(collectionDeadline,
-				func() {
-					syscall.Kill(syscall.Getpid(), syscall.SIGHUP)
-				},
-			)
+			countdownTimer := time.AfterFunc(collectionDeadline*time.Second, func() {
+				syscall.Kill(syscall.Getpid(), syscall.SIGHUP)
+			})
 			collector.Collect()
 			countdownTimer.Stop()
 		}
 	}
 	ticker.Stop()
-
 }
 
 func readFromCollectors(collectors []collector.Collector, metrics chan metric.Metric) {
@@ -87,11 +93,10 @@ func readFromCollector(collector collector.Collector, metrics chan metric.Metric
 
 func recoverKilledCollector(collector collector.Collector) {
 	if r := recover(); r != nil {
-		log.Error(fmt.Sprintf("%s collector took too long to run, killed!", collector.Name()))
+		log.Error(fmt.Sprintf("%s collector took too long to run, reporting incident!", collector.Name()))
 		metric := metric.New("fullerite.collection_time_exceeded")
 		metric.Value = 1
 		metric.AddDimension("interval", fmt.Sprintf("%d", collector.Interval()))
 		collector.Channel() <- metric
-		runCollector(collector)
 	}
 }

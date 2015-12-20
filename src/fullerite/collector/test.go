@@ -49,7 +49,7 @@ func (t Test) Collect() {
 	metric := metric.New(t.metricName)
 	metric.Value = t.generator()
 	metric.AddDimension("testing", "yes")
+	time.Sleep(3 * time.Second)
 	t.Channel() <- metric
 	t.log.Debug(metric)
-	time.Sleep(2 * time.Second)
 }

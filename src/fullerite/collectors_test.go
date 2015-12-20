@@ -86,7 +86,7 @@ func TestStartCollectorTooLong(t *testing.T) {
 		assert.Equal(t, "fullerite.collection_time_exceeded", m.Name)
 		assert.Equal(t, "1", m.Dimensions["interval"])
 		return
-	case <-time.After(3 * time.Second):
+	case <-time.After(5 * time.Second):
 		t.Fail()
 	}
 }
