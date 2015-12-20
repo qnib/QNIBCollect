@@ -42,13 +42,10 @@ clean:
 # Let's keep the generated file in the repo for ease of development.
 #	@rm -f $(GEN_PROTO_SFX)
 
-gom_install:
-	@echo Installing gom...
-	@go get github.com/mattn/gom
-
-deps: gom_install
+deps:
 	@echo Getting dependencies...
-	@gom install
+	@go get github.com/mattn/gom
+	@gom install > /dev/null
 
 $(FULLERITE): $(SOURCES) deps
 	@echo Building $(FULLERITE)...
