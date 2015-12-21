@@ -68,7 +68,7 @@ class NginxCollector(diamond.collector.Collector):
                 l = l.rstrip('\r\n')
                 if activeConnectionsRE.match(l):
                     self.publish_gauge(
-                        'active_connections',
+                        'nginx.active_connections',
                         int(activeConnectionsRE.match(l).group('conn')))
                 elif totalConnectionsRE.match(l):
                     m = totalConnectionsRE.match(l)
