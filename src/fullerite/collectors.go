@@ -52,19 +52,6 @@ func runCollector(collector collector.Collector) {
 
 	staggerValue := 1
 	collectionDeadline := time.Duration(collector.Interval() + staggerValue)
-	terminateChannel := make(chan bool)
-
-	go func() {
-		for {
-			select {
-			case <-terminateChannel:
-				go func() {
-					defer recoverCollector(collector)
-					panic("Collector took too long to run")
-				}()
-			}
-		}
-	}()
 
 	for {
 		select {
@@ -72,7 +59,7 @@ func runCollector(collector collector.Collector) {
 			collector.Collect()
 		case <-collect:
 			countdownTimer := time.AfterFunc(collectionDeadline*time.Second, func() {
-				terminateChannel <- true
+				reportCollector(collector)
 			})
 			collector.Collect()
 			countdownTimer.Stop()
@@ -93,12 +80,10 @@ func readFromCollector(collector collector.Collector, metrics chan metric.Metric
 	}
 }
 
-func recoverCollector(collector collector.Collector) {
-	if r := recover(); r != nil {
-		log.Error(fmt.Sprintf("%s collector took too long to run, reporting incident!", collector.Name()))
-		metric := metric.New("fullerite.collection_time_exceeded")
-		metric.Value = 1
-		metric.AddDimension("interval", fmt.Sprintf("%d", collector.Interval()))
-		collector.Channel() <- metric
-	}
+func reportCollector(collector collector.Collector) {
+	log.Error(fmt.Sprintf("%s collector took too long to run, reporting incident!", collector.Name()))
+	metric := metric.New("fullerite.collection_time_exceeded")
+	metric.Value = 1
+	metric.AddDimension("interval", fmt.Sprintf("%d", collector.Interval()))
+	collector.Channel() <- metric
 }
