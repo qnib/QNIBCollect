@@ -215,7 +215,7 @@ class TCPCollector(diamond.collector.Collector):
             'path':             'tcp',
             'allowed_names':    'ListenOverflows, ListenDrops, TCPLoss, '
             + 'TCPTimeouts, TCPFastRetrans, TCPLostRetransmit, '
-            + 'TCPForwardRetrans, TCPSlowStartRetrans, CurrEstab, '
+            + 'TCPForwardRetrans, TCPSlowStartRetrans, CurrEstab, MaxConn, '
             + 'TCPAbortOnMemory, TCPBacklogDrop, AttemptFails, '
             + 'EstabResets, InErrs, ActiveOpens, PassiveOpens, RetransSegs',
         })
@@ -277,4 +277,4 @@ class TCPCollector(diamond.collector.Collector):
                 self.publish_gauge(metric_name, value, 0)
             else:
                 metric_name = '.'.join(['tcp', metric_name])
-                self.publish_counter(metric_name, value, 0)
+                self.publish_cumulative_counter(metric_name, value)
