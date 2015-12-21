@@ -40,29 +40,24 @@ func startCollector(name string, globalConfig config.Config, instanceConfig map[
 func runCollector(collector collector.Collector) {
 	log.Info("Running ", collector)
 
-	var listen <-chan time.Time
-	var collect <-chan time.Time
-
 	ticker := time.NewTicker(time.Duration(collector.Interval()) * time.Second)
-	if collector.CollectorType() == "listener" {
-		listen = ticker.C
-	} else {
-		collect = ticker.C
-	}
+	collect := ticker.C
 
 	staggerValue := 1
 	collectionDeadline := time.Duration(collector.Interval() + staggerValue)
 
 	for {
 		select {
-		case <-listen:
-			collector.Collect()
 		case <-collect:
-			countdownTimer := time.AfterFunc(collectionDeadline*time.Second, func() {
-				reportCollector(collector)
-			})
-			collector.Collect()
-			countdownTimer.Stop()
+			if collector.CollectorType() == "listener" {
+				collector.Collect()
+			} else {
+				countdownTimer := time.AfterFunc(collectionDeadline*time.Second, func() {
+					reportCollector(collector)
+				})
+				collector.Collect()
+				countdownTimer.Stop()
+			}
 		}
 	}
 	ticker.Stop()
