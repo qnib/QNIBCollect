@@ -265,11 +265,16 @@ class HAProxyCollector(diamond.collector.Collector):
                 self.dimensions = {
                     'proxy_name': proxy_name,
                     'server_name': server_name,
-                    'check_status': check_status,
-                    'check_code': check_code,
-                    'status': status,
-                    'last_chk': last_chk,
                 }
+                if check_status:
+                    self.dimensions.update({'check_status': check_status})
+                if check_code:
+                    self.dimensions.update({'check_code': check_code})
+                if status:
+                    self.dimensions.update({'status': status})
+                if last_chk:
+                    self.dimensions.update({'last_chk': last_chk})
+
                 metric_name = '.'.join(['haproxy', headings[index]])
                 if section_name:
                     self.dimensions['section_server'] = section_name
