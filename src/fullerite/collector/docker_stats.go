@@ -4,6 +4,7 @@ import (
 	"fullerite/config"
 	"fullerite/metric"
 
+	"regexp"
 	"strings"
 	"time"
 
@@ -26,12 +27,21 @@ type DockerStats struct {
 	previousCPUValues map[string]*CPUValues
 	dockerClient      *docker.Client
 	statsTimeout      int
+	compiledRegex     map[string]*Regex
 }
 
 // CPUValues struct contains the last cpu-usage values in order to compute properly the current values.
 // (see calculateCPUPercent() for more details)
 type CPUValues struct {
 	totCPU, systemCPU uint64
+}
+
+// Regex struct contains the info used to get the user specific dimensions from the docker env variables
+// tag: is the environmental variable you want to get the value from
+// regex: is the reg exp used to extract the value from the env var
+type Regex struct {
+	tag   string
+	regex *regexp.Regexp
 }
 
 // NewDockerStats creates a new DockerStats collector.
@@ -45,18 +55,31 @@ func NewDockerStats(channel chan metric.Metric, initialInterval int, log *l.Entr
 	d.name = "DockerStats"
 	d.previousCPUValues = make(map[string]*CPUValues)
 	d.dockerClient, _ = docker.NewClient(endpoint)
+	d.compiledRegex = make(map[string]*Regex)
 
 	return d
 }
 
 // Configure takes a dictionary of values with which the handler can configure itself.
 func (d *DockerStats) Configure(configMap map[string]interface{}) {
-	d.configureCommonParams(configMap)
 	if timeout, exists := configMap["dockerStatsTimeout"]; exists {
 		d.statsTimeout = min(config.GetAsInt(timeout, d.interval), d.interval)
 	} else {
 		d.statsTimeout = d.interval
 	}
+	if generatedDimensions, exists := configMap["generatedDimensions"]; exists {
+		for dimension, generator := range generatedDimensions.(map[string]interface{}) {
+			for key, regx := range config.GetAsMap(generator) {
+				re, err := regexp.Compile(regx)
+				if err != nil {
+					d.log.Warn("Failed to compile regex: ", regx, err)
+				} else {
+					d.compiledRegex[dimension] = &Regex{regex: re, tag: key}
+				}
+			}
+		}
+	}
+	d.configureCommonParams(configMap)
 }
 
 // Collect iterates on all the docker containers alive and, if possible, collects the correspondent
@@ -133,7 +156,7 @@ func (d DockerStats) buildMetrics(container *docker.Container, containerStats *d
 		"container_name": strings.TrimPrefix(container.Name, "/"),
 	}
 	metric.AddToAll(&ret, additionalDimensions)
-	metric.AddToAll(&ret, getServiceDimensions(container))
+	metric.AddToAll(&ret, d.extractDimensions(container))
 
 	return ret
 }
@@ -145,29 +168,25 @@ func (d DockerStats) sendMetrics(metrics []metric.Metric) {
 	}
 }
 
-// Function that extracts the service and instance name from mesos id in order to add them as dimensions
-// in these metrics.
-func getServiceDimensions(container *docker.Container) map[string]string {
+// Function that extracts additional dimensions from the docker environmental variables set up by the user
+// in the configuration file.
+func (d DockerStats) extractDimensions(container *docker.Container) map[string]string {
 	envVars := container.Config.Env
+	ret := map[string]string{}
 
-	tmp := make(map[string]string)
-	for _, envVariable := range envVars {
-		envArray := strings.Split(envVariable, "=")
-		if envArray[0] == mesosTaskID {
-			serviceName, instance := getInfoFromMesosTaskID(envArray[1])
-			tmp["service_name"] = serviceName
-			tmp["instance_name"] = instance
-			break
-		} else if envArray[0] == serviceNameLabel {
-			tmp["service_name"] = strings.Replace(envArray[1], "\n", "", -1)
+	for dimension, r := range d.compiledRegex {
+		for _, envVariable := range envVars {
+			envArray := strings.Split(envVariable, "=")
+			if r.tag == envArray[0] {
+				subMatch := r.regex.FindStringSubmatch(envArray[1])
+				if len(subMatch) > 0 {
+					ret[dimension] = strings.Replace(subMatch[len(subMatch)-1], "--", "_", -1)
+				}
+			}
 		}
 	}
-	return tmp
-}
-
-func getInfoFromMesosTaskID(taskID string) (serviceName, instance string) {
-	varArray := strings.Split(taskID, ".")
-	return strings.Replace(varArray[0], "--", "_", -1), strings.Replace(varArray[1], "--", "_", -1)
+	d.log.Debug(ret)
+	return ret
 }
 
 func buildDockerMetric(name string, metricType string, value float64) (m metric.Metric) {
