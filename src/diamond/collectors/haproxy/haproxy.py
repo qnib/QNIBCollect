@@ -136,7 +136,7 @@ class HAProxyCollector(diamond.collector.Collector):
         'stot', 'bin', 'bout', 'chkdown',
         'downtime', 'lbtot', 'hrsp_1xx', 'hrsp_2xx',
         'hrsp_3xx', 'hrsp_4xx', 'hrsp_5xx', 'hrsp_other',
-        'req_tot', 'cli_abrt', 'arv_abrt', 'comp_in',
+        'req_tot', 'cli_abrt', 'srv_abrt', 'comp_in',
         'comp_out', 'comp_byp', 'comp_rsp',
     ])
     IGNORE = set([
