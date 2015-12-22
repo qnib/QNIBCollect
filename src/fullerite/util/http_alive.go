@@ -8,6 +8,10 @@ import (
 	"time"
 )
 
+const (
+	maxIdleConnections = 5
+)
+
 // HTTPAlive implements a simple way of reusing http connections
 type HTTPAlive struct {
 	client       *http.Client
@@ -23,16 +27,21 @@ type HTTPAliveResponse struct {
 }
 
 // Configure the http connection
-func (connection *HTTPAlive) Configure(timeout time.Duration) {
-	connection.transport = &http.Transport{
-		Dial: (&net.Dialer{
-			Timeout:   timeout,
-			KeepAlive: time.Minute,
-		}).Dial,
+func (connection *HTTPAlive) Configure(timeout time.Duration, aliveDuration time.Duration) {
+	if connection.transport == nil {
+		connection.transport = &http.Transport{
+			Dial: (&net.Dialer{
+				Timeout:   timeout,
+				KeepAlive: aliveDuration,
+			}).Dial,
+			MaxIdleConnsPerHost: maxIdleConnections,
+		}
 	}
 
-	connection.client = &http.Client{
-		Transport: connection.transport,
+	if connection.client == nil {
+		connection.client = &http.Client{
+			Transport: connection.transport,
+		}
 	}
 }
 

@@ -19,6 +19,10 @@ type SignalFx struct {
 	httpClient *util.HTTPAlive
 }
 
+const (
+	keepAliveGracePeriod = 60
+)
+
 // NewSignalFx returns a new SignalFx handler.
 func NewSignalFx(
 	channel chan metric.Metric,
@@ -37,7 +41,7 @@ func NewSignalFx(
 	inst.channel = channel
 
 	httpAliveClient := new(util.HTTPAlive)
-	httpAliveClient.Configure(inst.timeout)
+	httpAliveClient.Configure(inst.timeout, time.Duration(inst.interval+keepAliveGracePeriod)*time.Second)
 	inst.httpClient = httpAliveClient
 
 	return inst

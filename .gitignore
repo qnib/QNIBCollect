@@ -12,4 +12,3 @@ src/golang.org/*
 .vagrant
 src/fullerite/collector/collector.test
 _vendor/
-fullerite.conf
