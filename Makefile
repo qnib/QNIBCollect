@@ -107,8 +107,8 @@ ifeq ($(OS),Ubuntu)
 		--version $(VERSION) \
 		--description "metrics collector" \
 		--depends python \
-		--deb-user "fullerite" \
-		--deb-group "fullerite" \
+		--deb-user "fuller" \
+		--deb-group "fuller" \
 		--deb-default "deb/etc/fullerite" \
 		--deb-upstart "deb/etc/init/fullerite" \
 		--deb-upstart "deb/etc/init/fullerite_diamond_server" \
