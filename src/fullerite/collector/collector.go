@@ -26,6 +26,8 @@ type Collector interface {
 	Channel() chan metric.Metric
 	Interval() int
 	SetInterval(int)
+	CollectorType() string
+	SetCollectorType(string)
 }
 
 // New creates a new Collector based on the requested collector name.
@@ -40,12 +42,14 @@ func New(name string) Collector {
 		collector = NewTest(channel, DefaultCollectionInterval, collectorLog)
 	case "Diamond":
 		collector = NewDiamond(channel, DefaultCollectionInterval, collectorLog)
+		collector.SetCollectorType("listener")
 	case "Fullerite":
 		collector = NewFullerite(channel, DefaultCollectionInterval, collectorLog)
 	case "ProcStatus":
 		collector = NewProcStatus(channel, DefaultCollectionInterval, collectorLog)
 	case "FulleriteHTTP":
 		collector = newFulleriteHTTPCollector(channel, DefaultCollectionInterval, collectorLog)
+		collector.SetCollectorType("listener")
 	case "NerveUWSGI":
 		collector = newNerveUWSGICollector(channel, DefaultCollectionInterval, collectorLog)
 	case "DockerStats":
@@ -62,14 +66,18 @@ func New(name string) Collector {
 		defaultLog.Error("Cannot create collector: ", name)
 		return nil
 	}
+	if collector.CollectorType() == "" {
+		collector.SetCollectorType("collector")
+	}
 	return collector
 }
 
 type baseCollector struct {
 	// fulfill most of the rote parts of the collector interface
-	channel  chan metric.Metric
-	name     string
-	interval int
+	channel       chan metric.Metric
+	name          string
+	interval      int
+	collectorType string
 
 	// intentionally exported
 	log *l.Entry
@@ -84,6 +92,16 @@ func (col *baseCollector) configureCommonParams(configMap map[string]interface{}
 // SetInterval : set the interval to collect on
 func (col *baseCollector) SetInterval(interval int) {
 	col.interval = interval
+}
+
+// SetCollectorType : collector type
+func (col *baseCollector) SetCollectorType(collectorType string) {
+	col.collectorType = collectorType
+}
+
+// CollectorType : collector type
+func (col *baseCollector) CollectorType() string {
+	return col.collectorType
 }
 
 // Channel : the channel on which the collector should send metrics

@@ -53,7 +53,7 @@ func TestTestConfigureMetricName(t *testing.T) {
 	case m := <-test.Channel():
 		// don't test for the value - only metric name
 		assert.Equal(t, m.Name, "lala")
-	case <-time.After(1 * time.Second):
+	case <-time.After(4 * time.Second):
 		t.Fail()
 	}
 }
@@ -79,7 +79,7 @@ func TestTestCollect(t *testing.T) {
 	case m := <-test.Channel():
 		assert.Equal(t, 4.0, m.Value)
 		return
-	case <-time.After(2 * time.Second):
+	case <-time.After(4 * time.Second):
 		t.Fail()
 	}
 }

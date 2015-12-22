@@ -4,6 +4,8 @@ import (
 	"fullerite/collector"
 	"fullerite/config"
 	"fullerite/metric"
+
+	"fmt"
 	"time"
 )
 
@@ -37,10 +39,28 @@ func startCollector(name string, globalConfig config.Config, instanceConfig map[
 
 func runCollector(collector collector.Collector) {
 	log.Info("Running ", collector)
+
+	ticker := time.NewTicker(time.Duration(collector.Interval()) * time.Second)
+	collect := ticker.C
+
+	staggerValue := 1
+	collectionDeadline := time.Duration(collector.Interval() + staggerValue)
+
 	for {
-		collector.Collect()
-		time.Sleep(time.Duration(collector.Interval()) * time.Second)
+		select {
+		case <-collect:
+			if collector.CollectorType() == "listener" {
+				collector.Collect()
+			} else {
+				countdownTimer := time.AfterFunc(collectionDeadline*time.Second, func() {
+					reportCollector(collector)
+				})
+				collector.Collect()
+				countdownTimer.Stop()
+			}
+		}
 	}
+	ticker.Stop()
 }
 
 func readFromCollectors(collectors []collector.Collector, metrics chan metric.Metric) {
@@ -53,4 +73,12 @@ func readFromCollector(collector collector.Collector, metrics chan metric.Metric
 	for metric := range collector.Channel() {
 		metrics <- metric
 	}
+}
+
+func reportCollector(collector collector.Collector) {
+	log.Error(fmt.Sprintf("%s collector took too long to run, reporting incident!", collector.Name()))
+	metric := metric.New("fullerite.collection_time_exceeded")
+	metric.Value = 1
+	metric.AddDimension("interval", fmt.Sprintf("%d", collector.Interval()))
+	collector.Channel() <- metric
 }
