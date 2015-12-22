@@ -1,6 +1,8 @@
 {
     "prefix": "test.",
     "interval": 10,
+    "maxIdleConnectionsPerHost": 2,
+    "keepAliveInterval": 30,
     "defaultDimensions": {
         "application": "fullerite",
         "host": "dev33-devc"

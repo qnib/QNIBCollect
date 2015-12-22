@@ -13,9 +13,11 @@ import (
 
 // Some sane values to default things to
 const (
-	DefaultBufferSize = 100
-	DefaultInterval   = 10
-	DefaultTimeoutSec = 2
+	DefaultBufferSize                = 100
+	DefaultInterval                  = 10
+	DefaultTimeoutSec                = 2
+	DefaultMaxIdleConnectionsPerHost = 2
+	DefaultKeepAliveInterval         = time.Duration(30) * time.Second
 )
 
 var defaultLog = l.WithFields(l.Fields{"app": "fullerite", "pkg": "handler"})
@@ -104,6 +106,10 @@ type BaseHandler struct {
 	interval      int
 	maxBufferSize int
 	timeout       time.Duration
+
+	// for keepalive
+	maxIdleConnectionsPerHost int
+	keepAliveInterval         time.Duration
 
 	// for tracking
 	emissionTimes  list.List
