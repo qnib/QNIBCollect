@@ -136,7 +136,7 @@ class HAProxyCollector(diamond.collector.Collector):
         'stot', 'bin', 'bout', 'chkdown',
         'downtime', 'lbtot', 'hrsp_1xx', 'hrsp_2xx',
         'hrsp_3xx', 'hrsp_4xx', 'hrsp_5xx', 'hrsp_other',
-        'req_tot', 'cli_abrt', 'arv_abrt', 'comp_in',
+        'req_tot', 'cli_abrt', 'srv_abrt', 'comp_in',
         'comp_out', 'comp_byp', 'comp_rsp',
     ])
     IGNORE = set([
@@ -265,11 +265,16 @@ class HAProxyCollector(diamond.collector.Collector):
                 self.dimensions = {
                     'proxy_name': proxy_name,
                     'server_name': server_name,
-                    'check_status': check_status,
-                    'check_code': check_code,
-                    'status': status,
-                    'last_chk': last_chk,
                 }
+                if check_status:
+                    self.dimensions.update({'check_status': check_status})
+                if check_code:
+                    self.dimensions.update({'check_code': check_code})
+                if status:
+                    self.dimensions.update({'status': status})
+                if last_chk:
+                    self.dimensions.update({'last_chk': last_chk})
+
                 metric_name = '.'.join(['haproxy', headings[index]])
                 if section_name:
                     self.dimensions['section_server'] = section_name

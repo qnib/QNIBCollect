@@ -1,8 +1,8 @@
 #!/bin/bash
 
-if ! [ "$(id 'fullerite')" ]; then
-  echo "creating user fullerite"
-  useradd --no-create-home --system --user-group "fullerite"
+if ! [ "$(id 'fuller')" ]; then
+  echo "creating user fuller"
+  useradd --no-create-home --system --user-group "fuller"
 fi
 
 echo "creating log directory: /var/log/fullerite"
