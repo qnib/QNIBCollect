@@ -55,6 +55,21 @@ func TestDockerStatsConfigure(t *testing.T) {
 }
 
 func TestDockerStatsBuildMetrics(t *testing.T) {
+	config := make(map[string]interface{})
+	envVars := []byte(`
+	{
+		"service_name":  {
+			"MESOS_TASK_ID": "[^\\.]*"
+		},
+		"instance_name": {
+			"MESOS_TASK_ID": "\\.([^\\.]*)\\."}
+	}`)
+	var val map[string]interface{}
+
+	err := json.Unmarshal(envVars, &val)
+	assert.Equal(t, err, nil)
+	config["generatedDimensions"] = val
+
 	stats := new(docker.Stats)
 	stats.Network.RxBytes = 10
 	stats.Network.TxBytes = 20
@@ -72,7 +87,7 @@ func TestDockerStatsBuildMetrics(t *testing.T) {
 		}
 	}`)
 	var container *docker.Container
-	err := json.Unmarshal(containerJSON, &container)
+	err = json.Unmarshal(containerJSON, &container)
 	assert.Equal(t, err, nil)
 
 	expectedDims := map[string]string{
@@ -91,12 +106,26 @@ func TestDockerStatsBuildMetrics(t *testing.T) {
 	}
 
 	d := getSUT()
+	d.Configure(config)
 	ret := d.buildMetrics(container, stats, 0.5)
 
 	assert.Equal(t, ret, expectedMetrics)
 }
 
 func TestDockerStatsBuildMetricsWithNameAsEnvVariable(t *testing.T) {
+	config := make(map[string]interface{})
+	envVars := []byte(`
+	{
+		"service_name": {
+			"SERVICE_NAME": ".*"
+		}
+	}`)
+	var val map[string]interface{}
+
+	err := json.Unmarshal(envVars, &val)
+	assert.Equal(t, err, nil)
+	config["generatedDimensions"] = val
+
 	stats := new(docker.Stats)
 	stats.Network.RxBytes = 10
 	stats.Network.TxBytes = 20
@@ -114,7 +143,7 @@ func TestDockerStatsBuildMetricsWithNameAsEnvVariable(t *testing.T) {
 		}
 	}`)
 	var container *docker.Container
-	err := json.Unmarshal(containerJSON, &container)
+	err = json.Unmarshal(containerJSON, &container)
 	assert.Equal(t, err, nil)
 
 	expectedDims := map[string]string{
@@ -132,6 +161,7 @@ func TestDockerStatsBuildMetricsWithNameAsEnvVariable(t *testing.T) {
 	}
 
 	d := getSUT()
+	d.Configure(config)
 	ret := d.buildMetrics(container, stats, 0.5)
 
 	assert.Equal(t, ret, expectedMetrics)
@@ -154,12 +184,4 @@ func TestDockerStatsCalculateCPUPercent(t *testing.T) {
 	stats.CPUStats.SystemCPUUsage = 108086652820000000
 
 	assert.Equal(t, 0.060815135225936505, calculateCPUPercent(previousTotalUsage, previousSystem, stats))
-}
-
-func TestGetInfoFromMesosTaskID(t *testing.T) {
-	mesosID := "my--service.main.blablagit6bdsadnoise"
-	serviceName, instanceName := getInfoFromMesosTaskID(mesosID)
-
-	assert.Equal(t, serviceName, "my_service")
-	assert.Equal(t, instanceName, "main")
 }

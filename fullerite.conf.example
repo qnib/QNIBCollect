@@ -23,6 +23,13 @@
             "interval": 10
         },
         "Fullerite":{
+        },
+        "DockerStats":{
+            "generatedDimensions":{
+                "service_name":{
+                    "MESOS_TASK_ID": "[^\\.]*"
+                }
+            }
         }
     },
 
