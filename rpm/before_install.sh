@@ -1,6 +1,6 @@
 #!/bin/bash
 
-USER="fullerite"
+USER="fuller"
 
 id $USER > /dev/null 2>&1
 if [ $? != 0 ]; then
@@ -8,4 +8,4 @@ if [ $? != 0 ]; then
 fi
 
 mkdir -p /var/log/fullerite
-chown fullerite:fullerite /var/log/fullerite
+chown fuller:fuller /var/log/fullerite

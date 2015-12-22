@@ -7,4 +7,4 @@ fi
 
 echo "creating log directory: /var/log/fullerite"
 mkdir -p /var/log/fullerite
-chown fullerite:fullerite /var/log/fullerite
+chown fuller:fuller /var/log/fullerite
