@@ -25,12 +25,6 @@ import diamond.collector
 
 from diamond.collector import str_to_bool
 
-if sys.version_info < (2, 6):
-    from string import maketrans
-    DOTS_TO_UNDERS = maketrans('.', '_')
-else:
-    DOTS_TO_UNDERS = {ord(u'.'): u'_'}
-
 
 class PostfixCollector(diamond.collector.Collector):
 
@@ -41,6 +35,7 @@ class PostfixCollector(diamond.collector.Collector):
             'host':             'Hostname to connect to',
             'port':             'Port to connect to',
             'include_clients':  'Include client connection stats',
+            'relay_mode':       'Running postfix in relay mode?'
         })
         return config_help
 
@@ -54,6 +49,7 @@ class PostfixCollector(diamond.collector.Collector):
             'host':             'localhost',
             'port':             7777,
             'include_clients':  True,
+            'relay_mode':       False,
         })
         return config
 
@@ -101,33 +97,56 @@ class PostfixCollector(diamond.collector.Collector):
             return
 
         if str_to_bool(self.config['include_clients']) and u'clients' in data:
-            for client, value in data['clients'].iteritems():
-                # translate dots to underscores in client names
-                metric = u'.'.join(['clients',
-                                    client.translate(DOTS_TO_UNDERS)])
 
-                dvalue = self.derivative(metric, value)
+            metric_name = 'postfix.incoming'
+            if not str_to_bool(self.config['relay_mode']):
+                for client, value in data['clients'].iteritems():
+                    self.dimensions = {
+                        'client': str(client),
+                    }
 
-                self.publish(metric, dvalue)
+                    self.publish_cumulative_counter(metric_name, value)
+            else:
+                for component, clients in data['relay_clients'].iteritems():
+                    for client, value in clients.iteritems():
+                        self.dimensions = {
+                            'client': str(client),
+                            'queue':str(component),
+                        }
+
+                        self.publish_cumulative_counter(metric_name, value)
 
         for action in (u'in', u'recv', u'send'):
             if action not in data:
                 continue
 
-            for sect, stats in data[action].iteritems():
-                for status, value in stats.iteritems():
-                    metric = '.'.join([action,
-                                       sect,
-                                       status.translate(DOTS_TO_UNDERS)])
+            metric_name = '.'.join(['postfix', str(action)])
+            for sect, components in data[action].iteritems():
+                if not str_to_bool(self.config['relay_mode']):
+                    if sect == 'relay_status':
+                        continue
 
-                    dvalue = self.derivative(metric, value)
+                    for status, value in components.iteritems():
+                        self.dimensions = {
+                            'status': str(status),
+                        }
+                        self.publish_cumulative_counter(metric_name, value)
+                else:
+                    if sect != 'relay_status':
+                        continue
 
-                    self.publish(metric, dvalue)
+                    for component, stats in components.iteritems():
+                        for status, value in stats.iteritems():
+                            self.dimensions = {
+                                'status': str(status),
+                                'queue':str(component),
+                            }
+
+                            self.publish_cumulative_counter(metric_name, value)
 
         if u'local' in data:
+            metric_name = 'postfix.local'
             for key, value in data[u'local'].iteritems():
-                metric = '.'.join(['local', key])
+                self.dimensions = {'address': str(key)}
 
-                dvalue = self.derivative(metric, value)
-
-                self.publish(metric, dvalue)
+                self.publish_cumulative_counter(metric_name, value)
