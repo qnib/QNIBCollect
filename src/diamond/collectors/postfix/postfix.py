@@ -84,7 +84,7 @@ class PostfixCollector(diamond.collector.Collector):
 
         try:
             data = json.loads(json_string)
-        except (ValueError, TypeError):
+        except (ValueError, TypeError) as e:
             self.log.exception("Error parsing json from postfix-stats")
             return None
 
@@ -96,24 +96,24 @@ class PostfixCollector(diamond.collector.Collector):
         if not data:
             return
 
-        if str_to_bool(self.config['include_clients']) and u'clients' in data:
+        if str_to_bool(self.config['include_clients']):
 
             metric_name = 'postfix.incoming'
             if not str_to_bool(self.config['relay_mode']):
-                for client, value in data['clients'].iteritems():
+                for client, value in data.get('clients', {}).iteritems():
                     self.dimensions = {
                         'client': str(client),
                     }
 
                     self.publish_cumulative_counter(metric_name, value)
             else:
-                for component, clients in data['relay_clients'].iteritems():
+
+                for component, clients in data.get('relay_clients', {}).iteritems():
                     for client, value in clients.iteritems():
                         self.dimensions = {
                             'client': str(client),
                             'queue':str(component),
                         }
-
                         self.publish_cumulative_counter(metric_name, value)
 
         for action in (u'in', u'recv', u'send'):
