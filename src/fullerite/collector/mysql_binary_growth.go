@@ -2,6 +2,7 @@ package collector
 
 import (
 	"bufio"
+	"fmt"
 	"os"
 	"path"
 	"strings"
@@ -128,7 +129,7 @@ func (m *MySQLBinlogGrowth) getBinlogSize(binLog string, dataDir string) (size i
 	// It contains a list of log files, one per line
 	file, err := os.Open(binLog)
 	if err != nil {
-		m.log.Warn("Cannot open index file ", binLog)
+		m.log.Warn(fmt.Sprintf("Cannot open index file %s : %s", binLog, err))
 		return
 	}
 	defer file.Close()
