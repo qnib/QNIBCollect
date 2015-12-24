@@ -14,7 +14,6 @@ import (
 )
 
 const (
-	mesosTaskID      = "MESOS_TASK_ID"
 	endpoint         = "unix:///var/run/docker.sock"
 	serviceNameLabel = "SERVICE_NAME"
 )
