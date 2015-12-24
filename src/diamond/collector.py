@@ -46,6 +46,20 @@ def str_to_bool(value):
 
     return value
 
+class CollectorErrorHandler(logging.Handler, object):
+    def __init__(self, collector):
+        super(CollectorErrorHandler, self).__init__()
+        self.collector = collector
+
+    def emit(self, error):
+        e_type, _, _ = sys.exc_info()
+        metric_name = 'fullerite.collector_errors'
+        metric_value = 1
+        if e_type:
+            self.collector.dimensions = {
+                'error_type': str(e_type)
+            }
+        self.collector.publish(metric_name, metric_value)
 
 class Collector(object):
     """
@@ -58,6 +72,9 @@ class Collector(object):
         """
         # Initialize Logger
         self.log = logging.getLogger('diamond')
+        error_handler = CollectorErrorHandler(self)
+        error_handler.setLevel(logging.ERROR)
+        self.log.addHandler(error_handler)
         # Initialize Members
         if name is None:
             self.name = self.__class__.__name__
@@ -418,6 +435,15 @@ class Collector(object):
                     metric_name = 'collector_time_ms'
                     metric_value = collector_time
                     self.publish(metric_name, metric_value)
+        except Exception:
+            e_type, _, _ = sys.exc_info()
+            metric_name = 'fullerite.collector_errors'
+            metric_value = 1
+            if e_type:
+                self.dimensions = {
+                    'error_type': str(e_type.__name__)
+                }
+            self.publish(metric_name, metric_value)
         finally:
             # After collector run, invoke a flush
             # method on each handler.
