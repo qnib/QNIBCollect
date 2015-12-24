@@ -47,6 +47,8 @@ func TestSignalfxConfigure(t *testing.T) {
 	assert.Equal(t, 10, s.Interval())
 	assert.Equal(t, 100, s.MaxBufferSize())
 	assert.Equal(t, "signalfx.server", s.Endpoint())
+	assert.Equal(t, 30, s.KeepAliveInterval())
+	assert.Equal(t, 2, s.MaxIdleConnectionsPerHost())
 }
 
 func TestSignalFxRun(t *testing.T) {

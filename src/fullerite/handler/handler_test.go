@@ -62,6 +62,18 @@ func TestPerHandlerDimensions(t *testing.T) {
 	assert.Equal(t, "", b.DefaultDimensions()["host"])
 }
 
+func TestCommonKeepAliveConfig(t *testing.T) {
+	b := new(BaseHandler)
+
+	configMap := map[string]interface{}{
+		"keepAliveInterval":         100,
+		"maxIdleConnectionsPerHost": 5,
+	}
+	b.configureCommonParams(configMap)
+	assert.Equal(t, 5, b.MaxIdleConnectionsPerHost())
+	assert.Equal(t, 100, b.KeepAliveInterval())
+}
+
 func TestEmissionAndRecord(t *testing.T) {
 	emitCalled := false
 
@@ -228,4 +240,11 @@ func TestInternalMetricsWithNan(t *testing.T) {
 	}
 	im := base.InternalMetrics()
 	assert.Equal(t, expected, im)
+}
+
+func TestKeepAliveConfig(t *testing.T) {
+	base := BaseHandler{}
+
+	assert.Equal(t, 0, base.KeepAliveInterval())
+	assert.Equal(t, 0, base.MaxIdleConnectionsPerHost())
 }

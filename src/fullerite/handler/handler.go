@@ -13,9 +13,11 @@ import (
 
 // Some sane values to default things to
 const (
-	DefaultBufferSize = 100
-	DefaultInterval   = 10
-	DefaultTimeoutSec = 2
+	DefaultBufferSize                = 100
+	DefaultInterval                  = 10
+	DefaultTimeoutSec                = 2
+	DefaultMaxIdleConnectionsPerHost = 2
+	DefaultKeepAliveInterval         = 30
 )
 
 var defaultLog = l.WithFields(l.Fields{"app": "fullerite", "pkg": "handler"})
@@ -85,6 +87,12 @@ type Handler interface {
 
 	DefaultDimensions() map[string]string
 	SetDefaultDimensions(map[string]string)
+
+	MaxIdleConnectionsPerHost() int
+	SetMaxIdleConnectionsPerHost(int)
+
+	KeepAliveInterval() int
+	SetKeepAliveInterval(int)
 }
 
 type emissionTiming struct {
@@ -104,6 +112,10 @@ type BaseHandler struct {
 	interval      int
 	maxBufferSize int
 	timeout       time.Duration
+
+	// for keepalive
+	maxIdleConnectionsPerHost int
+	keepAliveInterval         int
 
 	// for tracking
 	emissionTimes  list.List
@@ -166,6 +178,26 @@ func (base BaseHandler) Interval() int {
 	return base.interval
 }
 
+// SetMaxIdleConnectionsPerHost : Set maximum idle connections per host
+func (base *BaseHandler) SetMaxIdleConnectionsPerHost(value int) {
+	base.maxIdleConnectionsPerHost = value
+}
+
+// SetKeepAliveInterval : Set keep alive interval
+func (base *BaseHandler) SetKeepAliveInterval(value int) {
+	base.keepAliveInterval = value
+}
+
+// MaxIdleConnectionsPerHost : return max idle connections per host
+func (base BaseHandler) MaxIdleConnectionsPerHost() int {
+	return base.maxIdleConnectionsPerHost
+}
+
+// KeepAliveInterval - return keep alive interval
+func (base BaseHandler) KeepAliveInterval() int {
+	return base.keepAliveInterval
+}
+
 // String returns the handler name in a printable format.
 func (base BaseHandler) String() string {
 	return base.name + "Handler"
@@ -226,6 +258,17 @@ func (base *BaseHandler) configureCommonParams(configMap map[string]interface{})
 	if asInterface, exists := configMap["defaultDimensions"]; exists {
 		handlerLevelDimensions := config.GetAsMap(asInterface)
 		base.SetDefaultDimensions(handlerLevelDimensions)
+	}
+
+	if asInterface, exists := configMap["keepAliveInterval"]; exists {
+		keepAliveInterval := config.GetAsInt(asInterface, DefaultKeepAliveInterval)
+		base.SetKeepAliveInterval(keepAliveInterval)
+	}
+
+	if asInterface, exists := configMap["maxIdleConnectionsPerHost"]; exists {
+		maxIdleConnectionsPerHost := config.GetAsInt(asInterface,
+			DefaultMaxIdleConnectionsPerHost)
+		base.SetMaxIdleConnectionsPerHost(maxIdleConnectionsPerHost)
 	}
 }
 

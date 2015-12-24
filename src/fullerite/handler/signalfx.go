@@ -2,11 +2,9 @@ package handler
 
 import (
 	"fullerite/metric"
+	"fullerite/util"
 
 	"bytes"
-	"io/ioutil"
-	"net"
-	"net/http"
 	"time"
 
 	l "github.com/Sirupsen/logrus"
@@ -16,8 +14,9 @@ import (
 // SignalFx Handler
 type SignalFx struct {
 	BaseHandler
-	endpoint  string
-	authToken string
+	endpoint   string
+	authToken  string
+	httpClient *util.HTTPAlive
 }
 
 // NewSignalFx returns a new SignalFx handler.
@@ -34,6 +33,8 @@ func NewSignalFx(
 	inst.interval = initialInterval
 	inst.maxBufferSize = initialBufferSize
 	inst.timeout = initialTimeout
+	inst.maxIdleConnectionsPerHost = DefaultMaxIdleConnectionsPerHost
+	inst.keepAliveInterval = DefaultKeepAliveInterval
 	inst.log = log
 	inst.channel = channel
 
@@ -63,6 +64,12 @@ func (s *SignalFx) Endpoint() string {
 
 // Run runs the handler main loop
 func (s *SignalFx) Run() {
+	httpAliveClient := new(util.HTTPAlive)
+	httpAliveClient.Configure(s.timeout,
+		time.Duration(s.KeepAliveInterval())*time.Second,
+		s.MaxIdleConnectionsPerHost())
+	s.httpClient = httpAliveClient
+
 	s.run(s.emitMetrics)
 }
 
@@ -135,40 +142,27 @@ func (s *SignalFx) emitMetrics(metrics []metric.Metric) bool {
 		return false
 	}
 
-	req, err := http.NewRequest("POST", s.endpoint, bytes.NewBuffer(serialized))
-	if err != nil {
-		s.log.Error("Failed to create a request to endpoint ", s.endpoint)
-		return false
-	}
-	req.Header.Set("X-SF-TOKEN", s.authToken)
-	req.Header.Set("Content-Type", "application/x-protobuf")
+	s.httpClient.SetHeader(map[string]string{
+		"X-SF-TOKEN":   s.authToken,
+		"Content-Type": "application/x-protobuf",
+	})
 
-	transport := http.Transport{
-		Dial: s.dialTimeout,
-	}
-	client := &http.Client{
-		Transport: &transport,
-	}
-	rsp, err := client.Do(req)
+	rsp, err := s.httpClient.MakeRequest("POST", s.endpoint, bytes.NewBuffer(serialized))
+
 	if err != nil {
-		s.log.Error("Failed to complete POST ", err)
+		s.log.Error("Failed to make request ", err,
+			" to endpoint ", s.endpoint)
 		return false
 	}
 
-	defer rsp.Body.Close()
-	if rsp.Status != "200 OK" {
-		body, _ := ioutil.ReadAll(rsp.Body)
+	if rsp.StatusCode != 200 {
 		s.log.Error("Failed to post to signalfx @", s.endpoint,
-			" status was ", rsp.Status,
-			" rsp body was ", string(body),
+			" status was ", rsp.StatusCode,
+			" rsp body was ", string(rsp.Body),
 			" payload was ", payload)
 		return false
 	}
 
 	s.log.Info("Successfully sent ", len(datapoints), " datapoints to SignalFx")
 	return true
-}
-
-func (s *SignalFx) dialTimeout(network, addr string) (net.Conn, error) {
-	return net.DialTimeout(network, addr, s.timeout)
 }
