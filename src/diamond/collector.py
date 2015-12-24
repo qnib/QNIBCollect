@@ -57,7 +57,7 @@ class CollectorErrorHandler(logging.Handler, object):
         metric_value = 1
         if e_type:
             self.collector.dimensions = {
-                'error_type': str(e_type)
+                'error_type': str(e_type.__name__)
             }
         self.collector.publish(metric_name, metric_value)
 
