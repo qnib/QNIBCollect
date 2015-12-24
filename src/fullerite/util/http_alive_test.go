@@ -18,7 +18,8 @@ func TestMakeRequest(t *testing.T) {
 	defer ts.Close()
 
 	httpClient := new(HTTPAlive)
-	httpClient.Configure(time.Duration(10)*time.Second, time.Minute)
+	httpClient.Configure(time.Duration(10)*time.Second, time.Minute, 10)
+	assert.Equal(t, 10, httpClient.transport.MaxIdleConnsPerHost)
 
 	httpClient.SetHeader(map[string]string{
 		"foo": "bar",

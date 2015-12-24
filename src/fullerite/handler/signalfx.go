@@ -65,7 +65,9 @@ func (s *SignalFx) Endpoint() string {
 // Run runs the handler main loop
 func (s *SignalFx) Run() {
 	httpAliveClient := new(util.HTTPAlive)
-	httpAliveClient.Configure(s.timeout, time.Duration(s.KeepAliveInterval())*time.Second)
+	httpAliveClient.Configure(s.timeout,
+		time.Duration(s.KeepAliveInterval())*time.Second,
+		s.MaxIdleConnectionsPerHost())
 	s.httpClient = httpAliveClient
 
 	s.run(s.emitMetrics)
