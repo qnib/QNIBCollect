@@ -57,6 +57,7 @@ func (c CPUInfo) Collect() {
 	metric := metric.New(c.metricName)
 	metric.Value = value
 	metric.AddDimension("model", model)
+	metric.AddDimension("collector", c.Name())
 	c.Channel() <- metric
 	c.log.Debug(metric)
 }

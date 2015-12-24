@@ -83,6 +83,7 @@ func (m *MySQLBinlogGrowth) Collect() {
 			Value:      float64(size),
 			Dimensions: make(map[string]string),
 		}
+		metric.AddDimension("collector", m.Name())
 
 		m.Channel() <- metric
 	}

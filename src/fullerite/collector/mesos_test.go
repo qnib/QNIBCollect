@@ -141,7 +141,7 @@ func TestMesosStatsSendMetrics(t *testing.T) {
 	oldGetMetrics := getMetrics
 	defer func() { getMetrics = oldGetMetrics }()
 
-	expected := metric.Metric{"test", "gauge", 0.1, map[string]string{}}
+	expected := metric.Metric{"test", "gauge", 0.1, map[string]string{"collector": "MesosStats"}}
 	getMetrics = func(m *MesosStats, ip string) map[string]float64 {
 		return map[string]float64{
 			"test": 0.1,
