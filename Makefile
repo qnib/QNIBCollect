@@ -1,6 +1,6 @@
 FULLERITE      := fullerite
 BEATIT         := beatit
-VERSION        := 0.2.3
+VERSION        := 0.2.4
 SRCDIR         := src
 HANDLER_DIR    := $(SRCDIR)/fullerite/handler
 PROTO_SFX      := $(HANDLER_DIR)/signalfx.proto
