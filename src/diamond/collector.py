@@ -436,7 +436,7 @@ class Collector(object):
                     metric_value = collector_time
                     self.publish(metric_name, metric_value)
         except Exception:
-            e_type, _, _ = sys.exc_info()
+            e_type = sys.exc_info()[0]
             metric_name = 'fullerite.collector_errors'
             metric_value = 1
             if e_type:
