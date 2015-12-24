@@ -91,8 +91,8 @@ type Handler interface {
 	MaxIdleConnectionsPerHost() int
 	SetMaxIdleConnectionsPerHost(int)
 
-	KeepAliveInterval() time.Duration
-	SetKeepAliveInterval(time.Duration)
+	KeepAliveInterval() int
+	SetKeepAliveInterval(int)
 }
 
 type emissionTiming struct {
@@ -178,18 +178,22 @@ func (base BaseHandler) Interval() int {
 	return base.interval
 }
 
+// SetMaxIdleConnectionsPerHost : Set maximum idle connections per host
 func (base *BaseHandler) SetMaxIdleConnectionsPerHost(value int) {
 	base.maxIdleConnectionsPerHost = value
 }
 
+// SetKeepAliveInterval : Set keep alive interval
 func (base *BaseHandler) SetKeepAliveInterval(value int) {
 	base.keepAliveInterval = value
 }
 
+// MaxIdleConnectionsPerHost : return max idle connections per host
 func (base BaseHandler) MaxIdleConnectionsPerHost() int {
 	return base.maxIdleConnectionsPerHost
 }
 
+// KeepAliveInterval - return keep alive interval
 func (base BaseHandler) KeepAliveInterval() int {
 	return base.keepAliveInterval
 }

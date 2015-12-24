@@ -25,9 +25,10 @@ func startHandler(name string, globalConfig config.Config, instanceConfig map[st
 	handlerInst.SetInterval(config.GetAsInt(globalConfig.Interval, handler.DefaultInterval))
 	handlerInst.SetPrefix(globalConfig.Prefix)
 	handlerInst.SetDefaultDimensions(globalConfig.DefaultDimensions)
-	handlerInst.SetKeepAliveInterval(config.GetAsInt(globalConfig.KeepAliveInterval, handler.DefaultKeepAliveInterval))
+	handlerInst.SetKeepAliveInterval(config.GetAsInt(globalConfig.KeepAliveInterval,
+		handler.DefaultKeepAliveInterval))
 	handlerInst.SetMaxIdleConnectionsPerHost(config.GetAsInt(globalConfig.MaxIdleConnectionsPerHost,
-		handler.MaxIdleConnectionsPerHost))
+		handler.DefaultMaxIdleConnectionsPerHost))
 
 	// now apply the handler level configs
 	handlerInst.Configure(instanceConfig)
