@@ -193,7 +193,6 @@ func buildDockerMetric(name string, metricType string, value float64) (m metric.
 	m = metric.New(name)
 	m.MetricType = metricType
 	m.Value = value
-	m.AddDimension("collector", "DockerStats")
 	return m
 }
 

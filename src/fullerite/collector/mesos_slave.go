@@ -140,6 +140,5 @@ func (m *MesosSlaveStats) buildMetric(name string, value float64) metric.Metric 
 	if _, exists := mesosSlaveCumulativeCountersList[name]; exists {
 		s.MetricType = metric.CumulativeCounter
 	}
-	s.AddDimension("collector", m.Name())
 	return s
 }

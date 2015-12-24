@@ -71,6 +71,7 @@ func readFromCollectors(collectors []collector.Collector, metrics chan metric.Me
 
 func readFromCollector(collector collector.Collector, metrics chan metric.Metric) {
 	for metric := range collector.Channel() {
+		metric.AddDimension("collector", collector.Name())
 		metrics <- metric
 	}
 }

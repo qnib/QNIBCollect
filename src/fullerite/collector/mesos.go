@@ -127,7 +127,6 @@ func (m *MesosStats) Collect() {
 func (m *MesosStats) sendMetrics() {
 	for k, v := range getMetrics(m, m.IP) {
 		s := buildMetric(k, v)
-		s.AddDimension("collector", m.Name())
 		m.Channel() <- s
 	}
 }
