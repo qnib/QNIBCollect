@@ -17,7 +17,7 @@ const (
 	DefaultInterval                  = 10
 	DefaultTimeoutSec                = 2
 	DefaultMaxIdleConnectionsPerHost = 2
-	DefaultKeepAliveInterval         = time.Duration(30) * time.Second
+	DefaultKeepAliveInterval         = 30
 )
 
 var defaultLog = l.WithFields(l.Fields{"app": "fullerite", "pkg": "handler"})
@@ -87,6 +87,12 @@ type Handler interface {
 
 	DefaultDimensions() map[string]string
 	SetDefaultDimensions(map[string]string)
+
+	MaxIdleConnectionsPerHost() int
+	SetMaxIdleConnectionsPerHost(int)
+
+	KeepAliveInterval() time.Duration
+	SetKeepAliveInterval(time.Duration)
 }
 
 type emissionTiming struct {
@@ -109,7 +115,7 @@ type BaseHandler struct {
 
 	// for keepalive
 	maxIdleConnectionsPerHost int
-	keepAliveInterval         time.Duration
+	keepAliveInterval         int
 
 	// for tracking
 	emissionTimes  list.List
@@ -170,6 +176,22 @@ func (base BaseHandler) DefaultDimensions() map[string]string {
 // Interval : the maximum interval that the handler should buffer stats for
 func (base BaseHandler) Interval() int {
 	return base.interval
+}
+
+func (base *BaseHandler) SetMaxIdleConnectionsPerHost(value int) {
+	base.maxIdleConnectionsPerHost = value
+}
+
+func (base *BaseHandler) SetKeepAliveInterval(value int) {
+	base.keepAliveInterval = value
+}
+
+func (base BaseHandler) MaxIdleConnectionsPerHost() int {
+	return base.maxIdleConnectionsPerHost
+}
+
+func (base BaseHandler) KeepAliveInterval() int {
+	return base.keepAliveInterval
 }
 
 // String returns the handler name in a printable format.

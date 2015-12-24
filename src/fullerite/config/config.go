@@ -13,14 +13,16 @@ var log = logrus.WithFields(logrus.Fields{"app": "fullerite", "pkg": "config"})
 
 // Config type holds the global Fullerite configuration.
 type Config struct {
-	Prefix                string                            `json:"prefix"`
-	Interval              interface{}                       `json:"interval"`
-	DiamondCollectorsPath string                            `json:"diamondCollectorsPath"`
-	DiamondCollectors     map[string]map[string]interface{} `json:"diamondCollectors"`
-	Handlers              map[string]map[string]interface{} `json:"handlers"`
-	Collectors            map[string]map[string]interface{} `json:"collectors"`
-	DefaultDimensions     map[string]string                 `json:"defaultDimensions"`
-	InternalServerConfig  map[string]interface{}            `json:"internalServer"`
+	Prefix                    string                            `json:"prefix"`
+	Interval                  interface{}                       `json:"interval"`
+	MaxIdleConnectionsPerHost interface{}                       `json:"maxIdleConnectionsPerHost"`
+	KeepAliveInterval         interface{}                       `json:"keepAliveInterval"`
+	DiamondCollectorsPath     string                            `json:"diamondCollectorsPath"`
+	DiamondCollectors         map[string]map[string]interface{} `json:"diamondCollectors"`
+	Handlers                  map[string]map[string]interface{} `json:"handlers"`
+	Collectors                map[string]map[string]interface{} `json:"collectors"`
+	DefaultDimensions         map[string]string                 `json:"defaultDimensions"`
+	InternalServerConfig      map[string]interface{}            `json:"internalServer"`
 }
 
 // ReadConfig reads a fullerite configuration file

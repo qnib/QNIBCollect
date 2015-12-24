@@ -42,10 +42,6 @@ func NewSignalFx(
 	inst.log = log
 	inst.channel = channel
 
-	httpAliveClient := new(util.HTTPAlive)
-	httpAliveClient.Configure(inst.timeout, time.Duration(inst.interval+keepAliveGracePeriod)*time.Second)
-	inst.httpClient = httpAliveClient
-
 	return inst
 }
 
@@ -72,6 +68,10 @@ func (s *SignalFx) Endpoint() string {
 
 // Run runs the handler main loop
 func (s *SignalFx) Run() {
+	httpAliveClient := new(util.HTTPAlive)
+	httpAliveClient.Configure(inst.timeout, time.Duration(inst.interval+keepAliveGracePeriod)*time.Second)
+	inst.httpClient = httpAliveClient
+
 	s.run(s.emitMetrics)
 }
 
