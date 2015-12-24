@@ -1,8 +1,6 @@
 {
     "prefix": "test.",
     "interval": 10,
-    "maxIdleConnectionsPerHost": 2,
-    "keepAliveInterval": 30,
     "defaultDimensions": {
         "application": "fullerite",
         "host": "dev33-devc"
@@ -55,7 +53,9 @@
             "endpoint": "https://ingest.signalfx.com/v2/datapoint",
             "interval": "10",
             "max_buffer_size": 300,
-            "timeout": 2
+            "timeout": 2,
+	    "maxIdleConnectionsPerHost": 2,
+	    "keepAliveInterval": 30
         },
         "Datadog": {
             "apiKey": "secret_key",

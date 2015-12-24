@@ -259,6 +259,17 @@ func (base *BaseHandler) configureCommonParams(configMap map[string]interface{})
 		handlerLevelDimensions := config.GetAsMap(asInterface)
 		base.SetDefaultDimensions(handlerLevelDimensions)
 	}
+
+	if asInterface, exists := configMap["keepAliveInterval"]; exists {
+		keepAliveInterval := config.GetAsInt(asInterface, DefaultKeepAliveInterval)
+		base.SetKeepAliveInterval(keepAliveInterval)
+	}
+
+	if asInterface, exists := configMap["maxIdleConnectionsPerHost"]; exists {
+		maxIdleConnectionsPerHost := config.GetAsInt(asInterface,
+			DefaultMaxIdleConnectionsPerHost)
+		base.SetMaxIdleConnectionsPerHost(maxIdleConnectionsPerHost)
+	}
 }
 
 func (base *BaseHandler) run(emitFunc func([]metric.Metric) bool) {
