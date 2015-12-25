@@ -84,7 +84,7 @@ class PostfixCollector(diamond.collector.Collector):
 
         try:
             data = json.loads(json_string)
-        except (ValueError, TypeError) as e:
+        except (ValueError, TypeError):
             self.log.exception("Error parsing json from postfix-stats")
             return None
 
