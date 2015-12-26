@@ -147,13 +147,9 @@ func validateUWSGIResults(t *testing.T, actual []metric.Metric) {
 
 func validateFullDimensions(t *testing.T, actual []metric.Metric, serviceName, port string) {
 	for _, m := range actual {
-		assert.Equal(t, 5, len(m.Dimensions))
+		assert.Equal(t, 4, len(m.Dimensions))
 
-		val, exists := m.GetDimensionValue("collector")
-		assert.True(t, exists)
-		assert.Equal(t, "NerveUWSGI", val)
-
-		val, exists = m.GetDimensionValue("service")
+		val, exists := m.GetDimensionValue("service")
 		assert.True(t, exists)
 		assert.Equal(t, serviceName, val)
 

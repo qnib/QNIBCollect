@@ -90,7 +90,6 @@ func getMemStats() *runtime.MemStats {
 func buildSimpleMetric(name string, value uint64) (m metric.Metric) {
 	m = metric.New(name)
 	m.Value = float64(value)
-	m.AddDimension("collector", "fullerite")
 	return m
 }
 

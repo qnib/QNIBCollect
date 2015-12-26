@@ -156,9 +156,8 @@ func (n *nerveUWSGICollector) queryService(serviceName string, port int) {
 	}
 
 	metric.AddToAll(&metrics, map[string]string{
-		"collector": n.Name(),
-		"service":   serviceName,
-		"port":      strconv.Itoa(port),
+		"service": serviceName,
+		"port":    strconv.Itoa(port),
 	})
 
 	serviceLog.Debug("Sending ", len(metrics), " to channel")
