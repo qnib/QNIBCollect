@@ -69,8 +69,6 @@ func New(name string) Collector {
 	if collector.CollectorType() == "" {
 		collector.SetCollectorType("collector")
 	}
-	hook := NewLogErrorHook(collector.Channel())
-	l.AddHook(hook)
 	return collector
 }
 

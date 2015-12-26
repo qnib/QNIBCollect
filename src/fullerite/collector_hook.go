@@ -1,4 +1,4 @@
-package collector
+package main
 
 import (
 	"fmt"
@@ -11,7 +11,7 @@ import (
 
 // LogErrorHook to send errors via collector channel.
 type LogErrorHook struct {
-	collectorChannel chan metric.Metric
+	metricsChannel chan metric.Metric
 
 	// intentionally exported
 	log *logrus.Entry
@@ -20,9 +20,9 @@ type LogErrorHook struct {
 // NewLogErrorHook creates a hook to be added to the collector logger
 // so that errors are forwards as a metric to the collecot
 // channel.
-func NewLogErrorHook(collectorChannel chan metric.Metric) *LogErrorHook {
-	hookLog := defaultLog.WithFields(logrus.Fields{"hook": "LogErrorHook"})
-	return &LogErrorHook{collectorChannel, hookLog}
+func NewLogErrorHook(metricsChannel chan metric.Metric) *LogErrorHook {
+	hookLog := log.WithFields(logrus.Fields{"hook": "LogErrorHook"})
+	return &LogErrorHook{metricsChannel, hookLog}
 }
 
 // Fire action to take when log is fired.
@@ -33,15 +33,7 @@ func (hook *LogErrorHook) Fire(entry *logrus.Entry) error {
 		return err
 	}
 
-	switch entry.Level {
-	case logrus.ErrorLevel:
-		go hook.reportErrors()
-	case logrus.FatalLevel:
-		go hook.reportErrors()
-	case logrus.PanicLevel:
-		go hook.reportErrors()
-	default:
-	}
+	go hook.reportErrors(entry)
 	return nil
 }
 
@@ -54,9 +46,12 @@ func (hook *LogErrorHook) Levels() []logrus.Level {
 	}
 }
 
-func (hook *LogErrorHook) reportErrors() {
+func (hook *LogErrorHook) reportErrors(entry *logrus.Entry) {
 	metric := metric.New("fullerite.collector_errors")
 	metric.Value = 1
-	hook.collectorChannel <- metric
+	if val, exists := entry.Data["collector"]; exists {
+		metric.AddDimension("collector", val.(string))
+	}
+	hook.metricsChannel <- metric
 	return
 }
