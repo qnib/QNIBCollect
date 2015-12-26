@@ -52,12 +52,12 @@ class CollectorErrorHandler(logging.Handler, object):
         self.collector = collector
 
     def emit(self, error):
-        e_type, _, _ = sys.exc_info()
+        e_type = sys.exc_info()[0]
         metric_name = 'fullerite.collector_errors'
         metric_value = 1
         if e_type:
             self.collector.dimensions = {
-                'error_type': str(e_type)
+                'error_type': str(e_type.__name__)
             }
         self.collector.publish(metric_name, metric_value)
 
