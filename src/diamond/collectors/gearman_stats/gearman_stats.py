@@ -52,7 +52,14 @@ class GearmanCollector(diamond.collector.Collector):
             with open(gearman_pid_path) as fp:
                 gearman_pid = fp.read().strip()
             proc_path = os.path.join('/proc', gearman_pid, 'fd')
-            return len(os.listdir(proc_path))
+            process = subprocess.Popen('sudo ls '+ proc_path,
+                                       shell=True,
+                                       stdout=subprocess.PIPE,
+                                       stderr=subprocess.PIPE)
+            output, errors = process.communicate()
+            if errors:
+                raise Exception(errors)
+            return len(output.splitlines())
 
         def publish_server_stats(gm_admin_client):
             #  Publish idle/running worker counts
