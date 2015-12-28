@@ -53,13 +53,17 @@ class CollectorErrorHandler(logging.Handler, object):
 
     def emit(self, error):
         e_type = sys.exc_info()[0]
-        metric_name = 'fullerite.collector_errors'
-        metric_value = 1
-        if e_type:
-            self.collector.dimensions = {
-                'error_type': str(e_type.__name__)
-            }
-        self.collector.publish(metric_name, metric_value)
+        report_error(e_type, self.collector)
+
+def report_error(e, collector):
+    e_type = sys.exc_info()[0]
+    metric_name = 'fullerite.collector_errors'
+    metric_value = 1
+    if e_type:
+        collector.dimensions = {
+            'error_type': str(e_type.__name__)
+        }
+    collector.publish(metric_name, metric_value)
 
 class Collector(object):
     """
@@ -436,14 +440,7 @@ class Collector(object):
                     metric_value = collector_time
                     self.publish(metric_name, metric_value)
         except Exception:
-            e_type = sys.exc_info()[0]
-            metric_name = 'fullerite.collector_errors'
-            metric_value = 1
-            if e_type:
-                self.dimensions = {
-                    'error_type': str(e_type.__name__)
-                }
-            self.publish(metric_name, metric_value)
+            report_error(sys.exc_info()[0], self)
         finally:
             # After collector run, invoke a flush
             # method on each handler.
