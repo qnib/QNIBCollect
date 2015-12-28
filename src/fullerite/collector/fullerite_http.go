@@ -84,7 +84,6 @@ func (inst fulleriteHTTP) buildMetrics(counters *map[string]float64, isCounter b
 	for key, val := range *counters {
 		m := metric.New(key)
 		m.Value = val
-		m.AddDimension("collector", inst.Name())
 		if isCounter {
 			m.MetricType = metric.Counter
 		}

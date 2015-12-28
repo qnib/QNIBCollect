@@ -122,7 +122,6 @@ func TestHandlePopulatedResponseFulleriteHTTP(t *testing.T) {
 	}
 
 	for _, m := range metrics {
-		assertDimension(&m, "collector", "FulleriteHTTP")
 
 		switch m.Name {
 		case "somemem":

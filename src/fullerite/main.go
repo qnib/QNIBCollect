@@ -89,6 +89,10 @@ func start(ctx *cli.Context) {
 
 	metrics := make(chan metric.Metric)
 	readFromCollectors(collectors, metrics)
+
+	hook := NewLogErrorHook(metrics)
+	log.Logger.Hooks.Add(hook)
+
 	for metric := range metrics {
 		// Writing to handlers' channels. Sending metrics is
 		// handled asynchronously in handlers' Run functions.

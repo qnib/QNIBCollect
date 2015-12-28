@@ -95,7 +95,6 @@ func TestDockerStatsBuildMetrics(t *testing.T) {
 		"container_name": "test-container",
 		"service_name":   "my_service",
 		"instance_name":  "main",
-		"collector":      "DockerStats",
 	}
 	expectedMetrics := []metric.Metric{
 		metric.Metric{"DockerRxBytes", "cumcounter", 10, expectedDims},
@@ -150,7 +149,6 @@ func TestDockerStatsBuildMetricsWithNameAsEnvVariable(t *testing.T) {
 		"container_id":   "test-id",
 		"container_name": "test-container",
 		"service_name":   "my_service",
-		"collector":      "DockerStats",
 	}
 	expectedMetrics := []metric.Metric{
 		metric.Metric{"DockerRxBytes", "cumcounter", 10, expectedDims},

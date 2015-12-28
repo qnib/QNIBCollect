@@ -71,12 +71,13 @@ func readFromCollectors(collectors []collector.Collector, metrics chan metric.Me
 
 func readFromCollector(collector collector.Collector, metrics chan metric.Metric) {
 	for metric := range collector.Channel() {
+		metric.AddDimension("collector", collector.Name())
 		metrics <- metric
 	}
 }
 
 func reportCollector(collector collector.Collector) {
-	log.Error(fmt.Sprintf("%s collector took too long to run, reporting incident!", collector.Name()))
+	log.Warn(fmt.Sprintf("%s collector took too long to run, reporting incident!", collector.Name()))
 	metric := metric.New("fullerite.collection_time_exceeded")
 	metric.Value = 1
 	metric.AddDimension("interval", fmt.Sprintf("%d", collector.Interval()))

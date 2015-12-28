@@ -21,7 +21,6 @@ func (ps ProcStatus) Collect() {
 func procStatusPoint(name string, value float64, dimensions map[string]string, metricType string) (m metric.Metric) {
 	m = metric.New(name)
 	m.Value = value
-	m.AddDimension("collector", "ProcStatus")
 	m.AddDimensions(dimensions)
 	m.MetricType = metricType
 	return m
