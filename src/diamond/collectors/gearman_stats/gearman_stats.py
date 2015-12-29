@@ -9,6 +9,7 @@ Collects stats from gearman job server
  *  gearman
 
 """
+from diamond.collector import str_to_bool
 
 import diamond.collector
 import os
@@ -28,6 +29,9 @@ class GearmanCollector(diamond.collector.Collector):
         config_help.update({
             'gearman_pid_path': 'Gearman PID file path',
             'url': 'Gearman endpoint to talk to',
+            'bin': 'Path to ls command',
+            'use_sudo': 'Use sudo?',
+            'sudo_cmd': 'Path to sudo',
         })
         return config_help
 
@@ -40,6 +44,9 @@ class GearmanCollector(diamond.collector.Collector):
             'path': 'gearman_stats',
             'gearman_pid_path': '/var/run/gearman/gearman-job-server.pid',
             'url': 'localhost',
+            'bin': '/bin/ls',
+            'use_sudo': False,
+            'sudo_cmd': '/usr/bin/sudo',
         })
         return config
 
@@ -52,7 +59,18 @@ class GearmanCollector(diamond.collector.Collector):
             with open(gearman_pid_path) as fp:
                 gearman_pid = fp.read().strip()
             proc_path = os.path.join('/proc', gearman_pid, 'fd')
-            return len(os.listdir(proc_path))
+
+            command = [self.config['bin'], proc_path]
+            if str_to_bool(self.config['use_sudo']):
+                command.insert(0, self.config['sudo_cmd'])
+
+            process = subprocess.Popen(command,
+                                       stdout=subprocess.PIPE,
+                                       stderr=subprocess.PIPE)
+            output, errors = process.communicate()
+            if errors:
+                raise Exception(errors)
+            return len(output.splitlines())
 
         def publish_server_stats(gm_admin_client):
             #  Publish idle/running worker counts

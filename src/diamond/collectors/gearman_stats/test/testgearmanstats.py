@@ -10,6 +10,7 @@ from mock import Mock
 from mock import patch
 
 import os
+import subprocess
 
 from diamond.collector import Collector
 from gearman_stats import GearmanCollector
@@ -40,9 +41,9 @@ class TestGearmanCollector(CollectorTestCase):
 
     @run_only_if_gearman_is_available
     @patch('gearman.GearmanAdminClient')
-    @patch('os.listdir', Mock(return_value=[1,2,3]))
+    @patch('subprocess.Popen')
     @patch.object(Collector, 'publish')
-    def test_collect(self, publish_mock, gearman_mock):
+    def test_collect(self, publish_mock, subprocess_mock, gearman_mock):
 
         #  Setup mocks
         client = Mock()
@@ -54,7 +55,11 @@ class TestGearmanCollector(CollectorTestCase):
         gearman_mock.return_value = client
         client.ping_server.return_value = ping_server_mock_return
         client.get_status.return_value = gearman_stats_mock_return
-        
+
+        subprocess = Mock()
+        subprocess.communicate.return_value = ("1\n2\n3", "")
+        subprocess_mock.return_value = subprocess
+
         self.collector.collect()
 
         # Dimensions are not tested since Fullerite diamond test suite does not support it.
