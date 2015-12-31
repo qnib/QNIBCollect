@@ -6,7 +6,7 @@ TimeoutStartSec=5
 EnvironmentFile=-/etc/sysconfig/fullerite
 ExecStart=/usr/bin/fullerite --config ${CONFIG_FILE} --log_file ${LOG_FILE} --log_level ${LOG_LEVEL}
 PIDFile=/var/run/fullerite.pid
-User=fullerite
+User=fuller
 
 
 [Install]
