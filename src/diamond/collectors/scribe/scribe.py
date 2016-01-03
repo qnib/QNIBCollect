@@ -21,7 +21,7 @@ class ScribeCollector(diamond.collector.Collector):
     GAUGES = set([
         'buffer_size', 'scribe_overall_sent_since_last_reconnect',
         'scribe_overall_received_good', 'scribe_overall_retries',
-        'scribe_overall_sent'
+        'scribe_overall_sent', 'scribe_overall_denied_for_queue_size',
     ])
 
     def get_default_config_help(self):
