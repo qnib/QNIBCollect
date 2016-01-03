@@ -18,6 +18,12 @@ from diamond.collector import str_to_bool
 
 class ScribeCollector(diamond.collector.Collector):
 
+    GAUGES = set([
+        'buffer_size', 'scribe_overall_sent_since_last_reconnect',
+        'scribe_overall_received_good', 'scribe_overall_retries',
+        'scribe_overall_sent'
+    ])
+
     def get_default_config_help(self):
         config_help = super(ScribeCollector, self).get_default_config_help()
         config_help.update({
@@ -96,7 +102,7 @@ class ScribeCollector(diamond.collector.Collector):
                 else:
                     data['buffer_size'] = int(output[:output.find('\t')])
             except OSError:
-                self.log.exception(
+                self.log.error(
                     "Unable to run {0!r}".format(cmd)
                 )
 
@@ -112,7 +118,7 @@ class ScribeCollector(diamond.collector.Collector):
                 self.dimensions = { 'node_type': 'leaf' }
             else:
                 self.dimensions = { 'node_type': 'aggregator' }
-            if stat == 'buffer_size':
+            if stat in self.GAUGES:
                 self.publish(metric_name, val)
             else:
                 self.publish_cumulative_counter(metric_name, val)
