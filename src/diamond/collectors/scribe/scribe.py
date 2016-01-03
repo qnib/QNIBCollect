@@ -57,7 +57,7 @@ class ScribeCollector(diamond.collector.Collector):
             p = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                                  stderr=subprocess.PIPE)
         except OSError:
-            self.log.exception("Unable to run %r", cmd)
+            self.log.error("Unable to run %r", cmd)
             return ""
 
         stdout, stderr = p.communicate()
@@ -112,4 +112,7 @@ class ScribeCollector(diamond.collector.Collector):
                 self.dimensions = { 'node_type': 'leaf' }
             else:
                 self.dimensions = { 'node_type': 'aggregator' }
-            self.publish(metric_name, val)
+            if stat == 'buffer_size':
+                self.publish(metric_name, val)
+            else:
+                self.publish_cumulative_counter(metric_name, val)
