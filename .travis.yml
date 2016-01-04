@@ -1,4 +1,8 @@
 language: go
 
+python:
+  - "2.6"
+  - "2.7"
+
 go:
   - 1.4
