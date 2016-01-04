@@ -65,7 +65,7 @@ tests: deps diamond_core_test
 
 python_deps: deps
 	@echo Installing Python dependencies...
-	@pip install -r requirements.txt
+	@pip install -r requirements.txt > /dev/null
 
 diamond_core_test: python_deps
 	@python src/diamond/test.py -d
