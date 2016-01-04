@@ -23,7 +23,6 @@ class Metric(object):
             Generally the default (2) should work fine.
         """
 
-
         # Validate the path, value and metric_type submitted
         if (None in [path, value] or metric_type not in self._METRIC_TYPES):
             raise DiamondException(("Invalid parameter when creating new "
@@ -67,6 +66,7 @@ class Metric(object):
                     (k, str(v)) for k, v in dimensions.iteritems()
                     if v is not None and isinstance(v, (int, float, str, unicode)) and k is not None and isinstance(k, str)
                 )
+
         self.dimensions = dimensions
         self.path = path
         self.value = value
