@@ -34,7 +34,7 @@ Fullerite makes a deb package that can be installed onto a linux box. It has bee
     $ service fullerite [status | start | stop]
     $ service fullerite_diamond_server [status | start | stop]
 
-By default it logs out to `/var/log/fullerite/*`. It runs as user `fullerite`. This can all be changed by editing the `/etc/default/fullerite.conf` file. See the upstart scripts for [fullerite](deb/etc/init/fullerite) and [fullerite_diamond_server](deb/etc/init/fullerite_diamond_server) for more info. 
+By default it logs out to `/var/log/fullerite/*`. It runs as user `fuller`. This can all be changed by editing the `/etc/default/fullerite.conf` file. See the upstart scripts for [fullerite](deb/etc/init/fullerite) and [fullerite_diamond_server](deb/etc/init/fullerite_diamond_server) for more info. 
 
 You can also run fullerite directly using the commands: `run-fullerite.sh` and `run-diamond-collectors.sh`. These both have command line args that are good to use. 
 
