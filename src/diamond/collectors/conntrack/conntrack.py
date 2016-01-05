@@ -79,7 +79,7 @@ class ConnTrackCollector(diamond.collector.Collector):
                                    fpath,
                                    exception)
         if not collected:
-            self.log.error('No metric was collected, looks like '
+            self.log.debug('No metric was collected, looks like '
                            'nf_conntrack/ip_conntrack kernel module was '
                            'not loaded')
         else:
