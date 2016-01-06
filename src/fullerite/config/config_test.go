@@ -52,7 +52,8 @@ var testGoodConfiguration = `{
             "authToken": "secret_token",
             "endpoint": "https://ingest.signalfx.com/v2/datapoint",
             "interval": 10,
-            "timeout": 2
+            "timeout": 2,
+			"collectorBlackList": ["TestCollector1", "TestCollector2"]
         }
     }
 }
@@ -126,6 +127,18 @@ func TestGetAsMap(t *testing.T) {
 	interfaceMapToParse["runtimeenv"] = "dev"
 	interfaceMapToParse["region"] = "uswest1-devc"
 	assert.Equal(config.GetAsMap(interfaceMapToParse), expectedValue)
+}
+
+func TestGetAsSlice(t *testing.T) {
+	assert := assert.New(t)
+
+	// Test if string array can be converted to []string
+	stringToParse := "[\"TestCollector1\", \"TestCollector2\"]"
+	expectedValue := []string{"TestCollector1", "TestCollector2"}
+	assert.Equal(config.GetAsSlice(stringToParse), expectedValue)
+
+	sliceToParse := []string{"TestCollector1", "TestCollector2"}
+	assert.Equal(config.GetAsSlice(sliceToParse), expectedValue)
 }
 
 func TestParseGoodConfig(t *testing.T) {

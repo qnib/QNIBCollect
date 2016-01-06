@@ -111,3 +111,22 @@ func GetAsMap(value interface{}) (result map[string]string) {
 
 	return
 }
+
+// GetAsSlice : Parses a json array string to []string
+func GetAsSlice(value interface{}) (result []string) {
+	result = []string{}
+
+	switch value.(type) {
+	case string:
+		err := json.Unmarshal([]byte(value.(string)), &result)
+		if err != nil {
+			log.Warn("Failed to convert value", value, "to a slice")
+		}
+	case []string:
+		result = value.([]string)
+	default:
+		log.Warn("Expected a slice but got", reflect.TypeOf(value), ".Returning empty slice!")
+	}
+
+	return result
+}
