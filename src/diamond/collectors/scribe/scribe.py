@@ -8,7 +8,7 @@ Collect counters from scribe
     * /usr/sbin/scribe_ctrl, distributed with scribe
 
 """
-
+import os
 import subprocess
 import string
 
@@ -75,13 +75,14 @@ class ScribeCollector(diamond.collector.Collector):
     def get_scribe_stats(self):
         data = {}
 
-        output = self.get_scribe_ctrl_output()
+        if os.path.exists(self.config['scribe_ctrl_bin']):
+            output = self.get_scribe_ctrl_output()
 
 
-        for line in output.splitlines():
-            key, val = line.rsplit(':', 1)
-            metric = self.key_to_metric(key)
-            data[metric] = int(val)
+            for line in output.splitlines():
+                key, val = line.rsplit(':', 1)
+                metric = self.key_to_metric(key)
+                data[metric] = int(val)
 
         if self.config['buffer_path']:
             cmd = ['du', '-sb', '--apparent-size', self.config['buffer_path']]

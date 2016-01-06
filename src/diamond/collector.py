@@ -439,7 +439,8 @@ class Collector(object):
                     metric_name = 'collector_time_ms'
                     metric_value = collector_time
                     self.publish(metric_name, metric_value)
-        except Exception:
+        except Exception as e:
+            self.log.warn(e)
             report_error(sys.exc_info()[0], self)
         finally:
             # After collector run, invoke a flush
