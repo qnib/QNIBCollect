@@ -95,13 +95,13 @@ class ScribeCollector(diamond.collector.Collector):
                                      stderr=subprocess.PIPE)
                 output, errors = p.communicate()
                 if errors:
-                    self.log.info(
+                    self.log.error(
                         "Error running {0!r}, {1!s}".format(cmd, errors)
                     )
                 else:
                     data['buffer_size'] = int(output[:output.find('\t')])
             except OSError:
-                self.log.info(
+                self.log.error(
                     "Unable to run {0!r}".format(cmd)
                 )
 
