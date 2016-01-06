@@ -135,7 +135,7 @@ func (m *MesosSlaveStats) getSlaveMetrics(ip string) map[string]float64 {
 
 // buildMetric creates the metric and set the correct metricType
 func (m *MesosSlaveStats) buildMetric(name string, value float64) metric.Metric {
-	s := metric.New(name)
+	s := metric.New("mesos." + name)
 	s.Value = value
 	if _, exists := mesosSlaveCumulativeCountersList[name]; exists {
 		s.MetricType = metric.CumulativeCounter

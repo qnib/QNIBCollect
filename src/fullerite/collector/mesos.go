@@ -164,7 +164,7 @@ func (m *MesosStats) getMetrics(ip string) map[string]float64 {
 
 // buildMetric Build a fullerite metric.
 func buildMetric(k string, v float64) metric.Metric {
-	m := metric.New(k)
+	m := metric.New("mesos." + k)
 	m.Value = v
 
 	if _, exists := mesosMasterCumulativeCountersList[k]; exists {

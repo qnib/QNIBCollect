@@ -141,7 +141,7 @@ func TestMesosStatsSendMetrics(t *testing.T) {
 	oldGetMetrics := getMetrics
 	defer func() { getMetrics = oldGetMetrics }()
 
-	expected := metric.Metric{"test", "gauge", 0.1, map[string]string{}}
+	expected := metric.Metric{"mesos.test", "gauge", 0.1, map[string]string{}}
 	getMetrics = func(m *MesosStats, ip string) map[string]float64 {
 		return map[string]float64{
 			"test": 0.1,
@@ -224,7 +224,7 @@ func TestMesosStatsGetMetricsHandleNon200s(t *testing.T) {
 }
 
 func TestMesosStatsBuildMetric(t *testing.T) {
-	expected := metric.Metric{"test", "gauge", 0.1, map[string]string{}}
+	expected := metric.Metric{"mesos.test", "gauge", 0.1, map[string]string{}}
 
 	actual := buildMetric("test", 0.1)
 
@@ -232,7 +232,7 @@ func TestMesosStatsBuildMetric(t *testing.T) {
 }
 
 func TestMesosStatsBuildMetricCumCounter(t *testing.T) {
-	expected := metric.Metric{"master.slave_reregistrations", metric.CumulativeCounter, 0.1, map[string]string{}}
+	expected := metric.Metric{"mesos.master.slave_reregistrations", metric.CumulativeCounter, 0.1, map[string]string{}}
 
 	actual := buildMetric("master.slave_reregistrations", 0.1)
 
