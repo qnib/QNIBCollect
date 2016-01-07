@@ -46,6 +46,7 @@ def str_to_bool(value):
 
     return value
 
+
 class CollectorErrorHandler(logging.Handler, object):
     def __init__(self, collector):
         super(CollectorErrorHandler, self).__init__()
@@ -55,6 +56,7 @@ class CollectorErrorHandler(logging.Handler, object):
         e_type = sys.exc_info()[0]
         report_error(e_type, self.collector)
 
+
 def report_error(e, collector):
     e_type = sys.exc_info()[0]
     metric_name = 'fullerite.collector_errors'
@@ -63,7 +65,8 @@ def report_error(e, collector):
         collector.dimensions = {
             'error_type': str(e_type.__name__)
         }
-    collector.publish(metric_name, metric_value)
+    if collector.can_publish_metric():
+        collector.publish(metric_name, metric_value)
 
 class Collector(object):
     """
@@ -130,6 +133,9 @@ class Collector(object):
                 if self.name in config['diamondCollectors']:
                     self.config.update(config['diamondCollectors'][self.name])
         self.process_config()
+
+    def can_publish_metric(self):
+        return self._socket is not None and self._reconnect is False
 
     def process_config(self):
         """
@@ -305,7 +311,7 @@ class Collector(object):
                             precision=precision,
                             metric_type=metric_type, ttl=ttl, dimensions=dimensions)
         except DiamondException:
-            self.log.warn(('Error when creating new Metric: path=%r, '
+            self.log.error(('Error when creating new Metric: path=%r, '
                             'value=%r'), path, value)
             raise
 
