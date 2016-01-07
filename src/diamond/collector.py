@@ -74,16 +74,19 @@ class Collector(object):
         """
         Create a new instance of the Collector class
         """
-        # Initialize Logger
-        self.log = logging.getLogger('diamond')
-        error_handler = CollectorErrorHandler(self)
-        error_handler.setLevel(logging.ERROR)
-        self.log.addHandler(error_handler)
+
         # Initialize Members
         if name is None:
             self.name = self.__class__.__name__
         else:
             self.name = name
+
+        # Initialize Logger
+        logger_name = '.'.join(['diamond', self.name])
+        self.log = logging.getLogger(logger_name)
+        error_handler = CollectorErrorHandler(self)
+        error_handler.setLevel(logging.ERROR)
+        self.log.addHandler(error_handler)
 
         self._socket = None
         self._reconnect = False
@@ -338,6 +341,9 @@ class Collector(object):
             metric.dimensions or {}
         )
         payloadStr = "%s\n" % json.dumps(payload)
+        if payload['name'] == 'fullerite.collector_errors':
+            self.log.info(payloadStr)
+        return
         success = False
 
         for i in range(FULLERITE_RETRY_COUNT):
