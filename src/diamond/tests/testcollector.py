@@ -3,11 +3,9 @@
 
 from mock import patch
 from mock import Mock
-from mock import MagicMock
 
 from test import unittest
 import configobj
-import socket
 import logging
 
 from diamond.collector import Collector
