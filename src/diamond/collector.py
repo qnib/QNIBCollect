@@ -135,9 +135,7 @@ class Collector(object):
         self.process_config()
 
     def can_publish_metric(self):
-        if ((self._socket is not None) and (self._reconnect is False)):
-            return True
-        return False
+        return self._socket is not None and self._reconnect is False
 
     def process_config(self):
         """

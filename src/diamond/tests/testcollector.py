@@ -8,12 +8,17 @@ from mock import MagicMock
 from test import unittest
 import configobj
 import socket
+import logging
 
 from diamond.collector import Collector
 from diamond.error import DiamondException
 
 
 class BaseCollectorTest(unittest.TestCase):
+
+    def tearDown(self):
+        log = logging.getLogger("diamond.Collector")
+        log.removeHandler(log.handlers[0])
 
     def config_object(self):
         config = configobj.ConfigObj()
@@ -68,4 +73,3 @@ class BaseCollectorTest(unittest.TestCase):
 
         c._socket = "socket"
         self.assertTrue(c.can_publish_metric())
-        c._socket = None
