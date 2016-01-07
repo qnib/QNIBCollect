@@ -120,12 +120,12 @@ func GetAsSlice(value interface{}) (result []string) {
 	case string:
 		err := json.Unmarshal([]byte(realValue), &result)
 		if err != nil {
-			log.Warn("Failed to convert value", value, "to a slice")
+			log.Warn("Failed to convert string:", realValue, "to a []string")
 		}
 	case []string:
 		result = realValue
 	default:
-		log.Warn("Expected a string array but got", reflect.TypeOf(value), ".Returning empty slice!")
+		log.Warn("Expected a string array but got", reflect.TypeOf(realValue), ".Returning empty slice!")
 	}
 
 	return result
