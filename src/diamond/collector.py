@@ -111,7 +111,7 @@ class Collector(object):
         try:
             sock.connect(fullerite_addr)
         except socket.error, msg:
-            self.log.error("Error connecting to fullerite TCP port: %s", msg)
+            self.log.warn("Error connecting to fullerite TCP port: %s", msg)
             sys.exit(1)
         return sock
 
@@ -305,7 +305,7 @@ class Collector(object):
                             precision=precision,
                             metric_type=metric_type, ttl=ttl, dimensions=dimensions)
         except DiamondException:
-            self.log.error(('Error when creating new Metric: path=%r, '
+            self.log.warn(('Error when creating new Metric: path=%r, '
                             'value=%r'), path, value)
             raise
 
