@@ -53,7 +53,8 @@
               "region": "uswest1-dev",
               "ecosystem": "devc",
               "habitat":"uswest1devc"
-            }
+            },
+        "collectorBlackList" : ["Test"]
         },
         "SignalFx": {
             "authToken": "secret_token",

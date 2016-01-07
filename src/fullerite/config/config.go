@@ -116,16 +116,16 @@ func GetAsMap(value interface{}) (result map[string]string) {
 func GetAsSlice(value interface{}) (result []string) {
 	result = []string{}
 
-	switch value.(type) {
+	switch realValue := value.(type) {
 	case string:
-		err := json.Unmarshal([]byte(value.(string)), &result)
+		err := json.Unmarshal([]byte(realValue), &result)
 		if err != nil {
 			log.Warn("Failed to convert value", value, "to a slice")
 		}
 	case []string:
-		result = value.([]string)
+		result = realValue
 	default:
-		log.Warn("Expected a slice but got", reflect.TypeOf(value), ".Returning empty slice!")
+		log.Warn("Expected a string array but got", reflect.TypeOf(value), ".Returning empty slice!")
 	}
 
 	return result
