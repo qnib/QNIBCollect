@@ -341,9 +341,6 @@ class Collector(object):
             metric.dimensions or {}
         )
         payloadStr = "%s\n" % json.dumps(payload)
-        if payload['name'] == 'fullerite.collector_errors':
-            self.log.info(payloadStr)
-        return
         success = False
 
         for i in range(FULLERITE_RETRY_COUNT):
