@@ -113,8 +113,8 @@ func GetAsMap(value interface{}) (result map[string]string) {
 }
 
 // GetAsSlice : Parses a json array string to []string
-func GetAsSlice(value interface{}) (result []string) {
-	result = []string{}
+func GetAsSlice(value interface{}) []string {
+	result := []string{}
 
 	switch realValue := value.(type) {
 	case string:

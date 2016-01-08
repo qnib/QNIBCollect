@@ -71,8 +71,12 @@ func TestCollectorBlackList(t *testing.T) {
 
 	b.configureCommonParams(configMap)
 	assert.Equal(t, 2, len(b.CollectorBlackList()))
-	assert.Equal(t, true, b.IsCollectorBlackListed("TestCollector1"))
-	assert.Equal(t, false, b.IsCollectorBlackListed("WhiteListed"))
+
+	val, _ := b.IsCollectorBlackListed("TestCollector1")
+	assert.Equal(t, true, val)
+
+	val, _ = b.IsCollectorBlackListed("WhiteListed")
+	assert.Equal(t, false, val)
 }
 
 func TestCommonKeepAliveConfig(t *testing.T) {

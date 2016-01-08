@@ -98,7 +98,7 @@ type Handler interface {
 	// is blacklisted in the handler
 	SetCollectorBlackList([]string)
 	CollectorBlackList() map[string]bool
-	IsCollectorBlackListed(string) bool
+	IsCollectorBlackListed(string) (bool, bool)
 }
 
 type emissionTiming struct {
@@ -207,8 +207,9 @@ func (base *BaseHandler) SetCollectorBlackList(blackList []string) {
 }
 
 // IsCollectorBlackListed : return true if collectorName is blacklisted in the handler
-func (base *BaseHandler) IsCollectorBlackListed(collectorName string) bool {
-	return base.blackListedCollectors[collectorName]
+func (base *BaseHandler) IsCollectorBlackListed(collectorName string) (bool, bool) {
+	val, exists := base.blackListedCollectors[collectorName]
+	return val, exists
 }
 
 // CollectorBlackList : return handler specific black listed collectors

@@ -36,7 +36,8 @@ func startHandler(name string, globalConfig config.Config, instanceConfig map[st
 func writeToHandlers(handlers []handler.Handler, metric metric.Metric) {
 	for _, handler := range handlers {
 		value, ok := metric.GetDimensionValue("collector")
-		if ok && handler.IsCollectorBlackListed(value) {
+		isBlackListed, _ := handler.IsCollectorBlackListed(value)
+		if ok && isBlackListed {
 			// This collector is black listed by
 			// this handler. Therefore we are dropping this
 			log.Debug("Not forwarding metrics from", value, "collector to", handler.Name(), "handler, since it has blacklisted this collector")
