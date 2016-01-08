@@ -48,10 +48,11 @@ class BaseCollectorTest(unittest.TestCase):
         c = Collector(self.config_object(), [])
         mock_socket = Mock()
         c._socket = mock_socket
-        try:
-            c.publish('metric', "bar")
-        except DiamondException:
-            pass
+        with patch.object(c, 'log'):
+            try:
+                c.publish('metric', "bar")
+            except DiamondException:
+                pass
         for call in mock_publish.mock_calls:
             name, args, kwargs = call
             metric = args[0]
@@ -61,10 +62,11 @@ class BaseCollectorTest(unittest.TestCase):
     def test_failed_error_metric_publish(self, mock_publish):
         c = Collector(self.config_object(), [])
         self.assertFalse(c.can_publish_metric())
-        try:
-            c.publish('metric', "baz")
-        except DiamondException:
-            pass
+        with patch.object(c, 'log'):
+            try:
+                c.publish('metric', "baz")
+            except DiamondException:
+                pass
         self.assertEquals(len(mock_publish.mock_calls), 0)
 
     def test_can_publish_metric(self):

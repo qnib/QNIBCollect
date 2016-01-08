@@ -93,6 +93,12 @@ type Handler interface {
 
 	KeepAliveInterval() int
 	SetKeepAliveInterval(int)
+
+	// Return true is collector
+	// is blacklisted in the handler
+	SetCollectorBlackList([]string)
+	CollectorBlackList() map[string]bool
+	IsCollectorBlackListed(string) (bool, bool)
 }
 
 type emissionTiming struct {
@@ -122,6 +128,10 @@ type BaseHandler struct {
 	totalEmissions uint64
 	metricsSent    uint64
 	metricsDropped uint64
+
+	// List of blacklisted collectors
+	// the handler won't accept metrics from
+	blackListedCollectors map[string]bool
 }
 
 // SetMaxBufferSize : set the buffer size
@@ -186,6 +196,25 @@ func (base *BaseHandler) SetMaxIdleConnectionsPerHost(value int) {
 // SetKeepAliveInterval : Set keep alive interval
 func (base *BaseHandler) SetKeepAliveInterval(value int) {
 	base.keepAliveInterval = value
+}
+
+// SetCollectorBlackList : Add collectors mentioned in the handler config to blacklist
+func (base *BaseHandler) SetCollectorBlackList(blackList []string) {
+	base.blackListedCollectors = make(map[string]bool)
+	for _, collectorName := range blackList {
+		base.blackListedCollectors[collectorName] = true
+	}
+}
+
+// IsCollectorBlackListed : return true if collectorName is blacklisted in the handler
+func (base *BaseHandler) IsCollectorBlackListed(collectorName string) (bool, bool) {
+	val, exists := base.blackListedCollectors[collectorName]
+	return val, exists
+}
+
+// CollectorBlackList : return handler specific black listed collectors
+func (base *BaseHandler) CollectorBlackList() map[string]bool {
+	return base.blackListedCollectors
 }
 
 // MaxIdleConnectionsPerHost : return max idle connections per host
@@ -269,6 +298,11 @@ func (base *BaseHandler) configureCommonParams(configMap map[string]interface{})
 		maxIdleConnectionsPerHost := config.GetAsInt(asInterface,
 			DefaultMaxIdleConnectionsPerHost)
 		base.SetMaxIdleConnectionsPerHost(maxIdleConnectionsPerHost)
+	}
+
+	if asInterface, exists := configMap["collectorBlackList"]; exists {
+		blackList := config.GetAsSlice(asInterface)
+		base.SetCollectorBlackList(blackList)
 	}
 }
 

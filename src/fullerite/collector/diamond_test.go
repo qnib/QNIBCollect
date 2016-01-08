@@ -69,34 +69,36 @@ func TestDiamondCollect(t *testing.T) {
 
 func TestparseJsonToMetric(t *testing.T) {
 	rawData := []byte(`
-{
+[{
    "name": "foobar",
    "type":  "GAUGE",
    "value": "100.0",
    "dimensions": {
       "host": "windrunner"
    }
-}
+}]
         `)
 	d := NewDiamond(nil, 12, nil)
-	metric, ok := d.parseMetric(rawData)
+	metrics, ok := d.parseMetrics(rawData)
 	assert.True(t, ok)
-	assert.Equal(t, "gauge", metric.MetricType)
+	for _, metric := range metrics {
+		assert.Equal(t, "gauge", metric.MetricType)
+	}
 }
 
 func TestInvalidJsonToMetric(t *testing.T) {
 	rawData := []byte(`
-{
+[{
    "name": "foobar",
    "type":  "GAUGE",
    "value": "100.0",
    "dimensions": {
       "host": "windrunner"
-}
+}]
         `)
 	l := defaultLog.WithFields(l.Fields{"collector": "diamond"})
 	d := NewDiamond(nil, 12, l)
-	_, ok := d.parseMetric(rawData)
+	_, ok := d.parseMetrics(rawData)
 	assert.False(t, ok)
 }
 
@@ -116,8 +118,9 @@ func connectToDiamondCollector(d *Diamond) (net.Conn, error) {
 }
 
 func emitTestMetric(conn net.Conn) {
-	m := metric.New("test")
-	b, _ := json.Marshal(m)
+	var metrics []metric.Metric
+	metrics = append(metrics, metric.New("test"))
+	b, _ := json.Marshal(metrics)
 	fmt.Fprintf(conn, string(b)+"\n")
 	fmt.Fprintf(conn, string(b)+"\n")
 }

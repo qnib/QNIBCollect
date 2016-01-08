@@ -62,6 +62,23 @@ func TestPerHandlerDimensions(t *testing.T) {
 	assert.Equal(t, "", b.DefaultDimensions()["host"])
 }
 
+func TestCollectorBlackList(t *testing.T) {
+	b := new(BaseHandler)
+	collectorBlackList := "[\"TestCollector1\", \"TestCollector2\"]"
+	configMap := map[string]interface{}{
+		"collectorBlackList": collectorBlackList,
+	}
+
+	b.configureCommonParams(configMap)
+	assert.Equal(t, 2, len(b.CollectorBlackList()))
+
+	val, _ := b.IsCollectorBlackListed("TestCollector1")
+	assert.Equal(t, true, val)
+
+	val, _ = b.IsCollectorBlackListed("WhiteListed")
+	assert.Equal(t, false, val)
+}
+
 func TestCommonKeepAliveConfig(t *testing.T) {
 	b := new(BaseHandler)
 
