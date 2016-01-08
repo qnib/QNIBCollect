@@ -112,7 +112,7 @@ func (d *Diamond) Collect() {
 	}
 
 	for line := range d.incoming {
-		if metrics, ok := d.parseMetric(line); ok {
+		if metrics, ok := d.parseMetrics(line); ok {
 			for _, metric := range metrics {
 				d.Channel() <- metric
 			}
@@ -120,7 +120,7 @@ func (d *Diamond) Collect() {
 	}
 }
 
-func (d *Diamond) parseMetric(line []byte) ([]metric.Metric, bool) {
+func (d *Diamond) parseMetrics(line []byte) ([]metric.Metric, bool) {
 	var metrics []metric.Metric
 	if err := json.Unmarshal(line, &metrics); err != nil {
 		d.log.Error("Cannot unmarshal metric line from diamond:", line)

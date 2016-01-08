@@ -79,7 +79,7 @@ func TestparseJsonToMetric(t *testing.T) {
 }]
         `)
 	d := NewDiamond(nil, 12, nil)
-	metrics, ok := d.parseMetric(rawData)
+	metrics, ok := d.parseMetrics(rawData)
 	assert.True(t, ok)
 	for _, metric := range metrics {
 		assert.Equal(t, "gauge", metric.MetricType)
@@ -98,7 +98,7 @@ func TestInvalidJsonToMetric(t *testing.T) {
         `)
 	l := defaultLog.WithFields(l.Fields{"collector": "diamond"})
 	d := NewDiamond(nil, 12, l)
-	_, ok := d.parseMetric(rawData)
+	_, ok := d.parseMetrics(rawData)
 	assert.False(t, ok)
 }
 
