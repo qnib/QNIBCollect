@@ -46,6 +46,7 @@ def str_to_bool(value):
 
     return value
 
+
 class CollectorErrorHandler(logging.Handler, object):
     def __init__(self, collector):
         super(CollectorErrorHandler, self).__init__()
@@ -55,6 +56,7 @@ class CollectorErrorHandler(logging.Handler, object):
         e_type = sys.exc_info()[0]
         report_error(e_type, self.collector)
 
+
 def report_error(e, collector):
     e_type = sys.exc_info()[0]
     metric_name = 'fullerite.collector_errors'
@@ -63,7 +65,8 @@ def report_error(e, collector):
         collector.dimensions = {
             'error_type': str(e_type.__name__)
         }
-    collector.publish(metric_name, metric_value)
+    if collector.can_publish_metric():
+        collector.publish(metric_name, metric_value)
 
 class Collector(object):
     """
@@ -74,16 +77,19 @@ class Collector(object):
         """
         Create a new instance of the Collector class
         """
-        # Initialize Logger
-        self.log = logging.getLogger('diamond')
-        error_handler = CollectorErrorHandler(self)
-        error_handler.setLevel(logging.ERROR)
-        self.log.addHandler(error_handler)
+
         # Initialize Members
         if name is None:
             self.name = self.__class__.__name__
         else:
             self.name = name
+
+        # Initialize Logger
+        logger_name = '.'.join(['diamond', self.name])
+        self.log = logging.getLogger(logger_name)
+        error_handler = CollectorErrorHandler(self)
+        error_handler.setLevel(logging.ERROR)
+        self.log.addHandler(error_handler)
 
         self._socket = None
         self._reconnect = False
@@ -108,7 +114,7 @@ class Collector(object):
         try:
             sock.connect(fullerite_addr)
         except socket.error, msg:
-            self.log.error("Error connecting to fullerite TCP port: %s", msg)
+            self.log.warn("Error connecting to fullerite TCP port: %s", msg)
             sys.exit(1)
         return sock
 
@@ -127,6 +133,9 @@ class Collector(object):
                 if self.name in config['diamondCollectors']:
                     self.config.update(config['diamondCollectors'][self.name])
         self.process_config()
+
+    def can_publish_metric(self):
+        return self._socket is not None and self._reconnect is False
 
     def process_config(self):
         """
