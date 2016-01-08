@@ -97,6 +97,7 @@ class Collector(object):
         self.dimensions = None
         self.handlers = handlers
         self.last_values = {}
+        self.payload = []
 
         self.config = {}
         self.load_config(config if config else {})
@@ -346,7 +347,10 @@ class Collector(object):
         payload['dimensions'].update(
             metric.dimensions or {}
         )
-        payloadStr = "%s\n" % json.dumps(payload)
+        self.payload.append(payload)
+
+    def flush(self):
+        payloadStr = "%s\n" % json.dumps(self.payload)
         success = False
 
         for i in range(FULLERITE_RETRY_COUNT):
@@ -436,6 +440,8 @@ class Collector(object):
 
             # Collect Data
             self.collect()
+            self.flush()
+            self.payload = []
             self.default_dimensions = None
 
             end_time = time.time()
