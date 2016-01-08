@@ -17,6 +17,8 @@ class BaseCollectorTest(unittest.TestCase):
     def tearDown(self):
         log = logging.getLogger("diamond.Collector")
         log.removeHandler(log.handlers[0])
+        # Ensure that we aren't printing log messages to stdout in unit tests
+        log.propagate = False
 
     def config_object(self):
         config = configobj.ConfigObj()
