@@ -409,7 +409,9 @@ class MySQLCollector(diamond.collector.Collector):
 
                     query = str(row_processlist['Info'])
                     user = str(row_processlist['User'])
-                    running_time = float(row_processlist['Time'])
+                    running_time = 0
+                    if row_processlist['Time'] is not None:
+                        running_time = float(row_processlist['Time'])
 
                     if cmd == "Sleep":
                         if running_time > self.config['idle_threshold']:
