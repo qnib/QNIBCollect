@@ -118,7 +118,7 @@ ifeq ($(OS),Ubuntu)
 		--deb-upstart "deb/etc/init/fullerite_diamond_server" \
 		--before-install "deb/before_install.sh" \
 		--before-remove "deb/before_rm.sh" \
-		--before-upgrade "deb/before_upgrade.sh" \
+		--after-remove "deb/post_rm.sh" \
 		-C build .
 # CentOS 7 Only
 else ifeq ($(OS),CentOS)
