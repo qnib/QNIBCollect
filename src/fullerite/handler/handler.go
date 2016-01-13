@@ -41,6 +41,8 @@ func New(name string) Handler {
 		base = NewKairos(channel, DefaultInterval, DefaultBufferSize, timeout, handlerLog)
 	case "Log":
 		base = NewLog(channel, DefaultInterval, DefaultBufferSize, handlerLog)
+	case "Scribe":
+		base = NewScribe(channel, DefaultInterval, DefaultBufferSize, timeout, handlerLog)
 	default:
 		defaultLog.Error("Cannot create handler ", name)
 		return nil
@@ -94,11 +96,17 @@ type Handler interface {
 	KeepAliveInterval() int
 	SetKeepAliveInterval(int)
 
-	// Return true is collector
+	// Return true if collector
 	// is blacklisted in the handler
 	SetCollectorBlackList([]string)
 	CollectorBlackList() map[string]bool
 	IsCollectorBlackListed(string) (bool, bool)
+
+	// Return true if collector
+	// is whitelisted in the handler
+	SetCollectorWhiteList([]string)
+	CollectorWhiteList() map[string]bool
+	IsCollectorWhiteListed(string) (bool, bool)
 }
 
 type emissionTiming struct {
@@ -132,6 +140,10 @@ type BaseHandler struct {
 	// List of blacklisted collectors
 	// the handler won't accept metrics from
 	blackListedCollectors map[string]bool
+
+	// List of whitelisted collectors
+	// the handler will accept metrics from
+	whiteListedCollectors map[string]bool
 }
 
 // SetMaxBufferSize : set the buffer size
@@ -215,6 +227,25 @@ func (base *BaseHandler) IsCollectorBlackListed(collectorName string) (bool, boo
 // CollectorBlackList : return handler specific black listed collectors
 func (base *BaseHandler) CollectorBlackList() map[string]bool {
 	return base.blackListedCollectors
+}
+
+// SetCollectorWhiteList : Add collectors mentioned in the handler config to the whitelist
+func (base *BaseHandler) SetCollectorWhiteList(whiteList []string) {
+	base.whiteListedCollectors = make(map[string]bool)
+	for _, collectorName := range whiteList {
+		base.whiteListedCollectors[collectorName] = true
+	}
+}
+
+// IsCollectorWhiteListed : return true if collectorName is blacklisted in the handler
+func (base *BaseHandler) IsCollectorWhiteListed(collectorName string) (bool, bool) {
+	val, exists := base.whiteListedCollectors[collectorName]
+	return val, exists
+}
+
+// CollectorWhiteList : return handler specific black listed collectors
+func (base *BaseHandler) CollectorWhiteList() map[string]bool {
+	return base.whiteListedCollectors
 }
 
 // MaxIdleConnectionsPerHost : return max idle connections per host
@@ -303,6 +334,11 @@ func (base *BaseHandler) configureCommonParams(configMap map[string]interface{})
 	if asInterface, exists := configMap["collectorBlackList"]; exists {
 		blackList := config.GetAsSlice(asInterface)
 		base.SetCollectorBlackList(blackList)
+	}
+
+	if asInterface, exists := configMap["collectorWhiteList"]; exists {
+		whiteList := config.GetAsSlice(asInterface)
+		base.SetCollectorWhiteList(whiteList)
 	}
 }
 

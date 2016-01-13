@@ -34,15 +34,30 @@ func startHandler(name string, globalConfig config.Config, instanceConfig map[st
 }
 
 func writeToHandlers(handlers []handler.Handler, metric metric.Metric) {
+	// whitelist and blacklist are mutually exclusive: you cannot set both for a single handler!
+	// If the handler's whitelist is set, then only metrics from collectors in it will be emitted.
+	// If the handler's whitelist is not set and its blacklist is not empty, only metrics from collectors not in
+	// the blacklist will be emitted.
 	for _, handler := range handlers {
 		value, ok := metric.GetDimensionValue("collector")
-		isBlackListed, _ := handler.IsCollectorBlackListed(value)
-		if ok && isBlackListed {
-			// This collector is black listed by
-			// this handler. Therefore we are dropping this
-			log.Debug("Not forwarding metrics from", value, "collector to", handler.Name(), "handler, since it has blacklisted this collector")
+
+		// If the handler's whitelist is not nil, only the whitelisted collectors should be considered
+		if handler.CollectorWhiteList() != nil {
+			isWhiteListed, _ := handler.IsCollectorWhiteListed(value)
+			if ok && isWhiteListed {
+				handler.Channel() <- metric
+			}
 		} else {
-			handler.Channel() <- metric
+
+			// If the handler's whitelist is nil, all collector except the ones in the blacklist are enabled
+			isBlackListed, _ := handler.IsCollectorBlackListed(value)
+			if ok && isBlackListed {
+				// This collector is black listed by
+				// this handler. Therefore we are dropping this
+				log.Debug("Not forwarding metrics from", value, "collector to", handler.Name(), "handler, since it has blacklisted this collector")
+			} else {
+				handler.Channel() <- metric
+			}
 		}
 	}
 }
