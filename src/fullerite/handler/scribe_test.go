@@ -118,3 +118,21 @@ func TestScribeEmitMetrics(t *testing.T) {
 	)
 	assert.True(t, matched)
 }
+
+func TestCreateScribeMetricsWithDefaultDimensions(t *testing.T) {
+	s := getTestScribeHandler(40, 50, 60)
+	config := map[string]interface{}{
+		"defaultDimensions": map[string]string{"region": "uswest1-devc", "ecosystem": "devc"},
+	}
+	s.Configure(config)
+
+	m := metric.Metric{
+		Name:       "test1",
+		MetricType: metric.Gauge,
+		Value:      1,
+		Dimensions: map[string]string{"dim1": "val1", "ecosystem": "devb"},
+	}
+
+	res := s.createScribeMetric(m)
+	assert.Equal(t, map[string]string{"region": "uswest1-devc", "ecosystem": "devc", "dim1": "val1"}, res.Dimensions)
+}

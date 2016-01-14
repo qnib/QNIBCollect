@@ -114,7 +114,7 @@ func (s *Scribe) emitMetrics(metrics []metric.Metric) bool {
 
 	var encodedMetrics []*scribe.LogEntry
 	for _, m := range metrics {
-		jsonMetric, err := json.Marshal(createScribeMetric(m))
+		jsonMetric, err := json.Marshal(s.createScribeMetric(m))
 		if err != nil {
 			s.log.Warnf("JSON encode failed: %s", err.Error())
 		} else {
@@ -135,12 +135,13 @@ func (s *Scribe) emitMetrics(metrics []metric.Metric) bool {
 	return true
 }
 
-func createScribeMetric(m metric.Metric) scribeMetric {
+func (s *Scribe) createScribeMetric(m metric.Metric) scribeMetric {
 	return scribeMetric{
 		Name:       m.Name,
 		Value:      m.Value,
 		MetricType: m.MetricType,
 		Timestamp:  time.Now().Unix(),
-		Dimensions: m.Dimensions,
+		Dimensions: m.GetDimensions(s.DefaultDimensions()),
 	}
+
 }
