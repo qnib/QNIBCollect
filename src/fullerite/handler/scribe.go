@@ -27,6 +27,14 @@ type Scribe struct {
 	scribeClient fulleriteScribeClient
 }
 
+type scribeMetric struct {
+	Name       string            `json:"name"`
+	MetricType string            `json:"type"`
+	Value      float64           `json:"value"`
+	Timestamp  int64             `json:"timestamp"`
+	Dimensions map[string]string `json:"dimensions"`
+}
+
 const (
 	defaultScribeEndpoint   = "localhost"
 	defaultScribePort       = 1464
@@ -106,7 +114,7 @@ func (s *Scribe) emitMetrics(metrics []metric.Metric) bool {
 
 	var encodedMetrics []*scribe.LogEntry
 	for _, m := range metrics {
-		jsonMetric, err := json.Marshal(m)
+		jsonMetric, err := json.Marshal(createScribeMetric(m))
 		if err != nil {
 			s.log.Warnf("JSON encode failed: %s", err.Error())
 		} else {
@@ -125,4 +133,14 @@ func (s *Scribe) emitMetrics(metrics []metric.Metric) bool {
 
 	s.log.Info("Successfully written ", len(encodedMetrics), " datapoints to Scribe")
 	return true
+}
+
+func createScribeMetric(m metric.Metric) scribeMetric {
+	return scribeMetric{
+		Name:       m.Name,
+		Value:      m.Value,
+		MetricType: m.MetricType,
+		Timestamp:  time.Now().Unix(),
+		Dimensions: m.Dimensions,
+	}
 }

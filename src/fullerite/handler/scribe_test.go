@@ -3,6 +3,7 @@ package handler
 import (
 	"fullerite/metric"
 
+	"regexp"
 	"testing"
 	"time"
 
@@ -104,8 +105,16 @@ func TestScribeEmitMetrics(t *testing.T) {
 	assert.True(t, res)
 
 	assert.Equal(t, "my_stream", m.msg[0].Category)
-	assert.Equal(t, "{\"name\":\"test1\",\"type\":\"gauge\",\"value\":1,\"dimensions\":{\"dim1\":\"val1\"}}", m.msg[0].Message)
+	matched, _ := regexp.MatchString(
+		"{\"name\":\"test1\",\"type\":\"gauge\",\"value\":1,\"timestamp\":\\d*,\"dimensions\":{\"dim1\":\"val1\"}}",
+		m.msg[0].Message,
+	)
+	assert.True(t, matched)
 
 	assert.Equal(t, "my_stream", m.msg[1].Category)
-	assert.Equal(t, "{\"name\":\"test2\",\"type\":\"counter\",\"value\":2,\"dimensions\":{\"dim2\":\"val2\"}}", m.msg[1].Message)
+	matched, _ = regexp.MatchString(
+		"{\"name\":\"test2\",\"type\":\"counter\",\"value\":2,\"timestamp\":\\d*,\"dimensions\":{\"dim2\":\"val2\"}}",
+		m.msg[1].Message,
+	)
+	assert.True(t, matched)
 }
