@@ -9,6 +9,7 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+	"encoding/json"
 )
 
 var testBadConfiguration = `{
@@ -139,6 +140,21 @@ func TestGetAsSlice(t *testing.T) {
 
 	sliceToParse := []string{"TestCollector1", "TestCollector2"}
 	assert.Equal(config.GetAsSlice(sliceToParse), expectedValue)
+}
+
+func TestGetAsSliceFromJson(t *testing.T) {
+	var data interface{}
+	jsonString := []byte(`{"listOfStrings": ["a", "b", "c"]}`)
+
+	err := json.Unmarshal(jsonString, &data)
+	assert.Nil(t, err)
+
+	if err == nil {
+		temp := data.(map[string]interface{})
+
+		res := config.GetAsSlice(temp["listOfStrings"])
+		assert.Equal(t, []string{"a", "b", "c"}, res)
+	}
 }
 
 func TestParseGoodConfig(t *testing.T) {
