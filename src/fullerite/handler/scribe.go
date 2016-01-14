@@ -46,8 +46,6 @@ func NewScribe(
 	inst.interval = initialInterval
 	inst.maxBufferSize = initialBufferSize
 	inst.timeout = initialTimeout
-	inst.maxIdleConnectionsPerHost = DefaultMaxIdleConnectionsPerHost
-	inst.keepAliveInterval = DefaultKeepAliveInterval
 	inst.log = log
 	inst.channel = channel
 

@@ -49,7 +49,7 @@ func checkEmission(t *testing.T, coll string, h handler.Handler, expected bool) 
 	}
 }
 
-func TestWriteToHandlersWhiteList(t *testing.T) {
+func TestCanSendMetricsWhiteList(t *testing.T) {
 	logrus.SetLevel(logrus.PanicLevel)
 
 	channel := make(chan metric.Metric, 5)
@@ -61,11 +61,11 @@ func TestWriteToHandlersWhiteList(t *testing.T) {
 	h.SetCollectorBlackList([]string{"coll2"})
 
 	checkEmission(t, "coll1", h, true)
-	checkEmission(t, "coll2", h, true)
+	checkEmission(t, "coll2", h, false)
 	checkEmission(t, "coll3", h, false)
 }
 
-func TestWriteToHandlersBlackList(t *testing.T) {
+func TestCanSendMetricsOnlyBlackList(t *testing.T) {
 	logrus.SetLevel(logrus.PanicLevel)
 
 	channel := make(chan metric.Metric, 5)
@@ -77,5 +77,18 @@ func TestWriteToHandlersBlackList(t *testing.T) {
 
 	checkEmission(t, "coll1", h, true)
 	checkEmission(t, "coll2", h, false)
+	checkEmission(t, "coll3", h, true)
+}
+
+func TestCanSendMetrics(t *testing.T) {
+	logrus.SetLevel(logrus.PanicLevel)
+
+	channel := make(chan metric.Metric, 5)
+	timeout := time.Duration(5 * time.Second)
+	log := logrus.WithFields(logrus.Fields{"app": "fullerite", "pkg": "handler"})
+	h := handler.NewSignalFx(channel, 10, 10, timeout, log)
+
+	checkEmission(t, "coll1", h, true)
+	checkEmission(t, "coll2", h, true)
 	checkEmission(t, "coll3", h, true)
 }
