@@ -38,6 +38,7 @@ func TestScribeConfigureEmptyConfig(t *testing.T) {
 	assert.Equal(t, 13, s.MaxBufferSize())
 	assert.Equal(t, defaultScribeEndpoint, s.endpoint)
 	assert.Equal(t, defaultScribePort, s.port)
+	assert.Equal(t, defaultScribeStreamName, s.streamName)
 	assert.Nil(t, s.scribeClient)
 }
 
@@ -48,6 +49,7 @@ func TestScribeConfigure(t *testing.T) {
 		"max_buffer_size": "100",
 		"endpoint":        "1.2.3.4",
 		"port":            123,
+		"streamName":      "my_stream",
 	}
 
 	s := getTestScribeHandler(40, 50, 60)
@@ -57,6 +59,7 @@ func TestScribeConfigure(t *testing.T) {
 	assert.Equal(t, 100, s.MaxBufferSize())
 	assert.Equal(t, "1.2.3.4", s.endpoint)
 	assert.Equal(t, 123, s.port)
+	assert.Equal(t, "my_stream", s.streamName)
 	assert.Nil(t, s.scribeClient)
 }
 
@@ -79,6 +82,7 @@ func TestScribeEmitMetricsZeroMetrics(t *testing.T) {
 func TestScribeEmitMetrics(t *testing.T) {
 	s := getTestScribeHandler(40, 50, 60)
 	m := &MockScribeClient{}
+	s.streamName = "my_stream"
 	s.scribeClient = m
 
 	metrics := []metric.Metric{
@@ -99,9 +103,9 @@ func TestScribeEmitMetrics(t *testing.T) {
 	res := s.emitMetrics(metrics)
 	assert.True(t, res)
 
-	assert.Equal(t, scribeStreamName, m.msg[0].Category)
+	assert.Equal(t, "my_stream", m.msg[0].Category)
 	assert.Equal(t, "{\"name\":\"test1\",\"type\":\"gauge\",\"value\":1,\"dimensions\":{\"dim1\":\"val1\"}}", m.msg[0].Message)
 
-	assert.Equal(t, scribeStreamName, m.msg[1].Category)
+	assert.Equal(t, "my_stream", m.msg[1].Category)
 	assert.Equal(t, "{\"name\":\"test2\",\"type\":\"counter\",\"value\":2,\"dimensions\":{\"dim2\":\"val2\"}}", m.msg[1].Message)
 }

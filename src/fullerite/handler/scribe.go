@@ -23,13 +23,14 @@ type Scribe struct {
 	BaseHandler
 	endpoint     string
 	port         int
+	streamName   string
 	scribeClient fulleriteScribeClient
 }
 
 const (
-	defaultScribeEndpoint = "localhost"
-	defaultScribePort     = 1464
-	scribeStreamName      = "tmp_fullerite_to_scribe"
+	defaultScribeEndpoint   = "localhost"
+	defaultScribePort       = 1464
+	defaultScribeStreamName = "fullerite_to_scribe"
 )
 
 // NewScribe returns a new Scribe handler.
@@ -51,6 +52,7 @@ func NewScribe(
 
 	inst.endpoint = defaultScribeEndpoint
 	inst.port = defaultScribePort
+	inst.streamName = defaultScribeStreamName
 
 	return inst
 }
@@ -63,6 +65,10 @@ func (s *Scribe) Configure(configMap map[string]interface{}) {
 
 	if port, exists := configMap["port"]; exists {
 		s.port = config.GetAsInt(port, defaultScribePort)
+	}
+
+	if stream, exists := configMap["streamName"]; exists {
+		s.streamName = stream.(string)
 	}
 
 	s.configureCommonParams(configMap)
@@ -104,7 +110,7 @@ func (s *Scribe) emitMetrics(metrics []metric.Metric) bool {
 		if err != nil {
 			s.log.Warnf("JSON encode failed: %s", err.Error())
 		} else {
-			encodedMetrics = append(encodedMetrics, &scribe.LogEntry{scribeStreamName, string(jsonMetric)})
+			encodedMetrics = append(encodedMetrics, &scribe.LogEntry{s.streamName, string(jsonMetric)})
 		}
 	}
 
