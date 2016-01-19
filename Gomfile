@@ -13,3 +13,4 @@ gom 'golang.org/x/tools/go/exact', :commit => '1cdaff4a02c554c9fb39dda0b56241c5f
 gom 'golang.org/x/tools/go/gcimporter', :commit => '1cdaff4a02c554c9fb39dda0b56241c5f0949d91'
 gom 'golang.org/x/tools/go/types', :commit => '1cdaff4a02c554c9fb39dda0b56241c5f0949d91'
 gom "github.com/stretchr/testify/assert"
+gom "github.com/samuel/go-thrift", :commit => 'ca819cf963ab710e7a285044e92f1353fa497b80'

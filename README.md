@@ -49,6 +49,7 @@ Finally, fullerite is just a simple go binary. You can manually invoke it and pa
  * [KairosDB](https://github.com/kairosdb/kairosdb)
  * [SignalFx](https://www.signalfx.com)
  * [Datadog](https://www.datadoghq.com)
+ * [Scribe](https://github.com/facebookarchive/scribe)
 
 # Contributing to fullerite
 
