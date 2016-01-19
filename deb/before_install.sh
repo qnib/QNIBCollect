@@ -5,7 +5,7 @@ if ! [ "$(id 'fuller')" ]; then
   exit_code=$?
   if [ $exit_code -eq 0 ]; then
     echo "creating user fuller and adding to fuller group"
-    useradd --no-create-home --system -g "fuller"
+    useradd --no-create-home --system -g"fuller" "fuller"
   elif [ $exit_code -eq 2 ]; then
     echo "creating user and group fuller"
     useradd --no-create-home --system --user-group "fuller"
