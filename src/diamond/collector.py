@@ -441,8 +441,6 @@ class Collector(object):
             # Collect Data
             self.collect()
             self.flush()
-            self.payload = []
-            self.default_dimensions = None
 
             end_time = time.time()
             collector_time = int((end_time - start_time) * 1000)
@@ -460,6 +458,8 @@ class Collector(object):
         finally:
             # After collector run, invoke a flush
             # method on each handler.
+            self.payload = []
+            self.default_dimensions = None
             for handler in self.handlers:
                 handler._flush()
 
