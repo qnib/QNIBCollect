@@ -439,6 +439,7 @@ class Collector(object):
             start_time = time.time()
 
             # Collect Data
+            self.payload = []
             self.collect()
             self.flush()
             self.payload = []
