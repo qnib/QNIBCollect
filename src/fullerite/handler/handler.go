@@ -3,6 +3,7 @@ package handler
 import (
 	"fullerite/config"
 	"fullerite/metric"
+	"sync/atomic"
 
 	"container/list"
 	"fmt"
@@ -380,7 +381,7 @@ func (base *BaseHandler) run(emitFunc func([]metric.Metric) bool) {
 // the base handler's interval
 func (base *BaseHandler) recordEmissions(timingsChannel chan emissionTiming) {
 	for timing := range timingsChannel {
-		base.totalEmissions++
+		atomic.AddUint64(&base.totalEmissions, 1)
 		now := time.Now()
 
 		base.emissionTimes.PushBack(timing)
@@ -426,8 +427,8 @@ func (base *BaseHandler) emitAndTime(
 	callbackChannel <- timing
 
 	if result {
-		base.metricsSent += uint64(numMetrics)
+		atomic.AddUint64(&base.metricsSent, uint64(numMetrics))
 	} else {
-		base.metricsDropped += uint64(numMetrics)
+		atomic.AddUint64(&base.metricsDropped, uint64(numMetrics))
 	}
 }
