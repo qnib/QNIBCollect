@@ -126,12 +126,12 @@ func TestHandlePopulatedResponseFulleriteHTTP(t *testing.T) {
 		switch m.Name {
 		case "somemem":
 			assert.Equal(t, 23.0, m.Value)
-			assert.Equal(t, metric.Counter, m.MetricType)
+			assert.Equal(t, metric.CumulativeCounter, m.MetricType)
 		case "somememgauge":
 			assert.Equal(t, 342.2, m.Value)
 		case "firstcounter":
 			assert.Equal(t, 213.0, m.Value)
-			assert.Equal(t, metric.Counter, m.MetricType)
+			assert.Equal(t, metric.CumulativeCounter, m.MetricType)
 			assertDimension(&m, "handler", "firsthandler")
 		case "firstgauge":
 			assert.Equal(t, 123.0, m.Value)
@@ -139,11 +139,11 @@ func TestHandlePopulatedResponseFulleriteHTTP(t *testing.T) {
 		case "secondcounter":
 			assert.Equal(t, 234.0, m.Value)
 			assertDimension(&m, "handler", "secondhandler")
-			assert.Equal(t, metric.Counter, m.MetricType)
+			assert.Equal(t, metric.CumulativeCounter, m.MetricType)
 		case "secondsecondcounter":
 			assert.Equal(t, 53.2, m.Value)
 			assertDimension(&m, "handler", "secondhandler")
-			assert.Equal(t, metric.Counter, m.MetricType)
+			assert.Equal(t, metric.CumulativeCounter, m.MetricType)
 		case "secondgauge":
 			assert.Equal(t, 245.3, m.Value)
 			assertDimension(&m, "handler", "secondhandler")

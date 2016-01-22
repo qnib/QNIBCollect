@@ -85,7 +85,7 @@ func (inst fulleriteHTTP) buildMetrics(counters *map[string]float64, isCounter b
 		m := metric.New(key)
 		m.Value = val
 		if isCounter {
-			m.MetricType = metric.Counter
+			m.MetricType = metric.CumulativeCounter
 		}
 		results = append(results, m)
 	}
