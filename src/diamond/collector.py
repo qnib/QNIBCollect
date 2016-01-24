@@ -232,6 +232,9 @@ class Collector(object):
 
             # Blacklist of metrics to let through
             'metrics_blacklist': None,
+
+            # Max buffer size before flushing to fullerite core
+            'max_buffer_size': 300,
         }
 
     def get_metric_path(self, name, instance=None):
@@ -348,9 +351,14 @@ class Collector(object):
             metric.dimensions or {}
         )
         self.payload.append(payload)
+        if len(self.payload) >= self.config.get('max_buffer_size', 300):
+            self.flush()
+            self.payload = []
 
     def flush(self):
         payloadStr = "%s\n" % json.dumps(self.payload)
+        self.log.info("Flushing {0} {1} ".format(self.name, len(self.payload)))
+        return
         success = False
 
         for i in range(FULLERITE_RETRY_COUNT):

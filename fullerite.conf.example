@@ -10,7 +10,7 @@
 
     "diamondCollectorsPath": "src/diamond/collectors",
     "diamondCollectors": {
-        "CPUCollector": {"interval": 10},
+        "CPUCollector": {"interval": 10, "max_buffer_size": 50},
         "PingCollector": {"target_google": "google.com", "interval": 10, "bin": "/sbin/ping"}
     },
 
