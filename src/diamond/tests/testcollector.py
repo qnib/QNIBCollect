@@ -76,11 +76,11 @@ class BaseCollectorTest(unittest.TestCase):
         c._socket = "socket"
         self.assertTrue(c.can_publish_metric())
 
-    @patch('diamond.collector.Collector.flush', autoSpec=True)
-    def test_batch_size_flush(self, mock_flush):
+    def test_batch_size_flush(self):
         c = Collector(self.config_object(), [])
         mock_socket = Mock()
         c._socket = mock_socket
+        c._reconnect = False
         c.config['max_buffer_size'] = 2
         with patch.object(c, 'log'):
             try:
@@ -89,4 +89,5 @@ class BaseCollectorTest(unittest.TestCase):
                 c.publish('metric3', 3)
             except DiamondException:
                 pass
-        self.assertEquals(len(mock_flush.mock_calls), 1)
+        self.assertEquals(mock_socket.sendall.call_count, 1)
+        self.assertEquals(len(c.payload), 1)
