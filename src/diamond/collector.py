@@ -448,6 +448,8 @@ class Collector(object):
             start_time = time.time()
 
             # Collect Data
+            self.payload = []
+            self.default_dimensions = None
             self.collect()
 
             end_time = time.time()
