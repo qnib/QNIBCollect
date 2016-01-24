@@ -168,6 +168,9 @@ class Collector(object):
             self.config['metrics_blacklist'] = re.compile(
                 self.config['metrics_blacklist'])
 
+        if 'max_buffer_size' in self.config:
+            self.config['max_buffer_size'] = int(self.config['max_buffer_size'])
+
     def get_default_config_help(self):
         """
         Returns the help text for the configuration options for this collector
