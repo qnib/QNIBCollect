@@ -357,8 +357,6 @@ class Collector(object):
 
     def flush(self):
         payloadStr = "%s\n" % json.dumps(self.payload)
-        self.log.info("Flushing {0} {1} ".format(self.name, len(self.payload)))
-        return
         success = False
 
         for i in range(FULLERITE_RETRY_COUNT):
