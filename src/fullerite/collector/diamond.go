@@ -128,9 +128,9 @@ func (d *Diamond) parseMetrics(line []byte) ([]metric.Metric, bool) {
 	}
 	// All diamond metric_types are reported in uppercase, lets make them
 	// fullerite compatible
-	for _, metric := range metrics {
-		metric.MetricType = strings.ToLower(metric.MetricType)
-		metric.AddDimension("diamond", "yes")
+	for i := range metrics {
+		metrics[i].MetricType = strings.ToLower(metrics[i].MetricType)
+		metrics[i].AddDimension("diamond", "yes")
 	}
 	return metrics, true
 }
