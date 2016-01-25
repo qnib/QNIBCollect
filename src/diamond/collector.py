@@ -356,10 +356,13 @@ class Collector(object):
         self.payload.append(payload)
         if len(self.payload) >= self.config.get('max_buffer_size', 300):
             self.flush()
-            self.payload = []
 
     def flush(self):
-        payloadStr = "%s\n" % json.dumps(self.payload)
+        try:
+            payloadStr = "%s\n" % json.dumps(self.payload)
+        finally:
+            self.payload = []
+
         success = False
 
         for i in range(FULLERITE_RETRY_COUNT):
@@ -448,7 +451,6 @@ class Collector(object):
             start_time = time.time()
 
             # Collect Data
-            self.payload = []
             self.default_dimensions = None
             self.collect()
 
@@ -469,7 +471,6 @@ class Collector(object):
             # After collector run, invoke a flush
             # method on each handler.
             self.flush()
-            self.payload = []
             self.default_dimensions = None
             for handler in self.handlers:
                 handler._flush()
