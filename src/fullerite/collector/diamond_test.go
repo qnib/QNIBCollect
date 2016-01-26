@@ -67,12 +67,12 @@ func TestDiamondCollect(t *testing.T) {
 	}
 }
 
-func TestparseJsonToMetric(t *testing.T) {
+func TestParseJsonToMetric(t *testing.T) {
 	rawData := []byte(`
 [{
    "name": "foobar",
    "type":  "GAUGE",
-   "value": "100.0",
+   "value": 100.0,
    "dimensions": {
       "host": "windrunner"
    }
