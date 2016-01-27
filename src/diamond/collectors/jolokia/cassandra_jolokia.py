@@ -74,21 +74,20 @@ class CassandraJolokiaCollector(JolokiaCollector):
 
     def parse_and_publish(self, prefix, key, value):
         metric_prefix, meta = prefix.split(':', 2)
-        metric_name, metric_type, self.dimensions = self.parse_meta(meta)
+        name, metric_type, self.dimensions = self.parse_meta(meta)
 
         metric_name_list = [metric_prefix]
         if self.config.get('prefix', None):
             metric_name_list = [self.config['prefix'], metric_prefix]
         if metric_type:
             metric_name_list.append(metric_type)
-
-        metric_name_list.append(metric_name)
+        if name:
+            metric_name_list.append(name)
         if key.lower() != 'value':
             metric_name_list.append(key.lower())
 
         metric_name = '.'.join(metric_name_list)
         metric_name = self.clean_up(metric_name)
-
         if metric_name == "":
             self.dimensions = {}
             return
