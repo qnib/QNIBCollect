@@ -98,19 +98,19 @@ class CassandraJolokiaCollector(JolokiaCollector):
             self.publish(metric_name, value)
 
     def parse_meta(self, meta):
-        result = {}
+        dimensions = {}
         for k, v in [kv.split('=') for kv in meta.split(',')]:
-            result[str(k)] = v
+            dimensions[str(k)] = v
 
         # We can have no name defined for metrics like:
         # org.apache.cassandra.auth:type=PermissionsCache
-        metric_name = result.pop("name", None)
-        metric_type = result.pop("type", None)
-        scope_type = result.pop("scope", None)
+        metric_name = dimensions.pop("name", None)
+        metric_type = dimensions.pop("type", None)
+        scope_type = dimensions.pop("scope", None)
         if scope_type:
-            result["type"] = scope_type
+            dimensions["type"] = scope_type
 
-        return metric_name, metric_type, result
+        return metric_name, metric_type, dimensions
 
     # override: Interpret beans that match the `histogram_regex` as histograms,
     # and collect percentiles from them.
