@@ -103,7 +103,9 @@ class CassandraJolokiaCollector(JolokiaCollector):
         for k, v in [kv.split('=') for kv in meta.split(',')]:
             result[str(k)] = v
 
-        metric_name = result.pop("name")
+        # We can have no name defined for metrics like:
+        # org.apache.cassandra.auth:type=PermissionsCache
+        metric_name = result.pop("name", None)
         metric_type = result.pop("type", None)
         scope_type = result.pop("scope", None)
         if scope_type:
