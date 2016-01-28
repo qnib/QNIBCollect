@@ -65,7 +65,7 @@ class CassandraJolokiaCollector(JolokiaCollector):
 
     def collect_bean(self, prefix, obj):
         for k, v in obj.iteritems():
-            if isinstance(v, (int, float, long)):
+            if type(v) in [int, float, long]:
                 self.parse_and_publish(prefix, k, v)
             elif isinstance(v, dict) and str_to_bool(self.config['nested']):
                 self.collect_bean("%s.%s" % (prefix, k), v)
