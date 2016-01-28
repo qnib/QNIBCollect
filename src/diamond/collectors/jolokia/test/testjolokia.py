@@ -77,7 +77,7 @@ class TestJolokiaCollector(CollectorTestCase):
             if url == 'http://localhost:8778/jolokia/list':
                 return self.getFixture('listing_with_bad_mbean')
             elif url == ('http://localhost:8778/jolokia/?ignoreErrors=true'
-                         '&p=read/xxx.bad.package:*'):
+                         '&maxCollectionSize=1000&p=read/xxx.bad.package:*'):
                 return self.getFixture('stats_error')
             else:
                 return self.getFixture('stats')

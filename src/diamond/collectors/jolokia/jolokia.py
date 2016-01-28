@@ -58,7 +58,7 @@ import urllib2
 class JolokiaCollector(diamond.collector.Collector):
 
     LIST_URL = "/list"
-    READ_URL = "/?ignoreErrors=true&p=read/%s:*"
+    READ_URL = "/?ignoreErrors=true&maxCollectionSize=%s&p=read/%s:*"
 
     """
     These domains contain MBeans that are for management purposes,
@@ -80,7 +80,8 @@ class JolokiaCollector(diamond.collector.Collector):
             'port': 'Port',
             'rewrite': "This sub-section of the config contains pairs of"
                        " from-to regex rewrites.",
-            'path': 'Path to jolokia.  typically "jmx" or "jolokia"'
+            'path': 'Path to jolokia.  typically "jmx" or "jolokia"',
+            'read_limit': 'Request size to read from jolokia, defaults to 1000, 0 = no limit'
         })
         return config_help
 
@@ -93,6 +94,7 @@ class JolokiaCollector(diamond.collector.Collector):
             'path': 'jolokia',
             'host': 'localhost',
             'port': 8778,
+            'read_limit': 1000,
         })
         return config
 
@@ -154,7 +156,8 @@ class JolokiaCollector(diamond.collector.Collector):
 
     def read_request(self, domain):
         try:
-            url_path = self.READ_URL % self.escape_domain(domain)
+            url_path = self.READ_URL % (self.config['read_limit'],
+                                        self.escape_domain(domain))
             url = "http://%s:%s/%s%s" % (self.config['host'],
                                          self.config['port'],
                                          self.config['path'],
