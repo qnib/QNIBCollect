@@ -56,8 +56,8 @@ import urllib2
 
 
 class JolokiaCollector(diamond.collector.Collector):
+    LIST_URL = "/list?maxDepth=1"
 
-    LIST_URL = "/list"
     READ_URL = "/?ignoreErrors=true&maxCollectionSize=%s&p=read/%s:*"
 
     """
