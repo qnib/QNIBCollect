@@ -132,7 +132,7 @@ class JolokiaCollector(diamond.collector.Collector):
             domains = listing['value'] if listing['status'] == 200 else {}
             if listing['status'] == 200:
                 self.domain_keys = domains.keys()
-                self.last_list_request = int(time.time())
+                self.last_list_request = listing.get('timestamp', int(time.time()))
             for domain in self.domain_keys:
                 if domain not in self.IGNORE_DOMAINS:
                     obj = self.read_request(domain)
