@@ -51,13 +51,14 @@ an mbean.
 import diamond.collector
 import json
 import re
+import time
 import urllib
 import urllib2
 
 
 class JolokiaCollector(diamond.collector.Collector):
 
-    LIST_URL = "/list"
+    LIST_URL = "/list?ifModifiedSince=%s"
     READ_URL = "/?ignoreErrors=true&maxCollectionSize=%s&p=read/%s:*"
 
     """
@@ -96,6 +97,7 @@ class JolokiaCollector(diamond.collector.Collector):
             'port': 8778,
             'read_limit': 1000,
         })
+        self.last_list_request = 0
         return config
 
     def __init__(self, *args, **kwargs):
@@ -127,6 +129,8 @@ class JolokiaCollector(diamond.collector.Collector):
         listing = self.list_request()
         try:
             domains = listing['value'] if listing['status'] == 200 else {}
+            if listing['status'] == 200:
+                self.last_list_request = int(time.time())
             for domain in domains.keys():
                 if domain not in self.IGNORE_DOMAINS:
                     obj = self.read_request(domain)
@@ -144,10 +148,11 @@ class JolokiaCollector(diamond.collector.Collector):
 
     def list_request(self):
         try:
+            url_path = self.LIST_URL % (self.last_list_request)
             url = "http://%s:%s/%s%s" % (self.config['host'],
                                          self.config['port'],
                                          self.config['path'],
-                                         self.LIST_URL)
+                                         url_path)
             response = urllib2.urlopen(url)
             return self.read_json(response)
         except (urllib2.HTTPError, ValueError):
