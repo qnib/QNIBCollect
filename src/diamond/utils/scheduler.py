@@ -7,6 +7,12 @@ import os
 import random
 import sys
 import signal
+from subprocess import Popen, PIPE
+
+try:
+    import psutil
+except ImportError:
+    psutil = None
 
 try:
     from setproctitle import getproctitle, setproctitle
@@ -18,10 +24,29 @@ from diamond.utils.signals import SIGALRMException
 from diamond.utils.signals import SIGHUPException
 
 
+def get_children(parent_pid):
+    if psutil:
+        parent = psutil.Process(parent_pid)
+        return [child.pid for child in parent.get_children()]
+    else:
+        children = []
+        process = Popen(['ps', '-eo', 'pid,ppid'], stdout=PIPE, stderr=PIPE)
+        output, errors = process.communicate()
+        if errors:
+            log.error("Could not get processlist with child procs: {0!s}".format(errors))
+            return children
+        for line in output.splitlines():
+            pid, ppid = line.split(' ', 1)
+            if ppid == parent_pid:
+                children.append(pid)
+        return children
+
+
 def collector_process(collector, log):
     """
     """
     proc = multiprocessing.current_process()
+    pid = str(proc.pid)
     if setproctitle:
         setproctitle('%s - %s' % (getproctitle(), proc.name))
 
@@ -73,7 +98,6 @@ def collector_process(collector, log):
             signal.alarm(0)
 
         except SIGALRMException:
-            log.error('Took too long to run! Killed!')
 
             # Adjust  the stagger_offset to allow for more time to run the
             # collector
@@ -85,6 +109,15 @@ def collector_process(collector, log):
                 'interval': interval,
             }
             collector.publish('fullerite.collection_time_exceeded', 1)
+            try:
+                log.error('Took too long to run! Killed!')
+                children = get_children(pid)
+                for child in children:
+                    os.kill(int(child), signal.SIGKILL)
+            except OSError as e:
+                log.debug('Process died on its own!')
+            except Exception as e:
+                log.exception('Killing children failed')
 
         except SIGHUPException:
             # Reload the config if requested

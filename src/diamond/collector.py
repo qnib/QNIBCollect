@@ -465,8 +465,10 @@ class Collector(object):
                     metric_value = collector_time
                     self.publish(metric_name, metric_value)
         except Exception as e:
-            self.log.warn(e)
             report_error(sys.exc_info()[0], self)
+            # Now that we reported it let's raise the exception
+            # so it can be cought by the scheduler
+            raise e
         finally:
             # After collector run, invoke a flush
             # method on each handler.
