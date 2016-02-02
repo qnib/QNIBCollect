@@ -25,7 +25,7 @@ from diamond.utils.signals import SIGHUPException
 
 
 def get_children(parent_pid):
-    if not psutil:
+    if psutil:
         parent = psutil.Process(parent_pid)
         return [child.pid for child in parent.get_children()]
     else:
