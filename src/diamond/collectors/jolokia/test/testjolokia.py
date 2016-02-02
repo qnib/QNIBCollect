@@ -27,7 +27,7 @@ class TestJolokiaCollector(CollectorTestCase):
     @patch.object(Collector, 'publish')
     def test_should_work_with_real_data(self, publish_mock):
         def se(url):
-            if url == 'http://localhost:8778/jolokia/list':
+            if 'http://localhost:8778/jolokia/list' in url:
                 return self.getFixture('listing')
             else:
                 return self.getFixture('stats')
@@ -46,7 +46,7 @@ class TestJolokiaCollector(CollectorTestCase):
     @patch.object(Collector, 'publish')
     def test_real_data_with_rewrite(self, publish_mock):
         def se(url):
-            if url == 'http://localhost:8778/jolokia/list':
+            if 'http://localhost:8778/jolokia/list' in url:
                 return self.getFixture('listing')
             else:
                 return self.getFixture('stats')
@@ -74,7 +74,7 @@ class TestJolokiaCollector(CollectorTestCase):
     @patch.object(Collector, 'publish')
     def test_should_skip_when_mbean_request_fails(self, publish_mock):
         def se(url):
-            if url == 'http://localhost:8778/jolokia/list':
+            if 'http://localhost:8778/jolokia/list' in url:
                 return self.getFixture('listing_with_bad_mbean')
             elif url == ('http://localhost:8778/jolokia/?ignoreErrors=true'
                          '&maxCollectionSize=1000&p=read/xxx.bad.package:*'):
