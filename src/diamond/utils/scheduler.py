@@ -4,6 +4,7 @@ import time
 import math
 import multiprocessing
 import os
+import psutil
 import random
 import sys
 import signal
@@ -99,3 +100,13 @@ def collector_process(collector, log):
         except Exception:
             log.exception('Collector failed!')
             break
+
+        finally:
+            parent = psutil.Process(os.getpid())
+            children = parent.get_children()
+            for child in children:
+                try:
+                    os.kill(child.pid, signal.SIGKILL)
+                except Exception as e:
+                    log.exception('Killing children failed')
+                    continue
