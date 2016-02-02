@@ -37,8 +37,6 @@ def get_children(parent_pid):
             return children
         for line in output.splitlines():
             pid, ppid = line.split(' ', 1)
-            if pid == parent_pid:
-                continue
             if ppid == parent_pid:
                 children.append(pid)
         return children
