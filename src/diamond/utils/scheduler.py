@@ -48,7 +48,7 @@ def collector_process(collector, log):
     """
     """
     proc = multiprocessing.current_process()
-    pid = proc.pid
+    pid = str(proc.pid)
     if setproctitle:
         setproctitle('%s - %s' % (getproctitle(), proc.name))
 
@@ -113,7 +113,7 @@ def collector_process(collector, log):
             collector.publish('fullerite.collection_time_exceeded', 1)
             try:
                 log.error('Took too long to run! Killed!')
-                children = get_children(str(pid))
+                children = get_children(pid)
                 for child in children:
                     os.kill(int(child), signal.SIGKILL)
             except OSError as e:
