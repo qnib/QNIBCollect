@@ -58,7 +58,7 @@ import urllib2
 
 class JolokiaCollector(diamond.collector.Collector):
 
-    LIST_URL = "/list?ifModifiedSince=%s"
+    LIST_URL = "/list?ifModifiedSince=%s&maxDepth=%s"
     READ_URL = "/?ignoreErrors=true&maxCollectionSize=%s&p=read/%s:*"
 
     """
@@ -82,6 +82,7 @@ class JolokiaCollector(diamond.collector.Collector):
             'rewrite': "This sub-section of the config contains pairs of"
                        " from-to regex rewrites.",
             'path': 'Path to jolokia.  typically "jmx" or "jolokia"',
+            'listing_max_depth': 'max depth of domain listings tree, 0=deepest, 1=keys only, 2=weird',
             'read_limit': 'Request size to read from jolokia, defaults to 1000, 0 = no limit'
         })
         return config_help
@@ -95,6 +96,7 @@ class JolokiaCollector(diamond.collector.Collector):
             'path': 'jolokia',
             'host': 'localhost',
             'port': 8778,
+            'listing_max_depth': 0,
             'read_limit': 1000,
         })
         self.domain_keys = []
@@ -150,7 +152,8 @@ class JolokiaCollector(diamond.collector.Collector):
 
     def list_request(self):
         try:
-            url_path = self.LIST_URL % (self.last_list_request)
+            url_path = self.LIST_URL % (self.last_list_request,
+                                        self.config['listing_max_depth'])
             url = "http://%s:%s/%s%s" % (self.config['host'],
                                          self.config['port'],
                                          self.config['path'],
