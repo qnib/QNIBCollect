@@ -97,6 +97,7 @@ class JolokiaCollector(diamond.collector.Collector):
             'port': 8778,
             'read_limit': 1000,
         })
+        self.domain_keys = []
         self.last_list_request = 0
         return config
 
@@ -130,8 +131,9 @@ class JolokiaCollector(diamond.collector.Collector):
         try:
             domains = listing['value'] if listing['status'] == 200 else {}
             if listing['status'] == 200:
+                self.domain_keys = domains.keys()
                 self.last_list_request = int(time.time())
-            for domain in domains.keys():
+            for domain in self.domain_keys:
                 if domain not in self.IGNORE_DOMAINS:
                     obj = self.read_request(domain)
                     mbeans = obj['value'] if obj['status'] == 200 else {}
