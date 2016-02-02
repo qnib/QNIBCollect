@@ -30,7 +30,7 @@ def get_children(parent_pid):
         return [child.pid for child in parent.get_children()]
     else:
         children = []
-        process = Popen(['ps', 'ax', '-eo', 'pid,ppid'], stdout=PIPE, stderr=PIPE)
+        process = Popen(['ps', '-eo', 'pid,ppid'], stdout=PIPE, stderr=PIPE)
         output, errors = process.communicate()
         if errors:
             log.error("Could not get processlist with child procs: {0!s}".format(errors))
