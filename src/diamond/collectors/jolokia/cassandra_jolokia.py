@@ -28,7 +28,6 @@ import re
 
 
 class CassandraJolokiaCollector(JolokiaCollector):
-    LIST_URL = "/list?maxDepth=1"
     # override to allow setting which percentiles will be collected
     def get_default_config_help(self):
         config_help = super(CassandraJolokiaCollector,

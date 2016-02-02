@@ -27,7 +27,7 @@ class TestJolokiaCollector(CollectorTestCase):
     @patch.object(Collector, 'publish')
     def test_should_work_with_real_data(self, publish_mock):
         def se(url):
-            if url == 'http://localhost:8778/jolokia/list':
+            if url == 'http://localhost:8778/jolokia/list?maxDepth=1':
                 return self.getFixture('listing')
             else:
                 return self.getFixture('stats')
