@@ -59,7 +59,7 @@ import urllib2
 class JolokiaCollector(diamond.collector.Collector):
 
     LIST_URL = "/list?ifModifiedSince=%s&maxDepth=%s"
-    READ_URL = "/?ignoreErrors=true&includeStacTrace=false&maxCollectionSize=%s&p=read/%s:*"
+    READ_URL = "/?ignoreErrors=true&includeStackTrace=false&maxCollectionSize=%s&p=read/%s:*"
 
     """
     These domains contain MBeans that are for management purposes,
