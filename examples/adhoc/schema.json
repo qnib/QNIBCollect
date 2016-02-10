@@ -1,0 +1,20 @@
+[
+    {
+        "name":"testMetric",
+        "value":10,
+        "dimensions":{
+            "dim1":"val1",
+            "dim2":"val2"
+        },
+        "metricType":"gauge"
+    },
+    {
+        "name":"anotherTestMetric",
+        "value":5,
+        "dimensions":{
+            "dim1":"val1",
+            "dim2":"val2"
+        },
+        "metricType":"cumcounter"
+    }
+]

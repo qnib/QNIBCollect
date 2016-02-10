@@ -2,10 +2,12 @@ package main
 
 import (
 	"fullerite/config"
+	"fullerite/handler"
 	"fullerite/internalserver"
 	"fullerite/metric"
 
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/Sirupsen/logrus"
@@ -60,6 +62,39 @@ func main() {
 		},
 	}
 	app.Action = start
+
+	commandFlags := []cli.Flag{
+		cli.IntFlag{
+			Name:  "die-after, d",
+			Value: 600,
+			Usage: "How long (in seconds) to run the collector",
+		},
+		cli.IntFlag{
+			Name:  "interval, i",
+			Value: 10,
+			Usage: "How frequent (in seconds) to run your colelctor",
+		},
+	}
+	commandFlags = append(commandFlags, app.Flags...)
+	app.Commands = []cli.Command{
+		{
+			Name:    "visualise",
+			Action:  visualise,
+			Aliases: []string{"vis", "viz"},
+			Flags:   commandFlags,
+			Usage:   "shortest path from your terminal to your graphs",
+			UsageText: "You can use this tool to run a script the returns JSON\n" +
+				"as per the schema defined at \n" +
+				"https://github.com/Yelp/fullerite/tree/master/src/fullerite\n" +
+				"This JSON will be read from stdout and passed through to\n" +
+				"the fullerite TCP port on localhost to send to your graphing backend.\n" +
+				"All metric names produces will be prepended with your username as per\n" +
+				"the output of `whoami`. This is to make your metrics easier to find\n" +
+				"and also to avoid polluting other metrics that exist with the same name\n\n\n" +
+				"NOTE: Make sure you flush out all your metrics from your script to stdout in ONE go\n" +
+				"otherwise any metric flushed after the first flush will be IGNORED\n",
+		},
+	}
 	app.Run(os.Args)
 }
 
@@ -93,9 +128,66 @@ func start(ctx *cli.Context) {
 	hook := NewLogErrorHook(metrics)
 	log.Logger.Hooks.Add(hook)
 
-	for metric := range metrics {
-		// Writing to handlers' channels. Sending metrics is
-		// handled asynchronously in handlers' Run functions.
-		writeToHandlers(handlers, metric)
+	relayMetricsToHandlers(handlers, metrics)
+}
+
+func visualise(ctx *cli.Context) {
+	initLogrus(ctx)
+	log.Info("Visualising fullerite...")
+
+	if len(ctx.Args()) == 0 {
+		log.Error("You need a collector file to visualise!, see 'fullerite help visualise'")
+		return
+	}
+
+	c, err := config.ReadConfig(ctx.String("config"))
+	if err != nil {
+		return
+	}
+
+	// Setup AdHoc Collector config from context and args
+	collectorFile, _ := filepath.Abs(ctx.Args()[0])
+	configMap := make(map[string]interface{})
+	configMap["interval"] = ctx.Int("interval")
+	configMap["collectorFile"] = collectorFile
+
+	// Start colelctor and handlers
+	collector := startCollector("AdHoc", c, configMap)
+	handlers := startHandlers(c)
+
+	// Create channel for incoming metrics
+	metrics := make(chan metric.Metric)
+	defer close(metrics)
+
+	// Read the metrics from the AdHoc collector
+	go readFromCollector(collector, metrics)
+	go relayMetricsToHandlers(handlers, metrics)
+
+	// Stop collecting after `die-after` duration expires
+	quitChannel := make(chan bool, 1)
+	defer close(quitChannel)
+
+	dieAfter := time.Duration(ctx.Int("die-after"))
+	time.AfterFunc(dieAfter*time.Second, func() {
+		log.Info("Quitting...")
+		quitChannel <- true
+	})
+	// Wait to quit
+	for {
+		select {
+		case <-quitChannel:
+			return
+		}
+	}
+}
+
+func relayMetricsToHandlers(handlers []handler.Handler, metrics chan metric.Metric) {
+	for {
+		select {
+		case metric := <-metrics:
+			// Writing to handlers' channels. Sending metrics is
+			// handled asynchronously in handlers' Run functions.
+			writeToHandlers(handlers, metric)
+		}
 	}
 }

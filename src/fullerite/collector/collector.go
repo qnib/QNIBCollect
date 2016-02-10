@@ -62,6 +62,9 @@ func New(name string) Collector {
 		collector = NewMesosSlaveStats(channel, DefaultCollectionInterval, collectorLog)
 	case "MySQLBinlogGrowth":
 		collector = NewMySQLBinlogGrowth(channel, DefaultCollectionInterval, collectorLog)
+	case "AdHoc":
+		collector = NewAdHoc(channel, DefaultCollectionInterval, collectorLog)
+		collector.SetCollectorType("listener")
 	default:
 		defaultLog.Error("Cannot create collector: ", name)
 		return nil
