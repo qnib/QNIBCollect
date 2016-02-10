@@ -80,7 +80,7 @@ func main() {
 		{
 			Name:    "visualise",
 			Action:  visualise,
-			Aliases: []string{"vis", "viz"},
+			Aliases: []string{"visualize", "vis", "viz"},
 			Flags:   commandFlags,
 			Usage:   "shortest path from your terminal to your graphs",
 			UsageText: "You can use this tool to run a script the returns JSON\n" +
