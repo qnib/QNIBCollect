@@ -4,19 +4,21 @@ import json
 import sys
 
 metrics = {}
-dimensions = {"dim1": "val1"}
+dimensions = {
+    "dim1": "val1"
+}
 
 metrics['first'] = {
     "name": "example",
     "value": 2.0,
-    "dimensions":dimensions,
+    "dimensions": dimensions,
     "metricType": "gauge"
 }
 
 metrics['second'] = {
     "name": "anotherExample",
     "value": 2.0,
-    "dimensions":dimensions,
+    "dimensions": dimensions,
     "metricType": "cumcounter"
 }
 

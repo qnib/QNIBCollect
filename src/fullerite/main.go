@@ -72,7 +72,7 @@ func main() {
 		cli.IntFlag{
 			Name:  "interval, i",
 			Value: 10,
-			Usage: "How frequent (in seconds) to run your colelctor",
+			Usage: "How frequent (in seconds) to run your collector",
 		},
 	}
 	commandFlags = append(commandFlags, app.Flags...)
@@ -83,15 +83,15 @@ func main() {
 			Aliases: []string{"visualize", "vis", "viz"},
 			Flags:   commandFlags,
 			Usage:   "shortest path from your terminal to your graphs",
-			UsageText: "You can use this tool to run a script the returns JSON\n" +
+			UsageText: "You can use this tool to run a script that returns JSON\n" +
 				"as per the schema defined at \n" +
-				"https://github.com/Yelp/fullerite/tree/master/src/fullerite\n" +
+				"https://github.com/Yelp/fullerite/tree/master/src/fullerite/examples/adhoc/schema.json\n" +
 				"This JSON will be read from stdout and passed through to\n" +
 				"the fullerite TCP port on localhost to send to your graphing backend.\n" +
-				"All metric names produces will be prepended with your username as per\n" +
+				"All metric names produced will be prepended with your username as per\n" +
 				"the output of `whoami`. This is to make your metrics easier to find\n" +
 				"and also to avoid polluting other metrics that exist with the same name\n\n\n" +
-				"NOTE: Make sure you flush out all your metrics either as a list OR individually serparated\n" +
+				"NOTE: Make sure you flush out all your metrics either as a list OR individually separated\n" +
 				"with a newline '\\n'otherwise your metrics will not be parsed and will be IGNORED\n",
 		},
 	}
@@ -151,7 +151,7 @@ func visualise(ctx *cli.Context) {
 	configMap["interval"] = ctx.Int("interval")
 	configMap["collectorFile"] = collectorFile
 
-	// Start colelctor and handlers
+	// Start collector and handlers
 	collector := startCollector("AdHoc", c, configMap)
 	handlers := startHandlers(c)
 
