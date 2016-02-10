@@ -1,9 +1,12 @@
 package collector
 
 import (
+	"bytes"
 	"fmt"
+	"os/exec"
 	"os/user"
 
+	"encoding/json"
 	"fullerite/metric"
 
 	l "github.com/Sirupsen/logrus"
@@ -35,16 +38,41 @@ func (a *AdHoc) Configure(configMap map[string]interface{}) {
 		a.collectorFile = collectorFile.(string)
 	}
 	a.configureCommonParams(configMap)
-
-	fmt.Println(a, a.name, a.metricPrefix, a.interval, a.collectorFile)
 }
 
 // Collect Emits the metrics produce by the AdHoc script
 func (a AdHoc) Collect() {
 	a.log.Info("Collecting...")
-	//metric := metric.New(c.metricName)
-	//metric.Value = value
-	//metric.AddDimension("model", model)
-	//c.Channel() <- metric
-	//c.log.Debug(metric)
+	cmd := exec.Command(a.collectorFile, []string{""}...)
+	output, err := cmd.Output()
+	if err != nil {
+		a.log.Error("Could not run command: ", err)
+	}
+	for _, line := range bytes.Split((output), []byte{'\n'}) {
+		if metrics, ok := a.parseMetrics(line); ok {
+			for _, metric := range metrics {
+				a.Channel() <- metric
+			}
+		}
+	}
+}
+
+// Parse metrics from stdout
+func (a *AdHoc) parseMetrics(line []byte) ([]metric.Metric, bool) {
+	var metrics []metric.Metric
+	var metric metric.Metric
+	if err := json.Unmarshal(line, &metrics); err != nil {
+		if err = json.Unmarshal(line, &metric); err != nil {
+			a.log.Error("Cannot unmarshal metric line from adhoc collector:", line)
+			return metrics, false
+		} else {
+			metrics = append(metrics, metric)
+		}
+	}
+
+	for i := range metrics {
+		metrics[i].Name = a.metricPrefix + metrics[i].Name
+		metrics[i].AddDimension("adhoc", "yes")
+	}
+	return metrics, true
 }

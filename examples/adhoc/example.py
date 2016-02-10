@@ -21,7 +21,7 @@ metrics['second'] = {
 }
 
 # Send one metric
-sys.stdout.write(json.dumps(metrics['first']))
+print json.dumps(metrics['first'])
 
 # Send them all
-sys.stdout.write(json.dumps(metrics.values()))
+print json.dumps(metrics.values())

@@ -91,8 +91,8 @@ func main() {
 				"All metric names produces will be prepended with your username as per\n" +
 				"the output of `whoami`. This is to make your metrics easier to find\n" +
 				"and also to avoid polluting other metrics that exist with the same name\n\n\n" +
-				"NOTE: Make sure you flush out all your metrics from your script to stdout in ONE go\n" +
-				"otherwise any metric flushed after the first flush will be IGNORED\n",
+				"NOTE: Make sure you flush out all your metrics either as a list OR individually serparated\n" +
+				"with a newline '\\n'otherwise your metrics will not be parsed and will be IGNORED\n",
 		},
 	}
 	app.Run(os.Args)

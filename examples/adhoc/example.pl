@@ -25,6 +25,7 @@ my @metric_vals = values %metrics;
 
 # Send one metric
 print STDOUT encode_json \%{$metrics{"first"}};
+print STDOUT "\n";
 
 # Send them all
 print STDOUT encode_json \@metric_vals;
