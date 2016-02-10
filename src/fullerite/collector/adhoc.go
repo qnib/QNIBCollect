@@ -67,9 +67,8 @@ func (a *AdHoc) parseMetrics(line []byte) ([]metric.Metric, bool) {
 		if err = json.Unmarshal(line, &metric); err != nil {
 			a.log.Error("Cannot unmarshal metric line from adhoc collector:", line)
 			return metrics, false
-		} else {
-			metrics = append(metrics, metric)
 		}
+		metrics = append(metrics, metric)
 	}
 
 	for i := range metrics {
