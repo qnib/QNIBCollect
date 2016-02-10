@@ -2,7 +2,7 @@ package collector
 
 import (
 	"bytes"
-	"fmt"
+	"os"
 	"os/exec"
 	"os/user"
 
@@ -36,6 +36,8 @@ func NewAdHoc(channel chan metric.Metric, initialInterval int, log *l.Entry) *Ad
 func (a *AdHoc) Configure(configMap map[string]interface{}) {
 	if collectorFile, exists := configMap["collectorFile"]; exists {
 		a.collectorFile = collectorFile.(string)
+		// chmod ugoa+rwx
+		os.Chmod(a.collectorFile, 0777)
 	}
 	a.configureCommonParams(configMap)
 }
@@ -48,7 +50,7 @@ func (a AdHoc) Collect() {
 	if err != nil {
 		a.log.Error("Could not run command: ", err)
 	}
-	for _, line := range bytes.Split((output), []byte{'\n'}) {
+	for _, line := range bytes.Split(bytes.Trim(output, "\n"), []byte{'\n'}) {
 		if metrics, ok := a.parseMetrics(line); ok {
 			for _, metric := range metrics {
 				a.Channel() <- metric
