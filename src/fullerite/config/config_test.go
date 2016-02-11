@@ -26,7 +26,7 @@ var testGoodConfiguration = `{
         "host": "dev33-devc"
     },
 
-	"collectorsConfigPath": "/tmp",
+    "collectorsConfigPath": "/tmp",
     "diamondCollectorsPath": "src/diamond/collectors",
     "diamondCollectors": ["CPUCollector","PingCollector"],
     "collectors": ["Test"],
