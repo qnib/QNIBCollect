@@ -107,6 +107,11 @@ class Server(object):
                     # to the running fullerite instance.
 
                     # Each collector has it's own config file
+
+                    # Since collector naems can be defined with a space in order to instantiate multiple
+                    # instances of the same collector, we want their files
+                    # will not have that space and needs to have it replaced with an underscore
+                    # instead
                     config_file = '/'.join([self.config['collectorsConfigPath'], collector]).replace(' ', '_')
                     config = load_config(config_file)
 

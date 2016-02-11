@@ -15,6 +15,10 @@ func startCollectors(c config.Config) (collectors []collector.Collector) {
 
 	for _, name := range c.Collectors {
 		configFile := strings.Join([]string{c.CollectorsConfigPath, name}, "/")
+		// Since collector naems can be defined with a space in order to instantiate multiple
+		// instances of the same collector, we want their files
+		// will not have that space and needs to have it replaced with an underscore
+		// instead
 		configFile = strings.Replace(configFile, " ", "_", -1)
 		config, err := config.ReadCollectorConfig(configFile)
 		if err != nil {
