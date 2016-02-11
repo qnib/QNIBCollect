@@ -78,9 +78,9 @@ func main() {
 	commandFlags = append(commandFlags, app.Flags...)
 	app.Commands = []cli.Command{
 		{
-			Name:    "visualise",
-			Action:  visualise,
-			Aliases: []string{"visualize", "vis", "viz"},
+			Name:    "visualize",
+			Action:  visualize,
+			Aliases: []string{"visualise", "vis", "viz"},
 			Flags:   commandFlags,
 			Usage:   "shortest path from your terminal to your graphs",
 			UsageText: "You can use this tool to run a script that returns JSON\n" +
@@ -131,12 +131,12 @@ func start(ctx *cli.Context) {
 	relayMetricsToHandlers(handlers, metrics)
 }
 
-func visualise(ctx *cli.Context) {
+func visualize(ctx *cli.Context) {
 	initLogrus(ctx)
-	log.Info("Visualising fullerite...")
+	log.Info("Visualizing fullerite...")
 
 	if len(ctx.Args()) == 0 {
-		log.Error("You need a collector file to visualise!, see 'fullerite help visualise'")
+		log.Error("You need a collector file to visualize!, see 'fullerite help visualize'")
 		return
 	}
 
