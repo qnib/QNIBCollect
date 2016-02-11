@@ -102,7 +102,7 @@ package: clean $(FULLERITE) $(BEATIT)
 	@cp bin/fullerite build/usr/bin/
 	@cp bin/beatit build/usr/bin/
 	@cp deb/bin/run-* build/usr/bin/
-	@cp fullerite.conf.example build/etc/
+	@cp examples/config/fullerite.conf.example build/etc/
 	@cp -r src/diamond build/usr/share/fullerite/diamond
 ifeq ($(OS),Ubuntu)
 	@fpm -s dir \
