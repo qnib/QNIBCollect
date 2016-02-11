@@ -1,6 +1,9 @@
 {
     "prefix": "test.",
     "interval": 10,
+    "defaultConfig": {
+        "prefix":"fullerite"
+    },
     "defaultDimensions": {
         "application": "fullerite",
         "host": "dev33-devc"

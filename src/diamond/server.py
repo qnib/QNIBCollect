@@ -121,6 +121,7 @@ class Server(object):
                     config['enabled'] = True
                     config['fulleritePort'] = self.config['fulleritePort']
                     config['interval'] = config.get('interval', self.config['interval'])
+                    config['default'] = self.config.get('defaultConfig', {})
                     self.collector_config[collector] = config
 
                     running_collectors.append(collector)
