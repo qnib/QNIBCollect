@@ -95,7 +95,7 @@ class JolokiaCollector(diamond.collector.Collector):
             'path': 'jolokia',
             'host': 'localhost',
             'port': 8778,
-            'listing_max_depth': 0,
+            'listing_max_depth': 1,
             'read_limit': 1000,
         })
         self.domain_keys = []
