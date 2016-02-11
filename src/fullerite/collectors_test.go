@@ -49,7 +49,7 @@ func TestMain(m *testing.M) {
 	}
 	if f, err := ioutil.TempFile("/tmp", "fullerite"); err == nil {
 		f.WriteString(testCollectorConfiguration)
-		tempTestCollectorConfig = f.Name()
+		tempTestCollectorConfig = f.Name() + ".conf"
 		f.Close()
 		defer os.Remove(tempTestCollectorConfig)
 	}

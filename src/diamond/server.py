@@ -75,6 +75,7 @@ class Server(object):
         self.config = load_config(self.configfile)
 
         collectors = load_collectors(self.config['diamondCollectorsPath'])
+        collectors_config_dir = self.config['collectorsConfigPath']
 
         ########################################################################
         # Signals
@@ -113,7 +114,8 @@ class Server(object):
                     # instances of the same collector, we want their files
                     # will not have that space and needs to have it replaced with an underscore
                     # instead
-                    config_file = '/'.join([self.config['collectorsConfigPath'], collector]).replace(' ', '_')
+                    config_file = '/'.join([
+                        collectors_config_dir, collector]).replace(' ', '_') + '.conf'
                     config = load_config(config_file)
 
                     config['enabled'] = True
