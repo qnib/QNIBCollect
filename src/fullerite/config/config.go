@@ -15,10 +15,11 @@ var log = logrus.WithFields(logrus.Fields{"app": "fullerite", "pkg": "config"})
 type Config struct {
 	Prefix                string                            `json:"prefix"`
 	Interval              interface{}                       `json:"interval"`
+	CollectorsConfigPath  string                            `json:"collectorsConfigPath"`
 	DiamondCollectorsPath string                            `json:"diamondCollectorsPath"`
-	DiamondCollectors     map[string]map[string]interface{} `json:"diamondCollectors"`
+	DiamondCollectors     []string                          `json:"diamondCollectors"`
 	Handlers              map[string]map[string]interface{} `json:"handlers"`
-	Collectors            map[string]map[string]interface{} `json:"collectors"`
+	Collectors            []string                          `json:"collectors"`
 	DefaultDimensions     map[string]string                 `json:"defaultDimensions"`
 	InternalServerConfig  map[string]interface{}            `json:"internalServer"`
 }
@@ -26,6 +27,22 @@ type Config struct {
 // ReadConfig reads a fullerite configuration file
 func ReadConfig(configFile string) (c Config, e error) {
 	log.Info("Reading configuration file at ", configFile)
+	contents, e := ioutil.ReadFile(configFile)
+	if e != nil {
+		log.Error("Config file error: ", e)
+		return c, e
+	}
+	err := json.Unmarshal(contents, &c)
+	if err != nil {
+		log.Error("Invalid JSON in config: ", err)
+		return c, err
+	}
+	return c, nil
+}
+
+// ReadCollectorConfig reads a fullerite collector configuration file
+func ReadCollectorConfig(configFile string) (c map[string]interface{}, e error) {
+	log.Info("Reading collector configuration file at ", configFile)
 	contents, e := ioutil.ReadFile(configFile)
 	if e != nil {
 		log.Error("Config file error: ", e)

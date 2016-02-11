@@ -56,11 +56,11 @@ func canSendMetric(handler handler.Handler, metric metric.Metric) bool {
 			return true
 		}
 		return false
-	} else {
-		// If the handler's whitelist is nil, all collector except the ones in the blacklist are enabled
-		if !isBlackListed {
-			return true
-		}
+	}
+
+	// If the handler's whitelist is nil, all collector except the ones in the blacklist are enabled
+	if !isBlackListed {
+		return true
 	}
 	return false
 }

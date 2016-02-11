@@ -96,7 +96,7 @@ class Server(object):
                 ##############################################################
 
                 running_collectors = []
-                for collector, config in self.config['diamondCollectors'].iteritems():
+                for collector in self.config['diamondCollectors']:
                     # Inject keys to collector's configuration.
                     #
                     # "enabled" is requied to be compatible with
@@ -105,6 +105,11 @@ class Server(object):
                     #
                     # We use "fulleritePort" in collectors to connect
                     # to the running fullerite instance.
+
+                    # Each collector has it's own config file
+                    config_file = '/'.join([self.config['collectorsConfigPath'], collector]).replace(' ', '_')
+                    config = load_config(config_file)
+
                     config['enabled'] = True
                     config['fulleritePort'] = self.config['fulleritePort']
                     config['interval'] = config.get('interval', self.config['interval'])
