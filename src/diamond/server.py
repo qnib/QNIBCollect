@@ -52,6 +52,7 @@ class Server(object):
         # Initialize Members
         self.configfile = configfile
         self.config = None
+        self.collector_config = {}
         self.modules = {}
 
         # We do this weird process title swap around to get the sync manager
@@ -118,6 +119,7 @@ class Server(object):
                     config['enabled'] = True
                     config['fulleritePort'] = self.config['fulleritePort']
                     config['interval'] = config.get('interval', self.config['interval'])
+                    self.collector_config[collector] = config
 
                     running_collectors.append(collector)
                 running_collectors = set(running_collectors)
@@ -153,7 +155,7 @@ class Server(object):
                     collector = initialize_collector(
                         collector_classes[collector_name],
                         name=process_name,
-                        config=self.config,
+                        config=self.collector_config[process_name],
                         handlers=[])
 
                     if collector is None:
