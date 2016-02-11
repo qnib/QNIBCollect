@@ -26,22 +26,10 @@ var testGoodConfiguration = `{
         "host": "dev33-devc"
     },
 
+    "collectorsConfigPath": "/tmp",
     "diamondCollectorsPath": "src/diamond/collectors",
-    "diamondCollectors": {
-        "CPUCollector": {"enabled": true, "interval": 10},
-        "PingCollector": {"enabled": true, "target_google": "google.com", "interval": 10, "bin": "/bin/ping"}
-    },
-
-    "collectors": {
-        "Test": {
-            "metricName": "TestMetric",
-            "interval": 10
-        },
-        "Diamond":{
-            "port": "19191",
-            "interval": 10
-        }
-    },
+    "diamondCollectors": ["CPUCollector","PingCollector"],
+    "collectors": ["Test"],
 
     "handlers": {
         "Graphite": {
@@ -59,8 +47,15 @@ var testGoodConfiguration = `{
     }
 }
 `
+
+var testCollectorConfiguration = `{
+	"metricName": "TestMetric",
+	"interval": 10
+}
+`
+
 var (
-	tmpTestGoodFile, tmpTestBadFile string
+	tmpTestGoodFile, tmpTestBadFile, tempTestCollectorConfig string
 )
 
 func TestMain(m *testing.M) {
@@ -76,6 +71,12 @@ func TestMain(m *testing.M) {
 		tmpTestBadFile = f.Name()
 		f.Close()
 		defer os.Remove(tmpTestBadFile)
+	}
+	if f, err := ioutil.TempFile("/tmp", "fullerite"); err == nil {
+		f.WriteString(testCollectorConfiguration)
+		tempTestCollectorConfig = f.Name()
+		f.Close()
+		defer os.Remove(tempTestCollectorConfig)
 	}
 	os.Exit(m.Run())
 }
@@ -155,6 +156,11 @@ func TestGetAsSliceFromJson(t *testing.T) {
 		res := config.GetAsSlice(temp["listOfStrings"])
 		assert.Equal(t, []string{"a", "b", "c"}, res)
 	}
+}
+
+func TestParseCollectorConfig(t *testing.T) {
+	_, err := config.ReadCollectorConfig(tempTestCollectorConfig)
+	assert.Nil(t, err, "should succeed")
 }
 
 func TestParseGoodConfig(t *testing.T) {

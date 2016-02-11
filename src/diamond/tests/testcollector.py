@@ -25,7 +25,16 @@ class BaseCollectorTest(unittest.TestCase):
         config['server'] = {}
         config['server']['collectors_config_path'] = ''
         config['collectors'] = {}
+        config['defaultConfig'] = { "conf": "val" }
+        config['interval'] = 10
+        config['fulleritePort'] = 0
         return config
+
+    def configfile(self):
+        return {
+            'interval': 5,
+            'alice': 'bob',
+        }
 
     @patch('diamond.collector.Collector.publish_metric', autoSpec=True)
     def test_SetDimensions(self, mock_publish):
@@ -91,3 +100,24 @@ class BaseCollectorTest(unittest.TestCase):
                 pass
         self.assertEquals(mock_socket.sendall.call_count, 1)
         self.assertEquals(len(c.payload), 1)
+
+    def test_configure_collector(self):
+        c = Collector(self.config_object(), [], configfile=self.configfile())
+        self.assertEquals(c.config, {
+            'ttl_multiplier':2,
+            'path_suffix':'',
+            'measure_collector_time':False,
+            'metrics_blacklist':None,
+            'byte_unit':[
+                'byte'
+            ],
+            'instance_prefix':'instances',
+            'conf':'val',
+            'fulleritePort':0,
+            'interval':5,
+            'enabled':True,
+            'alice':'bob',
+            'metrics_whitelist':None,
+            'max_buffer_size':300,
+            'path_prefix':'servers'
+    })

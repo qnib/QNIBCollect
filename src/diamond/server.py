@@ -40,7 +40,6 @@ def load_config(configfile):
     with open(configfile_path, "r") as f:
         return json.load(f)
 
-
 class Server(object):
     """
     Server class loads and starts Handlers and Collectors
@@ -96,19 +95,7 @@ class Server(object):
                 ##############################################################
 
                 running_collectors = []
-                for collector, config in self.config['diamondCollectors'].iteritems():
-                    # Inject keys to collector's configuration.
-                    #
-                    # "enabled" is requied to be compatible with
-                    # diamond configuration. There are collectors that
-                    # check if they are enabled.
-                    #
-                    # We use "fulleritePort" in collectors to connect
-                    # to the running fullerite instance.
-                    config['enabled'] = True
-                    config['fulleritePort'] = self.config['fulleritePort']
-                    config['interval'] = config.get('interval', self.config['interval'])
-
+                for collector in self.config['diamondCollectors']:
                     running_collectors.append(collector)
                 running_collectors = set(running_collectors)
                 self.log.debug("Running collectors: %s" % running_collectors)
@@ -140,10 +127,18 @@ class Server(object):
                                        collector_name)
                         continue
 
+                    # Since collector names can be defined with a space in order to instantiate multiple
+                    # instances of the same collector, we want their files
+                    # will not have that space and needs to have it replaced with an underscore
+                    # instead
+                    configfile = '/'.join([
+                        self.config['collectorsConfigPath'], process_name]).replace(' ', '_') + '.conf'
+                    configfile = load_config(configfile)
                     collector = initialize_collector(
                         collector_classes[collector_name],
                         name=process_name,
                         config=self.config,
+                        configfile=configfile,
                         handlers=[])
 
                     if collector is None:

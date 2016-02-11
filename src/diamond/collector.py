@@ -100,6 +100,7 @@ class Collector(object):
         self.payload = []
 
         self.config = {}
+        self.configfile = configfile or {}
         self.load_config(config if config else {})
 
     def _connect(self):
@@ -127,12 +128,20 @@ class Collector(object):
         if self.get_default_config() is not None:
             self.config.update(self.get_default_config())
 
-            if 'diamondCollectors' in config:
-                if 'default' in config['collectors']:
-                    self.config.update(config['diamondCollectors']['default'])
+        # Inject keys to collector's configuration.
+        #
+        # "enabled" is requied to be compatible with
+        # diamond configuration. There are collectors that
+        # check if they are enabled.
+        #
+        # We use "fulleritePort" in collectors to connect
+        # to the running fullerite instance.
+        self.config['enabled'] = True
+        self.config['fulleritePort'] = config['fulleritePort']
+        self.config['interval'] = self.configfile.get('interval', config['interval'])
 
-                if self.name in config['diamondCollectors']:
-                    self.config.update(config['diamondCollectors'][self.name])
+        self.config.update(config.get('defaultConfig', {}))
+        self.config.update(self.configfile)
         self.process_config()
 
     def can_publish_metric(self):

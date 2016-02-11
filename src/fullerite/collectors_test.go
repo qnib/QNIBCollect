@@ -18,24 +18,25 @@ var testFakeConfiguration = `{
     "defaultDimensions": {
     },
 
+	"collectorsConfigPath": "/tmp",
     "diamondCollectorsPath": "src/diamond/collectors",
-    "diamondCollectors": {
-    },
+    "diamondCollectors": [],
 
-    "collectors": {
-        "FakeCollector": {
-        },
-        "Test":{
-        }
-    },
+    "collectors": ["FakeCollector","Test"],
 
     "handlers": {
     }
 }
 `
 
+var testCollectorConfiguration = `{
+	"metricName": "TestMetric",
+	"interval": 10
+}
+`
+
 var (
-	tmpTestFakeFile string
+	tmpTestFakeFile, tempTestCollectorConfig string
 )
 
 func TestMain(m *testing.M) {
@@ -45,6 +46,12 @@ func TestMain(m *testing.M) {
 		tmpTestFakeFile = f.Name()
 		f.Close()
 		defer os.Remove(tmpTestFakeFile)
+	}
+	if f, err := ioutil.TempFile("/tmp", "fullerite"); err == nil {
+		f.WriteString(testCollectorConfiguration)
+		tempTestCollectorConfig = f.Name() + ".conf"
+		f.Close()
+		defer os.Remove(tempTestCollectorConfig)
 	}
 	os.Exit(m.Run())
 }
