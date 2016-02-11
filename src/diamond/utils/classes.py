@@ -140,7 +140,7 @@ def load_collectors(paths=None, filter=None):
     return collectors
 
 
-def initialize_collector(cls, name=None, config=None, handlers=[]):
+def initialize_collector(cls, name=None, config=None, handlers=[], configfile=None):
     """
     Initialize collector
     """
@@ -149,7 +149,7 @@ def initialize_collector(cls, name=None, config=None, handlers=[]):
 
     try:
         # Initialize Collector
-        collector = cls(name=name, config=config, handlers=handlers)
+        collector = cls(name=name, config=config, handlers=handlers, configfile=configfile)
     except Exception:
         # Log error
         log.error("Failed to initialize Collector: %s. %s",

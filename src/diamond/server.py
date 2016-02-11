@@ -40,7 +40,6 @@ def load_config(configfile):
     with open(configfile_path, "r") as f:
         return json.load(f)
 
-
 class Server(object):
     """
     Server class loads and starts Handlers and Collectors
@@ -52,7 +51,6 @@ class Server(object):
         # Initialize Members
         self.configfile = configfile
         self.config = None
-        self.collector_config = {}
         self.modules = {}
 
         # We do this weird process title swap around to get the sync manager
@@ -75,7 +73,6 @@ class Server(object):
         self.config = load_config(self.configfile)
 
         collectors = load_collectors(self.config['diamondCollectorsPath'])
-        collectors_config_dir = self.config['collectorsConfigPath']
 
         ########################################################################
         # Signals
@@ -99,31 +96,6 @@ class Server(object):
 
                 running_collectors = []
                 for collector in self.config['diamondCollectors']:
-                    # Inject keys to collector's configuration.
-                    #
-                    # "enabled" is requied to be compatible with
-                    # diamond configuration. There are collectors that
-                    # check if they are enabled.
-                    #
-                    # We use "fulleritePort" in collectors to connect
-                    # to the running fullerite instance.
-
-                    # Each collector has it's own config file
-
-                    # Since collector naems can be defined with a space in order to instantiate multiple
-                    # instances of the same collector, we want their files
-                    # will not have that space and needs to have it replaced with an underscore
-                    # instead
-                    config_file = '/'.join([
-                        collectors_config_dir, collector]).replace(' ', '_') + '.conf'
-                    config = load_config(config_file)
-
-                    config['enabled'] = True
-                    config['fulleritePort'] = self.config['fulleritePort']
-                    config['interval'] = config.get('interval', self.config['interval'])
-                    config['default'] = self.config.get('defaultConfig', {})
-                    self.collector_config[collector] = config
-
                     running_collectors.append(collector)
                 running_collectors = set(running_collectors)
                 self.log.debug("Running collectors: %s" % running_collectors)
@@ -155,10 +127,18 @@ class Server(object):
                                        collector_name)
                         continue
 
+                    # Since collector names can be defined with a space in order to instantiate multiple
+                    # instances of the same collector, we want their files
+                    # will not have that space and needs to have it replaced with an underscore
+                    # instead
+                    configfile = '/'.join([
+                        self.config['collectorsConfigPath'], process_name]).replace(' ', '_') + '.conf'
+                    configfile = load_config(configfile)
                     collector = initialize_collector(
                         collector_classes[collector_name],
                         name=process_name,
-                        config=self.collector_config[process_name],
+                        config=self.config,
+                        configfile=configfile,
                         handlers=[])
 
                     if collector is None:
