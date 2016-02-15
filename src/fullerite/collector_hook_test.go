@@ -1,12 +1,13 @@
 package main
 
 import (
-	"fullerite/collector"
-	"fullerite/metric"
-	"test_utils"
-
 	"testing"
 	"time"
+
+	"fullerite/collector"
+	"fullerite/handler"
+	"fullerite/metric"
+	"test_utils"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -21,14 +22,17 @@ func TestCollectorLogsErrors(t *testing.T) {
 	testCol := collector.NewTest(channel, 123, testLogger)
 	testCol.Configure(config)
 
-	hook := NewLogErrorHook(testCol.Channel())
+	timeout := time.Duration(5 * time.Second)
+	h := handler.NewSignalFx(channel, 10, 10, timeout, testLogger)
+
+	hook := NewLogErrorHook([]handler.Handler{h})
 	testLogger.Logger.Hooks.Add(hook)
 
 	go testCol.Collect()
 	testLogger.Error("testing Error log")
 
 	select {
-	case m := <-testCol.Channel():
+	case m := <-h.Channel():
 		assert.Equal(t, "fullerite.collector_errors", m.Name)
 		assert.Equal(t, 1.0, m.Value)
 		assert.Equal(t, "Test", m.Dimensions["collector"])

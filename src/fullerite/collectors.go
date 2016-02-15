@@ -3,6 +3,7 @@ package main
 import (
 	"fullerite/collector"
 	"fullerite/config"
+	"fullerite/handler"
 	"fullerite/metric"
 
 	"fmt"
@@ -77,18 +78,26 @@ func runCollector(collector collector.Collector) {
 	ticker.Stop()
 }
 
-func readFromCollectors(collectors []collector.Collector, metrics chan metric.Metric) {
+func readFromCollectors(collectors []collector.Collector, handlers []handler.Handler) {
+	var chs []chan metric.Metric
 	for _, collector := range collectors {
-		go readFromCollector(collector, metrics)
+		for _, handler := range handlers {
+			if ch, exists := handler.CollectorChannels()[collector.Name()]; exists {
+				chs = append(chs, ch)
+			}
+		}
+		go readFromCollector(collector, chs)
 	}
 }
 
-func readFromCollector(collector collector.Collector, metrics chan metric.Metric) {
+func readFromCollector(collector collector.Collector, chs []chan metric.Metric) {
 	for metric := range collector.Channel() {
 		if _, exists := metric.GetDimensionValue("collector"); !exists {
 			metric.AddDimension("collector", collector.Name())
 		}
-		metrics <- metric
+		for _, ch := range chs {
+			ch <- metric
+		}
 	}
 }
 

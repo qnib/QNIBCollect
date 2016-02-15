@@ -4,6 +4,8 @@ import (
 	"fullerite/config"
 	"fullerite/metric"
 
+	"strings"
+
 	l "github.com/Sirupsen/logrus"
 )
 
@@ -28,6 +30,8 @@ type Collector interface {
 	SetInterval(int)
 	CollectorType() string
 	SetCollectorType(string)
+	CanonicalName() string
+	SetCanonicalName(string)
 }
 
 // New creates a new Collector based on the requested collector name.
@@ -36,8 +40,12 @@ func New(name string) Collector {
 
 	channel := make(chan metric.Metric)
 	collectorLog := defaultLog.WithFields(l.Fields{"collector": name})
+	// This allows for initiating multiple collectors of the same type
+	// but with a different canonical name so they can receive different
+	// configs
+	realName := strings.Split(name, " ")[0]
 
-	switch name {
+	switch realName {
 	case "Test":
 		collector = NewTest(channel, DefaultCollectionInterval, collectorLog)
 	case "Diamond":
@@ -66,12 +74,13 @@ func New(name string) Collector {
 		collector = NewAdHoc(channel, DefaultCollectionInterval, collectorLog)
 		collector.SetCollectorType("listener")
 	default:
-		defaultLog.Error("Cannot create collector: ", name)
+		defaultLog.Error("Cannot create collector: ", realName)
 		return nil
 	}
 	if collector.CollectorType() == "" {
 		collector.SetCollectorType("collector")
 	}
+	collector.SetCanonicalName(name)
 	return collector
 }
 
@@ -81,6 +90,7 @@ type baseCollector struct {
 	name          string
 	interval      int
 	collectorType string
+	canonicalName string
 
 	// intentionally exported
 	log *l.Entry
@@ -100,6 +110,16 @@ func (col *baseCollector) SetInterval(interval int) {
 // SetCollectorType : collector type
 func (col *baseCollector) SetCollectorType(collectorType string) {
 	col.collectorType = collectorType
+}
+
+// SetCanonicalName : collector canonical name
+func (col *baseCollector) SetCanonicalName(name string) {
+	col.canonicalName = name
+}
+
+// CanonicalName : collector canonical name
+func (col *baseCollector) CanonicalName() string {
+	return col.canonicalName
 }
 
 // CollectorType : collector type

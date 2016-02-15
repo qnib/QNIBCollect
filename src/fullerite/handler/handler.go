@@ -69,6 +69,7 @@ func NewInternalMetrics() *InternalMetrics {
 type Handler interface {
 	Run()
 	Configure(map[string]interface{})
+	InitListeners(config.Config)
 
 	// InternalMetrics is to publish a set of values
 	// that are relevant to the handler itself.
@@ -78,6 +79,9 @@ type Handler interface {
 	Name() string
 	String() string
 	Channel() chan metric.Metric
+
+	CollectorChannels() map[string]chan metric.Metric
+	SetCollectorChannels(map[string]chan metric.Metric)
 
 	Interval() int
 	SetInterval(int)
@@ -119,6 +123,7 @@ type emissionTiming struct {
 // BaseHandler is class to handle the boiler plate parts of the handlers
 type BaseHandler struct {
 	channel           chan metric.Metric
+	collectorChannels map[string]chan metric.Metric
 	name              string
 	prefix            string
 	defaultDimensions map[string]string
@@ -174,6 +179,16 @@ func (base *BaseHandler) SetDefaultDimensions(defaults map[string]string) {
 // Channel : the channel to handler listens for metrics on
 func (base BaseHandler) Channel() chan metric.Metric {
 	return base.channel
+}
+
+// CollectorChannels : the channels to handler listens for metrics on
+func (base BaseHandler) CollectorChannels() map[string]chan metric.Metric {
+	return base.collectorChannels
+}
+
+// SetCollectorChannels : the channels to handler listens for metrics on
+func (base *BaseHandler) SetCollectorChannels(c map[string]chan metric.Metric) {
+	base.collectorChannels = c
 }
 
 // Name : the name of the handler
@@ -250,8 +265,36 @@ func (base *BaseHandler) CollectorWhiteList() map[string]bool {
 }
 
 // MaxIdleConnectionsPerHost : return max idle connections per host
-func (base BaseHandler) MaxIdleConnectionsPerHost() int {
+func (base *BaseHandler) MaxIdleConnectionsPerHost() int {
 	return base.maxIdleConnectionsPerHost
+}
+
+// InitListeners - initiate listener channels for collectors
+func (base *BaseHandler) InitListeners(globalConfig config.Config) {
+	collectorChannels := make(map[string]chan metric.Metric)
+	for _, c := range append(globalConfig.Collectors, globalConfig.DiamondCollectors...) {
+
+		// If the handler's whitelist is set, then only metrics from collectors in it will be emitted. If the same
+		// collector is also in the blacklist, it will be skipped.
+		// If the handler's whitelist is not set and its blacklist is not empty, only metrics from collectors not in
+		// the blacklist will be emitted.
+		isWhiteListed, _ := base.IsCollectorWhiteListed(c)
+		isBlackListed, _ := base.IsCollectorBlackListed(c)
+
+		// If the handler's whitelist is not nil and not empty, only the whitelisted collectors should be considered
+		if base.CollectorWhiteList() != nil && len(base.CollectorWhiteList()) > 0 {
+			if !isWhiteListed || isBlackListed {
+				continue
+			}
+		} else {
+			// If the handler's whitelist is nil, all collector except the ones in the blacklist are enabled
+			if isBlackListed {
+				continue
+			}
+		}
+		collectorChannels[c] = make(chan metric.Metric)
+	}
+	base.SetCollectorChannels(collectorChannels)
 }
 
 // KeepAliveInterval - return keep alive interval
@@ -344,17 +387,24 @@ func (base *BaseHandler) configureCommonParams(configMap map[string]interface{})
 }
 
 func (base *BaseHandler) run(emitFunc func([]metric.Metric) bool) {
-	metrics := make([]metric.Metric, 0, base.maxBufferSize)
+	for _, v := range base.CollectorChannels() {
+		go base.listenForMetrics(emitFunc, v)
+	}
+	base.listenForMetrics(emitFunc, base.Channel())
+}
 
+func (base *BaseHandler) listenForMetrics(emitFunc func([]metric.Metric) bool, c chan metric.Metric) {
+	metrics := make([]metric.Metric, 0, base.maxBufferSize)
 	emissionResults := make(chan emissionTiming)
+
+	go base.recordEmissions(emissionResults)
 
 	ticker := time.NewTicker(time.Duration(base.interval) * time.Second)
 	flusher := ticker.C
 
-	go base.recordEmissions(emissionResults)
 	for {
 		select {
-		case incomingMetric := <-base.Channel():
+		case incomingMetric := <-c:
 			base.log.Debug(base.name, " metric: ", incomingMetric)
 			metrics = append(metrics, incomingMetric)
 
