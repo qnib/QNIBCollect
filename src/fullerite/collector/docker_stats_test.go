@@ -96,12 +96,18 @@ func TestDockerStatsBuildMetrics(t *testing.T) {
 		"service_name":   "my_service",
 		"instance_name":  "main",
 	}
+
+	expectedDimsGen := map[string]string{
+		"service_name":  "my_service",
+		"instance_name": "main",
+	}
 	expectedMetrics := []metric.Metric{
 		metric.Metric{"DockerRxBytes", "cumcounter", 10, expectedDims},
 		metric.Metric{"DockerTxBytes", "cumcounter", 20, expectedDims},
 		metric.Metric{"DockerMemoryUsed", "gauge", 50, expectedDims},
 		metric.Metric{"DockerMemoryLimit", "gauge", 70, expectedDims},
 		metric.Metric{"DockerCpuPercentage", "gauge", 0.5, expectedDims},
+		metric.Metric{"DockerContainerCount", "counter", 1, expectedDimsGen},
 	}
 
 	d := getSUT()
@@ -150,12 +156,16 @@ func TestDockerStatsBuildMetricsWithNameAsEnvVariable(t *testing.T) {
 		"container_name": "test-container",
 		"service_name":   "my_service",
 	}
+	expectedDimsGen := map[string]string{
+		"service_name": "my_service",
+	}
 	expectedMetrics := []metric.Metric{
 		metric.Metric{"DockerRxBytes", "cumcounter", 10, expectedDims},
 		metric.Metric{"DockerTxBytes", "cumcounter", 20, expectedDims},
 		metric.Metric{"DockerMemoryUsed", "gauge", 50, expectedDims},
 		metric.Metric{"DockerMemoryLimit", "gauge", 70, expectedDims},
 		metric.Metric{"DockerCpuPercentage", "gauge", 0.5, expectedDims},
+		metric.Metric{"DockerContainerCount", "counter", 1, expectedDimsGen},
 	}
 
 	d := getSUT()
