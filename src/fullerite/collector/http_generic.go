@@ -2,6 +2,7 @@ package collector
 
 import (
 	"fullerite/metric"
+	"time"
 
 	"net/http"
 )
@@ -41,7 +42,11 @@ func (base baseHTTPCollector) makeRequest() []metric.Metric {
 		return []metric.Metric{}
 	}
 
-	rsp, err := http.Get(base.endpoint)
+	client := http.Client{
+		Timeout: time.Duration(2) * time.Second,
+	}
+
+	rsp, err := client.Get(base.endpoint)
 	if err != nil {
 		base.errHandler(err)
 		return nil
