@@ -37,7 +37,7 @@ func New(name string) Collector {
 
 	switch name {
 	case "Test":
-		collector = newTest(channel, DefaultCollectionInterval, collectorLog)
+		collector = NewTest(channel, DefaultCollectionInterval, collectorLog)
 	case "Diamond":
 		collector = newDiamond(channel, DefaultCollectionInterval, collectorLog)
 		collector.SetCollectorType("listener")
@@ -52,7 +52,7 @@ func New(name string) Collector {
 		collector = newNerveUWSGI(channel, DefaultCollectionInterval, collectorLog)
 	case "DockerStats":
 		collector = newDockerStats(channel, DefaultCollectionInterval, collectorLog)
-	case "CpuInfo":
+	case "CPUInfo":
 		collector = newCpuInfo(channel, DefaultCollectionInterval, collectorLog)
 	case "MesosStats":
 		collector = newMesosStats(channel, DefaultCollectionInterval, collectorLog)

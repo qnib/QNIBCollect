@@ -12,7 +12,7 @@ import (
 
 func TestTestConfigureEmptyConfig(t *testing.T) {
 	config := make(map[string]interface{})
-	test := newTest(nil, 123, nil)
+	test := NewTest(nil, 123, nil)
 	test.Configure(config)
 
 	assert.Equal(t,
@@ -27,7 +27,7 @@ func TestTestConfigure(t *testing.T) {
 	config["interval"] = 9999
 
 	// the channel and logger don't matter
-	test := newTest(nil, 12, nil)
+	test := NewTest(nil, 12, nil)
 	test.Configure(config)
 
 	assert.Equal(t,
@@ -44,7 +44,7 @@ func TestTestConfigureMetricName(t *testing.T) {
 	testChannel := make(chan metric.Metric)
 	testLogger := test_utils.BuildLogger()
 
-	test := newTest(testChannel, 123, testLogger)
+	test := NewTest(testChannel, 123, testLogger)
 	test.Configure(config)
 
 	go test.Collect()
@@ -69,7 +69,7 @@ func TestTestCollect(t *testing.T) {
 		return 4.0
 	}
 
-	test := newTest(testChannel, 123, testLogger)
+	test := NewTest(testChannel, 123, testLogger)
 	test.Configure(config)
 	test.generator = mockGen
 

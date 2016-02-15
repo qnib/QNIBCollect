@@ -22,8 +22,8 @@ type Test struct {
 	generator  valueGenerator
 }
 
-// newTest creates a new Test collector.
-func newTest(channel chan metric.Metric, initialInterval int, log *l.Entry) *Test {
+// NewTest creates a new Test collector.
+func NewTest(channel chan metric.Metric, initialInterval int, log *l.Entry) *Test {
 	t := new(Test)
 
 	t.log = log
