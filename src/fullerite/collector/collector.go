@@ -53,7 +53,7 @@ func New(name string) Collector {
 	case "DockerStats":
 		collector = newDockerStats(channel, DefaultCollectionInterval, collectorLog)
 	case "CPUInfo":
-		collector = newCpuInfo(channel, DefaultCollectionInterval, collectorLog)
+		collector = newCPUInfo(channel, DefaultCollectionInterval, collectorLog)
 	case "MesosStats":
 		collector = newMesosStats(channel, DefaultCollectionInterval, collectorLog)
 	case "MesosSlaveStats":

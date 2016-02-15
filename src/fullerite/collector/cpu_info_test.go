@@ -17,7 +17,7 @@ func TestCpuInfoCollect(t *testing.T) {
 	testChannel := make(chan metric.Metric)
 	testLogger := test_utils.BuildLogger()
 
-	cpuInfo := newCpuInfo(testChannel, 100, testLogger)
+	cpuInfo := newCPUInfo(testChannel, 100, testLogger)
 	cpuInfo.Configure(config)
 
 	go cpuInfo.Collect()
