@@ -27,8 +27,8 @@ func (ps ProcStatus) MatchCommandLine() bool {
 	return ps.matchCommandLine
 }
 
-// NewProcStatus creates a new Test collector.
-func NewProcStatus(channel chan metric.Metric, initialInterval int, log *l.Entry) *ProcStatus {
+// newProcStatus creates a new Test collector.
+func newProcStatus(channel chan metric.Metric, initialInterval int, log *l.Entry) *ProcStatus {
 	ps := new(ProcStatus)
 
 	ps.log = log

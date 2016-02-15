@@ -26,8 +26,8 @@ type Diamond struct {
 	incoming      chan []byte
 }
 
-// NewDiamond creates a new Diamond collector.
-func NewDiamond(channel chan metric.Metric, initialInterval int, log *l.Entry) *Diamond {
+// newDiamond creates a new Diamond collector.
+func newDiamond(channel chan metric.Metric, initialInterval int, log *l.Entry) *Diamond {
 	d := new(Diamond)
 
 	d.log = log

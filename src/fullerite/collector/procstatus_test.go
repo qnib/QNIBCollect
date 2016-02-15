@@ -10,7 +10,7 @@ import (
 func TestProcStatusConfigureEmptyConfig(t *testing.T) {
 	config := make(map[string]interface{})
 
-	ps := NewProcStatus(nil, 123, nil)
+	ps := newProcStatus(nil, 123, nil)
 	ps.Configure(config)
 
 	assert.Equal(t, 123, ps.Interval())
@@ -34,7 +34,7 @@ func TestProcStatusConfigure(t *testing.T) {
 		"currentDirectory": regex,
 	}
 
-	ps := NewProcStatus(nil, 123, nil)
+	ps := newProcStatus(nil, 123, nil)
 	ps.Configure(config)
 
 	assert.Equal(t, 9999, ps.Interval())

@@ -13,7 +13,7 @@ import (
 func TestFulleriteConfigureEmptyConfig(t *testing.T) {
 	config := make(map[string]interface{})
 
-	f := NewFullerite(nil, 123, nil)
+	f := newFullerite(nil, 123, nil)
 	f.Configure(config)
 
 	assert.Equal(t,
@@ -27,7 +27,7 @@ func TestFulleriteConfigure(t *testing.T) {
 	config := make(map[string]interface{})
 	config["interval"] = 9999
 
-	f := NewFullerite(nil, 123, nil)
+	f := newFullerite(nil, 123, nil)
 	f.Configure(config)
 
 	assert.Equal(t,
@@ -43,7 +43,7 @@ func TestFulleriteCollect(t *testing.T) {
 	testChannel := make(chan metric.Metric)
 	testLog := test_utils.BuildLogger()
 
-	f := NewFullerite(testChannel, 123, testLog)
+	f := newFullerite(testChannel, 123, testLog)
 	f.Configure(config)
 
 	go f.Collect()

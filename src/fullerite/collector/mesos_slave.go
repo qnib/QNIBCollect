@@ -50,8 +50,8 @@ type MesosSlaveStats struct {
 	snapshotPort int
 }
 
-// NewMesosSlaveStats Simple constructor to set properties for the embedded baseCollector.
-func NewMesosSlaveStats(channel chan metric.Metric, intialInterval int, log *l.Entry) *MesosSlaveStats {
+// newMesosSlaveStats Simple constructor to set properties for the embedded baseCollector.
+func newMesosSlaveStats(channel chan metric.Metric, intialInterval int, log *l.Entry) *MesosSlaveStats {
 	m := new(MesosSlaveStats)
 
 	m.log = log
