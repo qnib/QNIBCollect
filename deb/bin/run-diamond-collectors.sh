@@ -3,7 +3,7 @@
 BINDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -L)"
 FULLERITE_DIR="$(dirname "${BINDIR}")"
 SRC_DIR="${FULLERITE_DIR}/src"
-EXAMPLE_CONFIG="${FULLERITE_DIR}/fullerite.conf.example"
+EXAMPLE_CONFIG="${FULLERITE_DIR}/examples/config/fullerite.conf.example"
 
 DIAMOND_DIR="${SRC_DIR}/diamond"
 if [ ! -d "${DIAMOND_DIR}" ]; then

@@ -1,6 +1,6 @@
 FULLERITE      := fullerite
 BEATIT         := beatit
-VERSION        := 0.3.8
+VERSION        := 0.3.9.1
 SRCDIR         := src
 HANDLER_DIR    := $(SRCDIR)/fullerite/handler
 PROTO_SFX      := $(HANDLER_DIR)/signalfx.proto
@@ -102,7 +102,7 @@ package: clean $(FULLERITE) $(BEATIT)
 	@cp bin/fullerite build/usr/bin/
 	@cp bin/beatit build/usr/bin/
 	@cp deb/bin/run-* build/usr/bin/
-	@cp fullerite.conf.example build/etc/
+	@cp examples/config/fullerite.conf.example build/etc/
 	@cp -r src/diamond build/usr/share/fullerite/diamond
 ifeq ($(OS),Ubuntu)
 	@fpm -s dir \
