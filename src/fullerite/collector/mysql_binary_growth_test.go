@@ -16,14 +16,14 @@ func newMockMySQLBinlogGrowth() *MySQLBinlogGrowth {
 	c := make(chan metric.Metric, 2)
 	i := 10
 	l := defaultLog
-	return NewMySQLBinlogGrowth(c, i, l)
+	return newMySQLBinlogGrowth(c, i, l)
 }
 
 func TestNewMySQLBinlogGrowth(t *testing.T) {
 	c := make(chan metric.Metric)
 	i := 10
 	l := defaultLog.WithFields(l.Fields{"collector": "MySQLBinlog"})
-	m := NewMySQLBinlogGrowth(c, i, l)
+	m := newMySQLBinlogGrowth(c, i, l)
 
 	assert.Equal(t, m.Channel(), c)
 	assert.Equal(t, m.Interval(), i)

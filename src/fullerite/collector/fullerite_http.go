@@ -24,8 +24,8 @@ type fulleriteHTTP struct {
 	baseHTTPCollector
 }
 
-// NewFulleriteHTTPCollector returns a collector meant to query fullerite's HTTP interface
-func newFulleriteHTTPCollector(channel chan metric.Metric, initialInterval int, log *l.Entry) *fulleriteHTTP {
+// newFulleriteHTTP returns a collector meant to query fullerite's HTTP interface
+func newFulleriteHTTP(channel chan metric.Metric, initialInterval int, log *l.Entry) *fulleriteHTTP {
 	inst := new(fulleriteHTTP)
 
 	inst.log = log

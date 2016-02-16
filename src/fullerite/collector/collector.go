@@ -10,8 +10,6 @@ import (
 const (
 	// DefaultCollectionInterval the interval to collect on unless overridden by a collectors config
 	DefaultCollectionInterval = 10
-	// CPUInfoCollectionInterval default collection interval for the CPUInfo collector
-	CPUInfoCollectionInterval = 3600
 )
 
 var defaultLog = l.WithFields(l.Fields{"app": "fullerite", "pkg": "collector"})
@@ -41,29 +39,29 @@ func New(name string) Collector {
 	case "Test":
 		collector = NewTest(channel, DefaultCollectionInterval, collectorLog)
 	case "Diamond":
-		collector = NewDiamond(channel, DefaultCollectionInterval, collectorLog)
+		collector = newDiamond(channel, DefaultCollectionInterval, collectorLog)
 		collector.SetCollectorType("listener")
 	case "Fullerite":
-		collector = NewFullerite(channel, DefaultCollectionInterval, collectorLog)
+		collector = newFullerite(channel, DefaultCollectionInterval, collectorLog)
 	case "ProcStatus":
-		collector = NewProcStatus(channel, DefaultCollectionInterval, collectorLog)
+		collector = newProcStatus(channel, DefaultCollectionInterval, collectorLog)
 	case "FulleriteHTTP":
-		collector = newFulleriteHTTPCollector(channel, DefaultCollectionInterval, collectorLog)
+		collector = newFulleriteHTTP(channel, DefaultCollectionInterval, collectorLog)
 		collector.SetCollectorType("listener")
 	case "NerveUWSGI":
-		collector = newNerveUWSGICollector(channel, DefaultCollectionInterval, collectorLog)
+		collector = newNerveUWSGI(channel, DefaultCollectionInterval, collectorLog)
 	case "DockerStats":
-		collector = NewDockerStats(channel, DefaultCollectionInterval, collectorLog)
-	case "CpuInfo":
-		collector = NewCPUInfo(channel, CPUInfoCollectionInterval, collectorLog)
+		collector = newDockerStats(channel, DefaultCollectionInterval, collectorLog)
+	case "CPUInfo":
+		collector = newCPUInfo(channel, DefaultCollectionInterval, collectorLog)
 	case "MesosStats":
-		collector = NewMesosStats(channel, DefaultCollectionInterval, collectorLog)
+		collector = newMesosStats(channel, DefaultCollectionInterval, collectorLog)
 	case "MesosSlaveStats":
-		collector = NewMesosSlaveStats(channel, DefaultCollectionInterval, collectorLog)
+		collector = newMesosSlaveStats(channel, DefaultCollectionInterval, collectorLog)
 	case "MySQLBinlogGrowth":
-		collector = NewMySQLBinlogGrowth(channel, DefaultCollectionInterval, collectorLog)
+		collector = newMySQLBinlogGrowth(channel, DefaultCollectionInterval, collectorLog)
 	case "AdHoc":
-		collector = NewAdHoc(channel, DefaultCollectionInterval, collectorLog)
+		collector = newAdHoc(channel, DefaultCollectionInterval, collectorLog)
 		collector.SetCollectorType("listener")
 	default:
 		defaultLog.Error("Cannot create collector: ", name)

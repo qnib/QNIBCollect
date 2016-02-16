@@ -43,8 +43,8 @@ var (
 // log-bin = ../dir
 // datadir = /var/srv/dir
 
-// NewMySQLBinlogGrowth creates a new MySQLBinlogGrowth collector.
-func NewMySQLBinlogGrowth(channel chan metric.Metric, initialInterval int, log *l.Entry) *MySQLBinlogGrowth {
+// newMySQLBinlogGrowth creates a new MySQLBinlogGrowth collector.
+func newMySQLBinlogGrowth(channel chan metric.Metric, initialInterval int, log *l.Entry) *MySQLBinlogGrowth {
 	// Initialize the collector struct with the default values
 	d := &MySQLBinlogGrowth{
 		baseCollector: baseCollector{

@@ -43,7 +43,7 @@ func TestMesosStatsNewMesosStats(t *testing.T) {
 	i := 10
 	l := defaultLog.WithFields(l.Fields{"collector": "Mesos"})
 
-	sut := NewMesosStats(c, i, l)
+	sut := newMesosStats(c, i, l)
 
 	assert.Equal(t, c, sut.channel)
 	assert.Equal(t, i, sut.interval)
@@ -70,7 +70,7 @@ func TestMesosStatsConfigure(t *testing.T) {
 
 	for _, test := range tests {
 		config := test.config
-		sut := NewMesosStats(nil, 0, defaultLog)
+		sut := newMesosStats(nil, 0, defaultLog)
 
 		assert.Nil(t, sut.mesosCache, "Before *baseCollector.Configure() is called, MesosStats.mesosCache should not be created.")
 
@@ -123,7 +123,7 @@ func TestMesosStatsCollect(t *testing.T) {
 		configMap := test.configMap
 		externalIP = func() (string, error) { return test.externalIP, nil }
 
-		sut := NewMesosStats(nil, 0, defaultLog)
+		sut := newMesosStats(nil, 0, defaultLog)
 		sut.Configure(configMap)
 		sut.Collect()
 
@@ -149,7 +149,7 @@ func TestMesosStatsSendMetrics(t *testing.T) {
 	}
 
 	c := make(chan metric.Metric)
-	sut := NewMesosStats(c, 10, defaultLog)
+	sut := newMesosStats(c, 10, defaultLog)
 
 	go sut.sendMetrics()
 	actual := <-c
@@ -182,7 +182,7 @@ func TestMesosStatsGetMetrics(t *testing.T) {
 
 		getMetricsURL = func(ip string) string { return ts.URL }
 
-		sut := NewMesosStats(nil, 10, defaultLog)
+		sut := newMesosStats(nil, 10, defaultLog)
 		actual := getMetrics(sut, httptest.DefaultRemoteAddr)
 
 		assert.Equal(t, expected, actual)
@@ -197,7 +197,7 @@ func TestMesosStatsGetMetricsHandleErrors(t *testing.T) {
 
 	getMetricsURL = func(ip string) string { return "" }
 
-	sut := NewMesosStats(nil, 10, defaultLog)
+	sut := newMesosStats(nil, 10, defaultLog)
 	actual := getMetrics(sut, httptest.DefaultRemoteAddr)
 
 	assert.Nil(t, actual, "Empty (invalid) URL, which means http client should throw an error; therefore, we expect a nil from getMetrics")
@@ -217,7 +217,7 @@ func TestMesosStatsGetMetricsHandleNon200s(t *testing.T) {
 
 	getMetricsURL = func(ip string) string { return ts.URL }
 
-	sut := NewMesosStats(nil, 10, defaultLog)
+	sut := newMesosStats(nil, 10, defaultLog)
 	actual := getMetrics(sut, httptest.DefaultRemoteAddr)
 
 	assert.Nil(t, actual, "Server threw a 500, so we should expect nil from getMetrics")

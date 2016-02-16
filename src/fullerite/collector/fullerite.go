@@ -16,8 +16,8 @@ type Fullerite struct {
 	memStats memStatRetriever
 }
 
-// NewFullerite creates a new Test collector.
-func NewFullerite(channel chan metric.Metric, initialInterval int, log *l.Entry) *Fullerite {
+// newFullerite creates a new Test collector.
+func newFullerite(channel chan metric.Metric, initialInterval int, log *l.Entry) *Fullerite {
 	f := new(Fullerite)
 
 	f.log = log
