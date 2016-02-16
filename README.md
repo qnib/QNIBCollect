@@ -72,7 +72,7 @@ please fix them before opening a pull request.
 Running `make` should build the fullerite go binary and place it in the `bin` directory.
 
 #### IMPORTANT
-Due to a compiler bug in `go1.4` we advise to use `go1.4.3` and later. Otherwise you risk
+Due to a compiler bug in `go1.4.x` we advise to use `go1.5` and later. Otherwise you risk
 running into infinite loops when you run many go routines with many channels. Which is what we use
 for connecitng collectors to handlers.
 
