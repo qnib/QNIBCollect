@@ -16,7 +16,7 @@ func getSUT() *DockerStats {
 	expectedChan := make(chan metric.Metric)
 	var expectedLogger = defaultLog.WithFields(l.Fields{"collector": "fullerite"})
 
-	return NewDockerStats(expectedChan, 10, expectedLogger)
+	return newDockerStats(expectedChan, 10, expectedLogger)
 }
 
 func TestDockerStatsNewDockerStats(t *testing.T) {
@@ -24,7 +24,7 @@ func TestDockerStatsNewDockerStats(t *testing.T) {
 	var expectedLogger = defaultLog.WithFields(l.Fields{"collector": "fullerite"})
 	expectedType := make(map[string]*CPUValues)
 
-	d := NewDockerStats(expectedChan, 10, expectedLogger)
+	d := newDockerStats(expectedChan, 10, expectedLogger)
 
 	assert.Equal(t, d.log, expectedLogger)
 	assert.Equal(t, d.channel, expectedChan)
@@ -38,7 +38,7 @@ func TestDockerStatsNewDockerStats(t *testing.T) {
 func TestDockerStatsConfigureEmptyConfig(t *testing.T) {
 	config := make(map[string]interface{})
 
-	d := NewDockerStats(nil, 123, nil)
+	d := newDockerStats(nil, 123, nil)
 	d.Configure(config)
 
 	assert.Equal(t, 123, d.Interval())
@@ -48,7 +48,7 @@ func TestDockerStatsConfigure(t *testing.T) {
 	config := make(map[string]interface{})
 	config["interval"] = 9999
 
-	d := NewDockerStats(nil, 123, nil)
+	d := newDockerStats(nil, 123, nil)
 	d.Configure(config)
 
 	assert.Equal(t, 9999, d.Interval())

@@ -19,8 +19,8 @@ type AdHoc struct {
 	collectorFile string
 }
 
-// NewAdHoc Simple constructor for an AdHoc collector
-func NewAdHoc(channel chan metric.Metric, initialInterval int, log *l.Entry) *AdHoc {
+// newAdHoc Simple constructor for an AdHoc collector
+func newAdHoc(channel chan metric.Metric, initialInterval int, log *l.Entry) *AdHoc {
 	a := new(AdHoc)
 	a.channel = channel
 	a.interval = initialInterval
