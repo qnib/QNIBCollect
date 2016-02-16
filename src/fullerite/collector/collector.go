@@ -30,6 +30,7 @@ type Collector interface {
 
 var collectorConstructs map[string]func(chan metric.Metric, int, *l.Entry) Collector
 
+// Compose a map of collector names -> factor functions
 func RegisterCollector(name string, f func(chan metric.Metric, int, *l.Entry) Collector) {
 	if collectorConstructs == nil {
 		collectorConstructs = make(map[string]func(chan metric.Metric, int, *l.Entry) Collector)

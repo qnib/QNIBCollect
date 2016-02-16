@@ -18,7 +18,7 @@ import (
 func TestDiamondConfigureEmptyConfig(t *testing.T) {
 	config := make(map[string]interface{})
 
-	d := newDiamond(nil, 12, nil)
+	d := newDiamond(nil, 12, nil).(*Diamond)
 	d.Configure(config)
 
 	assert.Equal(t,
@@ -32,7 +32,7 @@ func TestDiamondConfigure(t *testing.T) {
 	config := make(map[string]interface{})
 	config["interval"] = 9999
 	config["port"] = "0"
-	d := newDiamond(nil, 12, nil)
+	d := newDiamond(nil, 12, nil).(*Diamond)
 	d.Configure(config)
 
 	assert := assert.New(t)
@@ -47,7 +47,7 @@ func TestDiamondCollect(t *testing.T) {
 	testChannel := make(chan metric.Metric)
 	testLog := test_utils.BuildLogger()
 
-	d := newDiamond(testChannel, 123, testLog)
+	d := newDiamond(testChannel, 123, testLog).(*Diamond)
 	d.Configure(config)
 
 	// start collecting Diamond metrics
@@ -78,7 +78,7 @@ func TestParseJsonToMetric(t *testing.T) {
    }
 }]
         `)
-	d := newDiamond(nil, 12, nil)
+	d := newDiamond(nil, 12, nil).(*Diamond)
 	metrics, ok := d.parseMetrics(rawData)
 	assert.True(t, ok)
 	for _, metric := range metrics {
@@ -97,7 +97,7 @@ func TestInvalidJsonToMetric(t *testing.T) {
 }]
         `)
 	l := defaultLog.WithFields(l.Fields{"collector": "diamond"})
-	d := newDiamond(nil, 12, l)
+	d := newDiamond(nil, 12, l).(*Diamond)
 	_, ok := d.parseMetrics(rawData)
 	assert.False(t, ok)
 }
