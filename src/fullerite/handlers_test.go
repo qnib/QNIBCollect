@@ -37,7 +37,6 @@ func checkEmission(t *testing.T, coll string, h handler.Handler, expected bool) 
 	}
 	writeToHandlers([]handler.Handler{h}, m)
 	ch, _ := h.CollectorChannels()[coll]
-	fmt.Println(h.CollectorChannels(), ch)
 	if !expected && ch != nil {
 		assert.Fail(t, fmt.Sprintf("Was not expecting a collector channel for %s", coll))
 	}
