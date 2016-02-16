@@ -19,7 +19,7 @@ func getTestSignalfxHandler(interval, buffsize, timeoutsec int) *SignalFx {
 	testLog := l.WithField("testing", "signalfx_handler")
 	timeout := time.Duration(timeoutsec) * time.Second
 
-	return NewSignalFx(testChannel, interval, buffsize, timeout, testLog)
+	return NewSignalFx(testChannel, interval, buffsize, timeout, testLog).(*SignalFx)
 }
 
 func TestSignalfxConfigureEmptyConfig(t *testing.T) {

@@ -14,6 +14,10 @@ import (
 	l "github.com/Sirupsen/logrus"
 )
 
+func init() {
+	RegisterHandler("Datadog", NewDatadog)
+}
+
 // Datadog handler
 type Datadog struct {
 	BaseHandler
@@ -41,7 +45,7 @@ func NewDatadog(
 	initialInterval int,
 	initialBufferSize int,
 	initialTimeout time.Duration,
-	log *l.Entry) *Datadog {
+	log *l.Entry) Handler {
 
 	inst := new(Datadog)
 	inst.name = "Datadog"
@@ -70,7 +74,7 @@ func (d *Datadog) Configure(configMap map[string]interface{}) {
 }
 
 // Endpoint returns the Datadog API endpoint
-func (d *Datadog) Endpoint() string {
+func (d Datadog) Endpoint() string {
 	return d.endpoint
 }
 
@@ -153,11 +157,11 @@ func (d *Datadog) emitMetrics(metrics []metric.Metric) bool {
 	return false
 }
 
-func (d *Datadog) dialTimeout(network, addr string) (net.Conn, error) {
+func (d Datadog) dialTimeout(network, addr string) (net.Conn, error) {
 	return net.DialTimeout(network, addr, d.timeout)
 }
 
-func (d *Datadog) serializedDimensions(m metric.Metric) (dimensions []string) {
+func (d Datadog) serializedDimensions(m metric.Metric) (dimensions []string) {
 	for name, value := range m.GetDimensions(d.DefaultDimensions()) {
 		dimensions = append(dimensions, name+":"+value)
 	}

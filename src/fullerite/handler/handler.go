@@ -23,32 +23,28 @@ const (
 
 var defaultLog = l.WithFields(l.Fields{"app": "fullerite", "pkg": "handler"})
 
+var handlerConstructs map[string]func(chan metric.Metric, int, int, time.Duration, *l.Entry) Handler
+
+// RegisterHandler takes handler name and constructor function and returns handler
+func RegisterHandler(name string, f func(chan metric.Metric, int, int, time.Duration, *l.Entry) Handler) {
+	if handlerConstructs == nil {
+		handlerConstructs = make(map[string]func(chan metric.Metric, int, int, time.Duration, *l.Entry) Handler)
+	}
+	handlerConstructs[name] = f
+}
+
 // New creates a new Handler based on the requested handler name.
 func New(name string) Handler {
-	var base Handler
-
 	channel := make(chan metric.Metric)
 	handlerLog := defaultLog.WithFields(l.Fields{"handler": name})
 	timeout := time.Duration(DefaultTimeoutSec * time.Second)
 
-	switch name {
-	case "Graphite":
-		base = NewGraphite(channel, DefaultInterval, DefaultBufferSize, timeout, handlerLog)
-	case "SignalFx":
-		base = NewSignalFx(channel, DefaultInterval, DefaultBufferSize, timeout, handlerLog)
-	case "Datadog":
-		base = NewDatadog(channel, DefaultInterval, DefaultBufferSize, timeout, handlerLog)
-	case "Kairos":
-		base = NewKairos(channel, DefaultInterval, DefaultBufferSize, timeout, handlerLog)
-	case "Log":
-		base = NewLog(channel, DefaultInterval, DefaultBufferSize, handlerLog)
-	case "Scribe":
-		base = NewScribe(channel, DefaultInterval, DefaultBufferSize, timeout, handlerLog)
-	default:
-		defaultLog.Error("Cannot create handler ", name)
-		return nil
+	if f, exists := handlerConstructs[name]; exists {
+		return f(channel, DefaultInterval, DefaultBufferSize, timeout, handlerLog)
 	}
-	return base
+
+	defaultLog.Error("Cannot create handler ", name)
+	return nil
 }
 
 // InternalMetrics holds the key:value pairs for counters/gauges
@@ -238,13 +234,13 @@ func (base *BaseHandler) SetCollectorBlackList(blackList []string) {
 }
 
 // IsCollectorBlackListed : return true if collectorName is blacklisted in the handler
-func (base *BaseHandler) IsCollectorBlackListed(collectorName string) (bool, bool) {
+func (base BaseHandler) IsCollectorBlackListed(collectorName string) (bool, bool) {
 	val, exists := base.blackListedCollectors[collectorName]
 	return val, exists
 }
 
 // CollectorBlackList : return handler specific black listed collectors
-func (base *BaseHandler) CollectorBlackList() map[string]bool {
+func (base BaseHandler) CollectorBlackList() map[string]bool {
 	return base.blackListedCollectors
 }
 
@@ -257,18 +253,18 @@ func (base *BaseHandler) SetCollectorWhiteList(whiteList []string) {
 }
 
 // IsCollectorWhiteListed : return true if collectorName is blacklisted in the handler
-func (base *BaseHandler) IsCollectorWhiteListed(collectorName string) (bool, bool) {
+func (base BaseHandler) IsCollectorWhiteListed(collectorName string) (bool, bool) {
 	val, exists := base.whiteListedCollectors[collectorName]
 	return val, exists
 }
 
 // CollectorWhiteList : return handler specific black listed collectors
-func (base *BaseHandler) CollectorWhiteList() map[string]bool {
+func (base BaseHandler) CollectorWhiteList() map[string]bool {
 	return base.whiteListedCollectors
 }
 
 // MaxIdleConnectionsPerHost : return max idle connections per host
-func (base *BaseHandler) MaxIdleConnectionsPerHost() int {
+func (base BaseHandler) MaxIdleConnectionsPerHost() int {
 	return base.maxIdleConnectionsPerHost
 }
 

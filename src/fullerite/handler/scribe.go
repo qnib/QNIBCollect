@@ -14,6 +14,10 @@ import (
 	"github.com/samuel/go-thrift/thrift"
 )
 
+func init() {
+	RegisterHandler("Scribe", NewScribe)
+}
+
 type fulleriteScribeClient interface {
 	Log(Messages []*scribe.LogEntry) (scribe.ResultCode, error)
 }
@@ -47,7 +51,7 @@ func NewScribe(
 	initialInterval int,
 	initialBufferSize int,
 	initialTimeout time.Duration,
-	log *l.Entry) *Scribe {
+	log *l.Entry) Handler {
 
 	inst := new(Scribe)
 	inst.name = "Scribe"
@@ -135,7 +139,7 @@ func (s *Scribe) emitMetrics(metrics []metric.Metric) bool {
 	return true
 }
 
-func (s *Scribe) createScribeMetric(m metric.Metric) scribeMetric {
+func (s Scribe) createScribeMetric(m metric.Metric) scribeMetric {
 	return scribeMetric{
 		Name:       m.Name,
 		Value:      m.Value,

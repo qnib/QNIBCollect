@@ -16,6 +16,10 @@ import (
 	l "github.com/Sirupsen/logrus"
 )
 
+func init() {
+	RegisterHandler("Kairos", NewKairos)
+}
+
 // Kairos handler
 type Kairos struct {
 	BaseHandler
@@ -38,7 +42,7 @@ func NewKairos(
 	initialInterval int,
 	initialBufferSize int,
 	initialTimeout time.Duration,
-	log *l.Entry) *Kairos {
+	log *l.Entry) Handler {
 
 	inst := new(Kairos)
 	inst.name = "Kairos"
@@ -69,12 +73,12 @@ func (k *Kairos) Configure(configMap map[string]interface{}) {
 }
 
 // Server returns the Kairos server's hostname or IP address
-func (k *Kairos) Server() string {
+func (k Kairos) Server() string {
 	return k.server
 }
 
 // Port returns the Kairos server's port number
-func (k *Kairos) Port() string {
+func (k Kairos) Port() string {
 	return k.port
 }
 
@@ -83,7 +87,7 @@ func (k *Kairos) Run() {
 	k.run(k.emitMetrics)
 }
 
-func (k *Kairos) convertToKairos(incomingMetric metric.Metric) (datapoint KairosMetric) {
+func (k Kairos) convertToKairos(incomingMetric metric.Metric) (datapoint KairosMetric) {
 	km := new(KairosMetric)
 	km.Name = k.Prefix() + incomingMetric.Name
 	km.Value = incomingMetric.Value
@@ -154,11 +158,11 @@ func (k *Kairos) emitMetrics(metrics []metric.Metric) bool {
 	return false
 }
 
-func (k *Kairos) dialTimeout(network, addr string) (net.Conn, error) {
+func (k Kairos) dialTimeout(network, addr string) (net.Conn, error) {
 	return net.DialTimeout(network, addr, k.timeout)
 }
 
-func (k *Kairos) parseServerError(errMsg string, metrics []KairosMetric) string {
+func (k Kairos) parseServerError(errMsg string, metrics []KairosMetric) string {
 	re, err := regexp.Compile(`metric\[([0-9]+)\]`)
 	if err != nil {
 		return ""
