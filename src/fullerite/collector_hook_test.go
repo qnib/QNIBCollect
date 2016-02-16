@@ -23,7 +23,7 @@ func TestCollectorLogsErrors(t *testing.T) {
 	testCol.Configure(config)
 
 	timeout := time.Duration(5 * time.Second)
-	h := handler.NewSignalFx(channel, 10, 10, timeout, testLogger)
+	h := handler.NewTest(channel, 10, 10, timeout, testLogger)
 
 	hook := NewLogErrorHook([]handler.Handler{h})
 	testLogger.Logger.Hooks.Add(hook)

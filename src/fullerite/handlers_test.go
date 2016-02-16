@@ -52,7 +52,7 @@ func TestCanSendMetricsWhiteList(t *testing.T) {
 	channel := make(chan metric.Metric, 5)
 	timeout := time.Duration(5 * time.Second)
 	log := logrus.WithFields(logrus.Fields{"app": "fullerite", "pkg": "handler"})
-	h := handler.NewSignalFx(channel, 10, 10, timeout, log)
+	h := handler.NewTest(channel, 10, 10, timeout, log)
 	c := config.Config{
 		Collectors: []string{"coll1", "coll2", "coll3"},
 	}
@@ -71,7 +71,7 @@ func TestCanSendMetricsOnlyBlackList(t *testing.T) {
 	channel := make(chan metric.Metric, 5)
 	timeout := time.Duration(5 * time.Second)
 	log := logrus.WithFields(logrus.Fields{"app": "fullerite", "pkg": "handler"})
-	h := handler.NewSignalFx(channel, 10, 10, timeout, log)
+	h := handler.NewTest(channel, 10, 10, timeout, log)
 	c := config.Config{
 		Collectors: []string{"coll1", "coll2", "coll3"},
 	}
@@ -89,7 +89,7 @@ func TestCanSendMetrics(t *testing.T) {
 	channel := make(chan metric.Metric, 5)
 	timeout := time.Duration(5 * time.Second)
 	log := logrus.WithFields(logrus.Fields{"app": "fullerite", "pkg": "handler"})
-	h := handler.NewSignalFx(channel, 10, 10, timeout, log)
+	h := handler.NewTest(channel, 10, 10, timeout, log)
 	c := config.Config{
 		Collectors: []string{"coll1", "coll2", "coll3"},
 	}

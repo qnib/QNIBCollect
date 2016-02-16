@@ -15,7 +15,7 @@ func getTestGraphiteHandler(interval, buffsize, timeoutsec int) *Graphite {
 	testLog := l.WithField("testing", "graphite_handler")
 	timeout := time.Duration(timeoutsec) * time.Second
 
-	return NewGraphite(testChannel, interval, buffsize, timeout, testLog).(*Graphite)
+	return newGraphite(testChannel, interval, buffsize, timeout, testLog).(*Graphite)
 }
 
 func TestGraphiteConfigureEmptyConfig(t *testing.T) {

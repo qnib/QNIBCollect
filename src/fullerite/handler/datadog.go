@@ -15,7 +15,7 @@ import (
 )
 
 func init() {
-	RegisterHandler("Datadog", NewDatadog)
+	RegisterHandler("Datadog", newDatadog)
 }
 
 // Datadog handler
@@ -39,8 +39,8 @@ type datadogMetric struct {
 
 type datadogPoint [2]float64
 
-// NewDatadog returns a new Datadog handler
-func NewDatadog(
+// newDatadog returns a new Datadog handler
+func newDatadog(
 	channel chan metric.Metric,
 	initialInterval int,
 	initialBufferSize int,

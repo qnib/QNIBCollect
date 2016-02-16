@@ -15,7 +15,7 @@ func getTestDataDogHandler(interval, buffsize, timeoutsec int) *Datadog {
 	testLog := l.WithField("testing", "datadog_handler")
 	timeout := time.Duration(timeoutsec) * time.Second
 
-	return NewDatadog(testChannel, interval, buffsize, timeout, testLog).(*Datadog)
+	return newDatadog(testChannel, interval, buffsize, timeout, testLog).(*Datadog)
 }
 
 func TestDatadogConfigureEmptyConfig(t *testing.T) {

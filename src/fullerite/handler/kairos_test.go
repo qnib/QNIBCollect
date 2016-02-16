@@ -21,7 +21,7 @@ func getTestKairosHandler(interval, buffsize, timeoutsec int) *Kairos {
 	testLog := l.WithField("testing", "kairos_handler")
 	timeout := time.Duration(timeoutsec) * time.Second
 
-	return NewKairos(testChannel, interval, buffsize, timeout, testLog).(*Kairos)
+	return newKairos(testChannel, interval, buffsize, timeout, testLog).(*Kairos)
 }
 
 func TestKairosConfigureEmptyConfig(t *testing.T) {

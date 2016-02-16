@@ -15,7 +15,7 @@ import (
 )
 
 func init() {
-	RegisterHandler("Scribe", NewScribe)
+	RegisterHandler("Scribe", newScribe)
 }
 
 type fulleriteScribeClient interface {
@@ -45,8 +45,8 @@ const (
 	defaultScribeStreamName = "fullerite_to_scribe"
 )
 
-// NewScribe returns a new Scribe handler.
-func NewScribe(
+// newScribe returns a new Scribe handler.
+func newScribe(
 	channel chan metric.Metric,
 	initialInterval int,
 	initialBufferSize int,

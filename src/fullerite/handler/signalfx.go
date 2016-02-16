@@ -12,7 +12,7 @@ import (
 )
 
 func init() {
-	RegisterHandler("SignalFx", NewSignalFx)
+	RegisterHandler("SignalFx", newSignalFx)
 }
 
 // SignalFx Handler
@@ -23,8 +23,8 @@ type SignalFx struct {
 	httpClient *util.HTTPAlive
 }
 
-// NewSignalFx returns a new SignalFx handler.
-func NewSignalFx(
+// newSignalFx returns a new SignalFx handler.
+func newSignalFx(
 	channel chan metric.Metric,
 	initialInterval int,
 	initialBufferSize int,

@@ -11,7 +11,7 @@ import (
 )
 
 func init() {
-	RegisterHandler("Log", NewLog)
+	RegisterHandler("Log", newLog)
 }
 
 // Log type
@@ -19,8 +19,8 @@ type Log struct {
 	BaseHandler
 }
 
-// NewLog returns a new Debug handler.
-func NewLog(
+// newLog returns a new Debug handler.
+func newLog(
 	channel chan metric.Metric,
 	initialInterval int,
 	initialBufferSize int,

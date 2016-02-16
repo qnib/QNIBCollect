@@ -17,7 +17,7 @@ import (
 )
 
 func init() {
-	RegisterHandler("Kairos", NewKairos)
+	RegisterHandler("Kairos", newKairos)
 }
 
 // Kairos handler
@@ -36,8 +36,8 @@ type KairosMetric struct {
 	Tags       map[string]string `json:"tags"`
 }
 
-// NewKairos returns a new Kairos handler
-func NewKairos(
+// newKairos returns a new Kairos handler
+func newKairos(
 	channel chan metric.Metric,
 	initialInterval int,
 	initialBufferSize int,

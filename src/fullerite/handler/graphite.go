@@ -11,7 +11,7 @@ import (
 )
 
 func init() {
-	RegisterHandler("Graphite", NewGraphite)
+	RegisterHandler("Graphite", newGraphite)
 }
 
 // Graphite type
@@ -21,8 +21,8 @@ type Graphite struct {
 	port   string
 }
 
-// NewGraphite returns a new Graphite handler.
-func NewGraphite(
+// newGraphite returns a new Graphite handler.
+func newGraphite(
 	channel chan metric.Metric,
 	initialInterval int,
 	initialBufferSize int,

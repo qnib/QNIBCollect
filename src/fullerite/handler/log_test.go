@@ -13,7 +13,7 @@ func getTestLogHandler(interval int, buffsize int) *Log {
 	testChannel := make(chan metric.Metric)
 	testLog := l.WithField("testing", "log_handler")
 
-	return NewLog(testChannel, interval, buffsize, time.Duration(1)*time.Second, testLog).(*Log)
+	return newLog(testChannel, interval, buffsize, time.Duration(1)*time.Second, testLog).(*Log)
 }
 
 func TestLogConfigureEmptyConfig(t *testing.T) {
