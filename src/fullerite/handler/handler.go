@@ -188,7 +188,10 @@ func (base BaseHandler) CollectorChannels() map[string]chan metric.Metric {
 
 // SetCollectorChannels : the channels to handler listens for metrics on
 func (base *BaseHandler) SetCollectorChannels(c map[string]chan metric.Metric) {
-	base.collectorChannels = c
+	base.collectorChannels = make(map[string]chan metric.Metric)
+	for name, channel := range c {
+		base.collectorChannels[name] = channel
+	}
 }
 
 // Name : the name of the handler
@@ -292,7 +295,7 @@ func (base *BaseHandler) InitListeners(globalConfig config.Config) {
 				continue
 			}
 		}
-		collectorChannels[c] = make(chan metric.Metric)
+		collectorChannels[c] = make(chan metric.Metric, 1)
 	}
 	base.SetCollectorChannels(collectorChannels)
 }

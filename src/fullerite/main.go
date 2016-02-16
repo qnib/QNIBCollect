@@ -2,9 +2,7 @@ package main
 
 import (
 	"fullerite/config"
-	"fullerite/handler"
 	"fullerite/internalserver"
-	"fullerite/metric"
 
 	"os"
 	"path/filepath"
@@ -153,17 +151,12 @@ func visualize(ctx *cli.Context) {
 
 	// Start collector and handlers
 	collector := startCollector("AdHoc", c, configMap)
-	c.Collectors = []string{}
+	c.Collectors = []string{"AdHoc"}
 	c.DiamondCollectors = []string{}
 	handlers := startHandlers(c)
 
-	// Create channel for incoming metrics
-	var metrics []chan metric.Metric
-	metrics = append(metrics, make(chan metric.Metric))
-
 	// Read the metrics from the AdHoc collector
-	go readFromCollector(collector, metrics)
-	go relayMetricsToHandlers(handlers, metrics[0])
+	go readFromCollector(collector, handlers)
 
 	// Stop collecting after `die-after` duration expires
 	quitChannel := make(chan bool, 1)
@@ -176,15 +169,4 @@ func visualize(ctx *cli.Context) {
 	})
 	// Wait to quit
 	<-quitChannel
-}
-
-func relayMetricsToHandlers(handlers []handler.Handler, metrics chan metric.Metric) {
-	for {
-		select {
-		case metric := <-metrics:
-			// Writing to handlers' channels. Sending metrics is
-			// handled asynchronously in handlers' Run functions.
-			writeToHandlers(handlers, metric)
-		}
-	}
 }

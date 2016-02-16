@@ -79,24 +79,30 @@ func runCollector(collector collector.Collector) {
 }
 
 func readFromCollectors(collectors []collector.Collector, handlers []handler.Handler) {
-	var chs []chan metric.Metric
-	for _, collector := range collectors {
-		for _, handler := range handlers {
-			if ch, exists := handler.CollectorChannels()[collector.Name()]; exists {
-				chs = append(chs, ch)
-			}
-		}
-		go readFromCollector(collector, chs)
+	for i := range collectors {
+		go readFromCollector(collectors[i], handlers)
 	}
 }
 
-func readFromCollector(collector collector.Collector, chs []chan metric.Metric) {
+func readFromCollector(collector collector.Collector, handlers []handler.Handler) {
 	for metric := range collector.Channel() {
-		if _, exists := metric.GetDimensionValue("collector"); !exists {
+		var exists bool
+		c := collector.CanonicalName()
+		if _, exists = metric.GetDimensionValue("collector"); !exists {
 			metric.AddDimension("collector", collector.Name())
 		}
-		for _, ch := range chs {
-			ch <- metric
+		// We allow external collectors to provide us their collector's CanonicalName
+		// by sending it as a metric dimension. For example in the case of Diamond the
+		// individual python collectors can send their names this way.
+		if val, ok := metric.GetDimensionValue("collectorCanonicalName"); ok {
+			c = val
+			metric.RemoveDimension("collectorCanonicalName")
+		}
+
+		for i := range handlers {
+			if ch, exists := handlers[i].CollectorChannels()[c]; exists {
+				ch <- metric
+			}
 		}
 	}
 }
