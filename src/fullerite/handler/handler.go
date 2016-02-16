@@ -390,17 +390,20 @@ func (base *BaseHandler) configureCommonParams(configMap map[string]interface{})
 }
 
 func (base *BaseHandler) run(emitFunc func([]metric.Metric) bool) {
+	emissionResults := make(chan emissionTiming)
+	go base.recordEmissions(emissionResults)
+
 	for _, v := range base.CollectorChannels() {
-		go base.listenForMetrics(emitFunc, v)
+		go base.listenForMetrics(emitFunc, v, emissionResults)
 	}
-	go base.listenForMetrics(emitFunc, base.Channel())
+	go base.listenForMetrics(emitFunc, base.Channel(), emissionResults)
 }
 
-func (base *BaseHandler) listenForMetrics(emitFunc func([]metric.Metric) bool, c chan metric.Metric) {
+func (base *BaseHandler) listenForMetrics(
+	emitFunc func([]metric.Metric) bool,
+	c chan metric.Metric,
+	emissionResults chan emissionTiming) {
 	metrics := make([]metric.Metric, 0, base.maxBufferSize)
-	emissionResults := make(chan emissionTiming)
-
-	go base.recordEmissions(emissionResults)
 
 	ticker := time.NewTicker(time.Duration(base.interval) * time.Second)
 	flusher := ticker.C
