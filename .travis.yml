@@ -1,5 +1,5 @@
 language: go
-
+sudo: true
 install: "pip install --user -r requirements-dev.txt"
 go:
   - 1.4.3
