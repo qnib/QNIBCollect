@@ -77,8 +77,12 @@ type MesosStats struct {
 	mesosCache util.MesosLeaderElectInterface
 }
 
+func init() {
+	RegisterCollector("MesosStats", newMesosStats)
+}
+
 // newMesosStats Simple constructor to set properties for the embedded baseCollector.
-func newMesosStats(channel chan metric.Metric, intialInterval int, log *l.Entry) *MesosStats {
+func newMesosStats(channel chan metric.Metric, intialInterval int, log *l.Entry) Collector {
 	m := new(MesosStats)
 
 	m.log = log

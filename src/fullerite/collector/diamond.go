@@ -26,8 +26,12 @@ type Diamond struct {
 	incoming      chan []byte
 }
 
+func init() {
+	RegisterCollector("Diamond", newDiamond)
+}
+
 // newDiamond creates a new Diamond collector.
-func newDiamond(channel chan metric.Metric, initialInterval int, log *l.Entry) *Diamond {
+func newDiamond(channel chan metric.Metric, initialInterval int, log *l.Entry) Collector {
 	d := new(Diamond)
 
 	d.log = log
@@ -38,6 +42,7 @@ func newDiamond(channel chan metric.Metric, initialInterval int, log *l.Entry) *
 	d.incoming = make(chan []byte)
 	d.port = DefaultDiamondCollectorPort
 	d.serverStarted = false
+	d.SetCollectorType("listener")
 	return d
 }
 
