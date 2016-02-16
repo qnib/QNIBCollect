@@ -71,6 +71,11 @@ please fix them before opening a pull request.
 
 Running `make` should build the fullerite go binary and place it in the `bin` directory.
 
+#### IMPORTANT
+Due to a compiler bug in `go1.4` we advise to use `go1.4.2` and later. Otherwise you risk
+running into infinite loops when you run many go routines with many channels. Which is what we use
+for connecitng collectors to handlers.
+
 ## Building package fails or gom install fails
 
 If you have vendored external dependencies in `src/` directory or `pkg` directory from old build configuration, you should
