@@ -19,8 +19,12 @@ type AdHoc struct {
 	collectorFile string
 }
 
+func init() {
+	RegisterCollector("AdHoc", newAdHoc)
+}
+
 // newAdHoc Simple constructor for an AdHoc collector
-func newAdHoc(channel chan metric.Metric, initialInterval int, log *l.Entry) *AdHoc {
+func newAdHoc(channel chan metric.Metric, initialInterval int, log *l.Entry) Collector {
 	a := new(AdHoc)
 	a.channel = channel
 	a.interval = initialInterval
@@ -29,6 +33,7 @@ func newAdHoc(channel chan metric.Metric, initialInterval int, log *l.Entry) *Ad
 	a.name = "AdHoc"
 	currentUser, _ := user.Current()
 	a.metricPrefix = "adhoc." + currentUser.Username + "."
+	a.SetCollectorType("listener")
 	return a
 }
 

@@ -32,6 +32,16 @@ type Collector interface {
 	SetCanonicalName(string)
 }
 
+var collectorConstructs map[string]func(chan metric.Metric, int, *l.Entry) Collector
+
+// RegisterCollector composes a map of collector names -> factor functions
+func RegisterCollector(name string, f func(chan metric.Metric, int, *l.Entry) Collector) {
+	if collectorConstructs == nil {
+		collectorConstructs = make(map[string]func(chan metric.Metric, int, *l.Entry) Collector)
+	}
+	collectorConstructs[name] = f
+}
+
 // New creates a new Collector based on the requested collector name.
 func New(name string) Collector {
 	var collector Collector
@@ -43,38 +53,13 @@ func New(name string) Collector {
 	// configs
 	realName := strings.Split(name, " ")[0]
 
-	switch realName {
-	case "Test":
-		collector = NewTest(channel, DefaultCollectionInterval, collectorLog)
-	case "Diamond":
-		collector = newDiamond(channel, DefaultCollectionInterval, collectorLog)
-		collector.SetCollectorType("listener")
-	case "Fullerite":
-		collector = newFullerite(channel, DefaultCollectionInterval, collectorLog)
-	case "ProcStatus":
-		collector = newProcStatus(channel, DefaultCollectionInterval, collectorLog)
-	case "FulleriteHTTP":
-		collector = newFulleriteHTTP(channel, DefaultCollectionInterval, collectorLog)
-		collector.SetCollectorType("listener")
-	case "NerveUWSGI":
-		collector = newNerveUWSGI(channel, DefaultCollectionInterval, collectorLog)
-	case "DockerStats":
-		collector = newDockerStats(channel, DefaultCollectionInterval, collectorLog)
-	case "CPUInfo":
-		collector = newCPUInfo(channel, DefaultCollectionInterval, collectorLog)
-	case "MesosStats":
-		collector = newMesosStats(channel, DefaultCollectionInterval, collectorLog)
-	case "MesosSlaveStats":
-		collector = newMesosSlaveStats(channel, DefaultCollectionInterval, collectorLog)
-	case "MySQLBinlogGrowth":
-		collector = newMySQLBinlogGrowth(channel, DefaultCollectionInterval, collectorLog)
-	case "AdHoc":
-		collector = newAdHoc(channel, DefaultCollectionInterval, collectorLog)
-		collector.SetCollectorType("listener")
-	default:
+	if f, exists := collectorConstructs[realName]; exists {
+		collector = f(channel, DefaultCollectionInterval, collectorLog)
+	} else {
 		defaultLog.Error("Cannot create collector: ", realName)
 		return nil
 	}
+
 	if collector.CollectorType() == "" {
 		collector.SetCollectorType("collector")
 	}

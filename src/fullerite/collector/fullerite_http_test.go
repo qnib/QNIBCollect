@@ -16,7 +16,7 @@ func getTestInstance() *fulleriteHTTP {
 	testChannel := make(chan metric.Metric)
 	testLog = l.WithFields(l.Fields{"testing": "fullerite_http"})
 
-	inst := newFulleriteHTTP(testChannel, 12, testLog)
+	inst := newFulleriteHTTP(testChannel, 12, testLog).(*fulleriteHTTP)
 
 	return inst
 }

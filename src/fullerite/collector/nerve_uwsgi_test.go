@@ -201,7 +201,7 @@ func extractMetricWithType(metrics []metric.Metric,
 }
 
 func getTestNerveUWSGI() *nerveUWSGICollector {
-	return newNerveUWSGI(make(chan metric.Metric), 12, l.WithField("testing", "nerveuwsgi"))
+	return newNerveUWSGI(make(chan metric.Metric), 12, l.WithField("testing", "nerveuwsgi")).(*nerveUWSGICollector)
 }
 
 func TestNerveConfigParsing(t *testing.T) {

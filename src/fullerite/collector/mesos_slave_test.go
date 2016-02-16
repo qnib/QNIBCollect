@@ -28,7 +28,7 @@ func TestNewMesosSlaveStats(t *testing.T) {
 	i := 10
 	l := defaultLog.WithFields(l.Fields{"collector": "Mesos"})
 
-	sut := newMesosSlaveStats(c, i, l)
+	sut := newMesosSlaveStats(c, i, l).(*MesosSlaveStats)
 
 	assert.Equal(t, c, sut.channel)
 	assert.Equal(t, i, sut.interval)
@@ -41,7 +41,7 @@ func TestNewMesosSlaveStats(t *testing.T) {
 func TestMesosSlaveStatsConfigureDefault(t *testing.T) {
 	config := make(map[string]interface{})
 	c := make(chan metric.Metric)
-	sut := newMesosSlaveStats(c, 10, defaultLog)
+	sut := newMesosSlaveStats(c, 10, defaultLog).(*MesosSlaveStats)
 
 	sut.Configure(config)
 
@@ -56,7 +56,7 @@ func TestMesosSlaveStatsConfigure(t *testing.T) {
 		"slaveSnapshotPort": "1234",
 	}
 	c := make(chan metric.Metric)
-	sut := newMesosSlaveStats(c, 10, defaultLog)
+	sut := newMesosSlaveStats(c, 10, defaultLog).(*MesosSlaveStats)
 
 	sut.Configure(config)
 
@@ -77,7 +77,7 @@ func TestMesosSlaveStatsSendMetrics(t *testing.T) {
 	}
 
 	c := make(chan metric.Metric)
-	sut := newMesosSlaveStats(c, 10, defaultLog)
+	sut := newMesosSlaveStats(c, 10, defaultLog).(*MesosSlaveStats)
 
 	go sut.sendMetrics()
 	actual := <-c
@@ -110,7 +110,7 @@ func TestMesosSlaveStatsGetMetrics(t *testing.T) {
 
 		getSlaveMetricsURL = func(m *MesosSlaveStats, ip string) string { return ts.URL }
 
-		sut := newMesosSlaveStats(nil, 10, defaultLog)
+		sut := newMesosSlaveStats(nil, 10, defaultLog).(*MesosSlaveStats)
 		actual := sut.getSlaveMetrics(httptest.DefaultRemoteAddr)
 
 		assert.Equal(t, expected, actual)
@@ -125,7 +125,7 @@ func TestMesosSlaveStatsGetMetricsHandleErrors(t *testing.T) {
 
 	getSlaveMetricsURL = func(m *MesosSlaveStats, ip string) string { return "" }
 
-	sut := newMesosSlaveStats(nil, 10, defaultLog)
+	sut := newMesosSlaveStats(nil, 10, defaultLog).(*MesosSlaveStats)
 	actual := sut.getSlaveMetrics(httptest.DefaultRemoteAddr)
 
 	assert.Nil(t, actual, "Empty (invalid) URL, which means http client should throw an error; therefore, we expect a nil from getMetrics")
@@ -145,14 +145,14 @@ func TestMesosSlaveStatsGetMetricsHandleNon200s(t *testing.T) {
 
 	getSlaveMetricsURL = func(m *MesosSlaveStats, ip string) string { return ts.URL }
 
-	sut := newMesosSlaveStats(nil, 10, defaultLog)
+	sut := newMesosSlaveStats(nil, 10, defaultLog).(*MesosSlaveStats)
 	actual := sut.getSlaveMetrics(httptest.DefaultRemoteAddr)
 
 	assert.Nil(t, actual, "Server threw a 500, so we should expect nil from getMetrics")
 }
 
 func TestMesosSlaveStatsBuildMetric(t *testing.T) {
-	sut := newMesosSlaveStats(nil, 10, defaultLog)
+	sut := newMesosSlaveStats(nil, 10, defaultLog).(*MesosSlaveStats)
 
 	tests := []struct {
 		name       string
