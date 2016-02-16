@@ -26,7 +26,7 @@ func TestProcStatusCollect(t *testing.T) {
 	channel := make(chan metric.Metric)
 
 	testLog := test_utils.BuildLogger()
-	ps := newProcStatus(channel, 12, testLog)
+	ps := newProcStatus(channel, 12, testLog).(*ProcStatus)
 	ps.Configure(config)
 
 	go ps.Collect()
@@ -52,7 +52,7 @@ func TestProcStatusCollectMetricTypes(t *testing.T) {
 	channel := make(chan metric.Metric)
 
 	testLog := test_utils.BuildLogger()
-	ps := newProcStatus(channel, 12, testLog)
+	ps := newProcStatus(channel, 12, testLog).(*ProcStatus)
 	ps.Configure(config)
 
 	go ps.Collect()
@@ -80,7 +80,7 @@ func TestProcStatusExtractDimensions(t *testing.T) {
 	}
 	config["generatedDimensions"] = dims
 
-	ps := newProcStatus(nil, 12, testLog)
+	ps := newProcStatus(nil, 12, testLog).(*ProcStatus)
 	ps.Configure(config)
 
 	dim := map[string]string{
@@ -103,7 +103,7 @@ func TestProcStatusMetrics(t *testing.T) {
 	}
 	config["generatedDimensions"] = dims
 
-	ps := newProcStatus(nil, 12, testLog)
+	ps := newProcStatus(nil, 12, testLog).(*ProcStatus)
 	ps.Configure(config)
 
 	count := 0
@@ -124,7 +124,7 @@ func TestProcStatusMetrics(t *testing.T) {
 func TestProcStatusMatches(t *testing.T) {
 	assert := assert.New(t)
 	testLog := test_utils.BuildLogger()
-	ps := newProcStatus(nil, 12, testLog)
+	ps := newProcStatus(nil, 12, testLog).(*ProcStatus)
 	config := make(map[string]interface{})
 
 	commGenerator := func(comm string, err error) func() (string, error) {

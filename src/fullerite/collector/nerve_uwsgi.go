@@ -89,7 +89,11 @@ type nestedMetricMap struct {
 	metricMap      map[string]interface{}
 }
 
-func newNerveUWSGI(channel chan metric.Metric, initialInterval int, log *l.Entry) *nerveUWSGICollector {
+func init() {
+	RegisterCollector("NerveUWSGI", newNerveUWSGI)
+}
+
+func newNerveUWSGI(channel chan metric.Metric, initialInterval int, log *l.Entry) Collector {
 	col := new(nerveUWSGICollector)
 
 	col.log = log

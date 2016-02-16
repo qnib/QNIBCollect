@@ -26,8 +26,12 @@ type CPUInfo struct {
 	procPath   string
 }
 
+func init() {
+	RegisterCollector("CPUInfo", newCPUInfo)
+}
+
 // newCPUInfo Simple constructor for CPUInfo collector
-func newCPUInfo(channel chan metric.Metric, initialInterval int, log *l.Entry) *CPUInfo {
+func newCPUInfo(channel chan metric.Metric, initialInterval int, log *l.Entry) Collector {
 	c := new(CPUInfo)
 	c.channel = channel
 	c.interval = initialInterval

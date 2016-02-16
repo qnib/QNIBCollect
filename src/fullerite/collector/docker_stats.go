@@ -42,8 +42,12 @@ type Regex struct {
 	regex *regexp.Regexp
 }
 
+func init() {
+	RegisterCollector("DockerStats", newDockerStats)
+}
+
 // newDockerStats creates a new DockerStats collector.
-func newDockerStats(channel chan metric.Metric, initialInterval int, log *l.Entry) *DockerStats {
+func newDockerStats(channel chan metric.Metric, initialInterval int, log *l.Entry) Collector {
 	d := new(DockerStats)
 
 	d.log = log
