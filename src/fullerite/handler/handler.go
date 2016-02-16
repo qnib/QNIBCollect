@@ -393,7 +393,7 @@ func (base *BaseHandler) run(emitFunc func([]metric.Metric) bool) {
 	for _, v := range base.CollectorChannels() {
 		go base.listenForMetrics(emitFunc, v)
 	}
-	base.listenForMetrics(emitFunc, base.Channel())
+	go base.listenForMetrics(emitFunc, base.Channel())
 }
 
 func (base *BaseHandler) listenForMetrics(emitFunc func([]metric.Metric) bool, c chan metric.Metric) {
