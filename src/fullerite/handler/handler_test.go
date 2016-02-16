@@ -143,7 +143,7 @@ func TestRecordTimings(t *testing.T) {
 
 func TestHandlerRunFlushInterval(t *testing.T) {
 	base := BaseHandler{}
-	base.log = l.WithField("testing", "basehandler")
+	base.log = l.WithField("testing", "basehandler_flush")
 	base.interval = 1
 	base.maxBufferSize = 2
 	base.channel = make(chan metric.Metric)

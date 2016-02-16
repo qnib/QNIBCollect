@@ -393,10 +393,10 @@ func (base *BaseHandler) run(emitFunc func([]metric.Metric) bool) {
 	emissionResults := make(chan emissionTiming)
 	go base.recordEmissions(emissionResults)
 
+	go base.listenForMetrics(emitFunc, base.Channel(), emissionResults)
 	for _, v := range base.CollectorChannels() {
 		go base.listenForMetrics(emitFunc, v, emissionResults)
 	}
-	go base.listenForMetrics(emitFunc, base.Channel(), emissionResults)
 }
 
 func (base *BaseHandler) listenForMetrics(
@@ -442,7 +442,7 @@ func (base *BaseHandler) recordEmissions(timingsChannel chan emissionTiming) {
 
 		base.emissionTimes.PushBack(timing)
 
-		// now kull the list of old times, iterate through the list until we find
+		// now kill the list of old times, iterate through the list until we find
 		// a timestamp that is within the interval
 		minTime := now.Add(time.Duration(-1*base.interval) * time.Second)
 		toRemove := []*list.Element{}
