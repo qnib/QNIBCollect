@@ -7,6 +7,7 @@ import (
 
 	"container/list"
 	"fmt"
+	"strings"
 	"time"
 
 	l "github.com/Sirupsen/logrus"
@@ -39,11 +40,16 @@ func New(name string) Handler {
 	handlerLog := defaultLog.WithFields(l.Fields{"handler": name})
 	timeout := time.Duration(DefaultTimeoutSec * time.Second)
 
-	if f, exists := handlerConstructs[name]; exists {
+	// This allows for initiating multiple handlers of the same type
+	// but with a different canonical name so they can receive different
+	// configs
+	realName := strings.Split(name, " ")[0]
+
+	if f, exists := handlerConstructs[realName]; exists {
 		return f(channel, DefaultInterval, DefaultBufferSize, timeout, handlerLog)
 	}
 
-	defaultLog.Error("Cannot create handler ", name)
+	defaultLog.Error("Cannot create handler ", realName)
 	return nil
 }
 
