@@ -395,17 +395,19 @@ func (base *BaseHandler) run(emitFunc func([]metric.Metric) bool) {
 	emissionResults := make(chan emissionTiming)
 	go base.recordEmissions(emissionResults)
 
-	go base.listenForMetrics(emitFunc, base.Channel(), emissionResults)
 	for k := range base.CollectorChannels() {
 		go base.listenForMetrics(emitFunc, base.CollectorChannels()[k], emissionResults)
 	}
+	base.listenForMetrics(emitFunc, base.Channel(), emissionResults)
 }
 
 func (base *BaseHandler) listenForMetrics(
 	emitFunc func([]metric.Metric) bool,
 	c <-chan metric.Metric,
 	emissionResults chan<- emissionTiming) {
+
 	metrics := make([]metric.Metric, 0, base.MaxBufferSize())
+	currentBufferSize := int64(0)
 
 	ticker := time.NewTicker(time.Duration(base.Interval()) * time.Second)
 	flusher := ticker.C
@@ -415,19 +417,20 @@ func (base *BaseHandler) listenForMetrics(
 		case incomingMetric := <-c:
 			base.log.Debug(base.Name(), " metric: ", incomingMetric)
 			metrics = append(metrics, incomingMetric)
+			atomic.AddInt64(&currentBufferSize, 1)
 
-			bufferSizeLimitReached := len(metrics) >= base.MaxBufferSize()
-
-			if bufferSizeLimitReached {
+			if int(currentBufferSize) >= base.MaxBufferSize() {
 				go base.emitAndTime(metrics, emitFunc, emissionResults)
 
 				// will get copied into this call, meaning it's ok to clear it
 				metrics = make([]metric.Metric, 0, base.MaxBufferSize())
+				atomic.StoreInt64(&currentBufferSize, 0)
 			}
 		case <-flusher:
-			if len(metrics) > 0 {
+			if currentBufferSize > 0 {
 				go base.emitAndTime(metrics, emitFunc, emissionResults)
 				metrics = make([]metric.Metric, 0, base.MaxBufferSize())
+				atomic.StoreInt64(&currentBufferSize, 0)
 			}
 		}
 	}
