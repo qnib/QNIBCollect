@@ -37,7 +37,7 @@ func startHandler(name string, globalConfig config.Config, instanceConfig map[st
 }
 
 func writeToHandlers(handlers []handler.Handler, metric metric.Metric) {
-	for _, handler := range handlers {
-		handler.Channel() <- metric
+	for i, _ := range handlers {
+		handlers[i].Channel() <- metric
 	}
 }
