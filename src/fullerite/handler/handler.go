@@ -417,7 +417,7 @@ stopReading:
 		select {
 		case incomingMetric := <-c:
 			if incomingMetric.ZeroValue() {
-				// an zero metric value means, either channel has been closed or
+				// a zero metric value means, either channel has been closed or
 				// we have been asked to stop reading.
 				break stopReading
 			}
