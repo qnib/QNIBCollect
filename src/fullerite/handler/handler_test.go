@@ -102,7 +102,7 @@ func TestEmissionAndRecord(t *testing.T) {
 	metrics := []metric.Metric{metric.New("example")}
 
 	base := BaseHandler{}
-	base.log = l.WithField("testing", "basehandler")
+	base.log = l.WithField("testing", "basehandler_emit")
 	go base.emitAndTime(metrics, emitFunc, callbackChannel)
 
 	select {
@@ -121,7 +121,7 @@ func TestEmissionAndRecord(t *testing.T) {
 
 func TestRecordTimings(t *testing.T) {
 	base := BaseHandler{}
-	base.log = l.WithField("testing", "basehandler")
+	base.log = l.WithField("testing", "basehandler_record")
 	base.interval = 2
 
 	minusFiveSec := -1 * 5 * time.Second
@@ -184,7 +184,7 @@ func TestHandlerRunFlushInterval(t *testing.T) {
 
 func TestHandlerRun(t *testing.T) {
 	base := BaseHandler{}
-	base.log = l.WithField("testing", "basehandler")
+	base.log = l.WithField("testing", "basehandler_run")
 	base.interval = 1
 	base.maxBufferSize = 1
 	base.channel = make(chan metric.Metric)
