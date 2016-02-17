@@ -193,6 +193,7 @@ func TestHandlerRun(t *testing.T) {
 	emitFunc := func(metrics []metric.Metric) bool {
 		assert.Equal(t, 1, len(metrics))
 		emitCalled = true
+		close(base.channel)
 		return true
 	}
 
@@ -206,8 +207,6 @@ func TestHandlerRun(t *testing.T) {
 	assert.Equal(t, uint64(1), base.metricsSent)
 	assert.Equal(t, uint64(0), base.metricsDropped)
 	assert.Equal(t, uint64(1), base.totalEmissions)
-	assertEmpty(t, base.channel)
-	base.channel = nil
 }
 
 func TestInternalMetrics(t *testing.T) {
