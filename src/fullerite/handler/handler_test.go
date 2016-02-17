@@ -152,10 +152,6 @@ func TestHandlerRunFlushInterval(t *testing.T) {
 	emitCalledTwice := false
 	emitCalledThrice := false
 	emitFunc := func(metrics []metric.Metric) bool {
-		if emitCalledOnce && emitCalledTwice {
-			emitCalledThrice = true
-			close(base.channel)
-		}
 		if emitCalledOnce && !emitCalledTwice {
 			assert.Equal(t, 1, len(metrics))
 			emitCalledTwice = true
@@ -206,8 +202,6 @@ func TestHandlerRun(t *testing.T) {
 	assert.Equal(t, uint64(1), base.metricsSent)
 	assert.Equal(t, uint64(0), base.metricsDropped)
 	assert.Equal(t, uint64(1), base.totalEmissions)
-	assertEmpty(t, base.channel)
-	base.channel = nil
 }
 
 func TestInternalMetrics(t *testing.T) {
