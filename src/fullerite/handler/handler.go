@@ -417,7 +417,7 @@ func (base *BaseHandler) listenForMetrics(
 		case incomingMetric := <-c:
 			base.log.Debug(base.Name(), " metric: ", incomingMetric)
 			metrics = append(metrics, incomingMetric)
-			currentBufferSize += 1
+			currentBufferSize++
 
 			if int(currentBufferSize) >= base.MaxBufferSize() {
 				go base.emitAndTime(metrics, emitFunc, emissionResults)
@@ -455,8 +455,8 @@ func (base *BaseHandler) recordEmissions(timingsChannel <-chan emissionTiming) {
 			toRemove = append(toRemove, e)
 		}
 
-		for _, entry := range toRemove {
-			base.emissionTimes.Remove(entry)
+		for i := range toRemove {
+			base.emissionTimes.Remove(toRemove[i])
 		}
 		base.log.Debug("We removed ", len(toRemove), " entries and now have ", base.emissionTimes.Len())
 	}
