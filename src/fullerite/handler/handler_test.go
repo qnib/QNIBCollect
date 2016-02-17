@@ -176,6 +176,7 @@ func TestHandlerRunFlushInterval(t *testing.T) {
 	assert.Equal(t, uint64(3), base.metricsSent)
 	assert.Equal(t, uint64(0), base.metricsDropped)
 	assert.Equal(t, uint64(2), base.totalEmissions)
+	base.channel <- metric.Metric{}
 }
 
 func TestHandlerRun(t *testing.T) {
