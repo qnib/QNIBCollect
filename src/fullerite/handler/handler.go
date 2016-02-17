@@ -403,31 +403,31 @@ func (base *BaseHandler) run(emitFunc func([]metric.Metric) bool) {
 
 func (base *BaseHandler) listenForMetrics(
 	emitFunc func([]metric.Metric) bool,
-	c chan metric.Metric,
-	emissionResults chan emissionTiming) {
-	metrics := make([]metric.Metric, 0, base.maxBufferSize)
+	c <-chan metric.Metric,
+	emissionResults chan<- emissionTiming) {
+	metrics := make([]metric.Metric, 0, base.MaxBufferSize())
 
-	ticker := time.NewTicker(time.Duration(base.interval) * time.Second)
+	ticker := time.NewTicker(time.Duration(base.Interval()) * time.Second)
 	flusher := ticker.C
 
 	for {
 		select {
 		case incomingMetric := <-c:
-			base.log.Debug(base.name, " metric: ", incomingMetric)
+			base.log.Debug(base.Name(), " metric: ", incomingMetric)
 			metrics = append(metrics, incomingMetric)
 
-			bufferSizeLimitReached := len(metrics) >= base.maxBufferSize
+			bufferSizeLimitReached := len(metrics) >= base.MaxBufferSize()
 
 			if bufferSizeLimitReached {
 				go base.emitAndTime(metrics, emitFunc, emissionResults)
 
 				// will get copied into this call, meaning it's ok to clear it
-				metrics = make([]metric.Metric, 0, base.maxBufferSize)
+				metrics = make([]metric.Metric, 0, base.MaxBufferSize())
 			}
 		case <-flusher:
 			if len(metrics) > 0 {
 				go base.emitAndTime(metrics, emitFunc, emissionResults)
-				metrics = make([]metric.Metric, 0, base.maxBufferSize)
+				metrics = make([]metric.Metric, 0, base.MaxBufferSize())
 			}
 		}
 	}
@@ -437,7 +437,7 @@ func (base *BaseHandler) listenForMetrics(
 // manages the rolling window of emissions
 // the emissions are a timesorted list, and we purge things older than
 // the base handler's interval
-func (base *BaseHandler) recordEmissions(timingsChannel chan emissionTiming) {
+func (base *BaseHandler) recordEmissions(timingsChannel <-chan emissionTiming) {
 	for timing := range timingsChannel {
 		atomic.AddUint64(&base.totalEmissions, 1)
 		now := time.Now()
@@ -462,7 +462,7 @@ func (base *BaseHandler) recordEmissions(timingsChannel chan emissionTiming) {
 func (base *BaseHandler) emitAndTime(
 	metrics []metric.Metric,
 	emitFunc func([]metric.Metric) bool,
-	callbackChannel chan emissionTiming,
+	callbackChannel chan<- emissionTiming,
 ) {
 	numMetrics := len(metrics)
 	beforeEmission := time.Now()
