@@ -2,9 +2,7 @@ package main
 
 import (
 	"fullerite/config"
-	"fullerite/handler"
 	"fullerite/internalserver"
-	"fullerite/metric"
 
 	"os"
 	"path/filepath"
@@ -109,6 +107,7 @@ func start(ctx *cli.Context) {
 		p := profile.Start(&pcfg)
 		defer p.Stop()
 	}
+	quit := make(chan bool)
 	initLogrus(ctx)
 	log.Info("Starting fullerite...")
 
@@ -122,13 +121,12 @@ func start(ctx *cli.Context) {
 	internalServer := internalserver.New(c, &handlers)
 	go internalServer.Run()
 
-	metrics := make(chan metric.Metric)
-	readFromCollectors(collectors, metrics)
+	readFromCollectors(collectors, handlers)
 
-	hook := NewLogErrorHook(metrics)
+	hook := NewLogErrorHook(handlers)
 	log.Logger.Hooks.Add(hook)
 
-	relayMetricsToHandlers(handlers, metrics)
+	<-quit
 }
 
 func visualize(ctx *cli.Context) {
@@ -153,15 +151,12 @@ func visualize(ctx *cli.Context) {
 
 	// Start collector and handlers
 	collector := startCollector("AdHoc", c, configMap)
+	c.Collectors = []string{"AdHoc"}
+	c.DiamondCollectors = []string{}
 	handlers := startHandlers(c)
 
-	// Create channel for incoming metrics
-	metrics := make(chan metric.Metric)
-	defer close(metrics)
-
 	// Read the metrics from the AdHoc collector
-	go readFromCollector(collector, metrics)
-	go relayMetricsToHandlers(handlers, metrics)
+	go readFromCollector(collector, handlers)
 
 	// Stop collecting after `die-after` duration expires
 	quitChannel := make(chan bool, 1)
@@ -173,21 +168,5 @@ func visualize(ctx *cli.Context) {
 		quitChannel <- true
 	})
 	// Wait to quit
-	for {
-		select {
-		case <-quitChannel:
-			return
-		}
-	}
-}
-
-func relayMetricsToHandlers(handlers []handler.Handler, metrics chan metric.Metric) {
-	for {
-		select {
-		case metric := <-metrics:
-			// Writing to handlers' channels. Sending metrics is
-			// handled asynchronously in handlers' Run functions.
-			writeToHandlers(handlers, metric)
-		}
-	}
+	<-quitChannel
 }

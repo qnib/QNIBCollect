@@ -34,6 +34,11 @@ func (m *Metric) AddDimension(name, value string) {
 	m.Dimensions[sanitizeString(name)] = sanitizeString(value)
 }
 
+// RemoveDimension removes a dimension from the Metric.
+func (m *Metric) RemoveDimension(name string) {
+	delete(m.Dimensions, name)
+}
+
 // AddDimensions adds multiple new dimensions to the Metric.
 func (m *Metric) AddDimensions(dimensions map[string]string) {
 	for k, v := range dimensions {

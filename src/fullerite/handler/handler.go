@@ -7,6 +7,7 @@ import (
 
 	"container/list"
 	"fmt"
+	"strings"
 	"time"
 
 	l "github.com/Sirupsen/logrus"
@@ -23,32 +24,33 @@ const (
 
 var defaultLog = l.WithFields(l.Fields{"app": "fullerite", "pkg": "handler"})
 
+var handlerConstructs map[string]func(chan metric.Metric, int, int, time.Duration, *l.Entry) Handler
+
+// RegisterHandler takes handler name and constructor function and returns handler
+func RegisterHandler(name string, f func(chan metric.Metric, int, int, time.Duration, *l.Entry) Handler) {
+	if handlerConstructs == nil {
+		handlerConstructs = make(map[string]func(chan metric.Metric, int, int, time.Duration, *l.Entry) Handler)
+	}
+	handlerConstructs[name] = f
+}
+
 // New creates a new Handler based on the requested handler name.
 func New(name string) Handler {
-	var base Handler
-
 	channel := make(chan metric.Metric)
 	handlerLog := defaultLog.WithFields(l.Fields{"handler": name})
 	timeout := time.Duration(DefaultTimeoutSec * time.Second)
 
-	switch name {
-	case "Graphite":
-		base = NewGraphite(channel, DefaultInterval, DefaultBufferSize, timeout, handlerLog)
-	case "SignalFx":
-		base = NewSignalFx(channel, DefaultInterval, DefaultBufferSize, timeout, handlerLog)
-	case "Datadog":
-		base = NewDatadog(channel, DefaultInterval, DefaultBufferSize, timeout, handlerLog)
-	case "Kairos":
-		base = NewKairos(channel, DefaultInterval, DefaultBufferSize, timeout, handlerLog)
-	case "Log":
-		base = NewLog(channel, DefaultInterval, DefaultBufferSize, handlerLog)
-	case "Scribe":
-		base = NewScribe(channel, DefaultInterval, DefaultBufferSize, timeout, handlerLog)
-	default:
-		defaultLog.Error("Cannot create handler ", name)
-		return nil
+	// This allows for initiating multiple handlers of the same type
+	// but with a different canonical name so they can receive different
+	// configs
+	realName := strings.Split(name, " ")[0]
+
+	if f, exists := handlerConstructs[realName]; exists {
+		return f(channel, DefaultInterval, DefaultBufferSize, timeout, handlerLog)
 	}
-	return base
+
+	defaultLog.Error("Cannot create handler ", realName)
+	return nil
 }
 
 // InternalMetrics holds the key:value pairs for counters/gauges
@@ -69,6 +71,7 @@ func NewInternalMetrics() *InternalMetrics {
 type Handler interface {
 	Run()
 	Configure(map[string]interface{})
+	InitListeners(config.Config)
 
 	// InternalMetrics is to publish a set of values
 	// that are relevant to the handler itself.
@@ -78,6 +81,9 @@ type Handler interface {
 	Name() string
 	String() string
 	Channel() chan metric.Metric
+
+	CollectorChannels() map[string]chan metric.Metric
+	SetCollectorChannels(map[string]chan metric.Metric)
 
 	Interval() int
 	SetInterval(int)
@@ -119,6 +125,7 @@ type emissionTiming struct {
 // BaseHandler is class to handle the boiler plate parts of the handlers
 type BaseHandler struct {
 	channel           chan metric.Metric
+	collectorChannels map[string]chan metric.Metric
 	name              string
 	prefix            string
 	defaultDimensions map[string]string
@@ -176,6 +183,19 @@ func (base BaseHandler) Channel() chan metric.Metric {
 	return base.channel
 }
 
+// CollectorChannels : the channels to handler listens for metrics on
+func (base BaseHandler) CollectorChannels() map[string]chan metric.Metric {
+	return base.collectorChannels
+}
+
+// SetCollectorChannels : the channels to handler listens for metrics on
+func (base *BaseHandler) SetCollectorChannels(c map[string]chan metric.Metric) {
+	base.collectorChannels = make(map[string]chan metric.Metric)
+	for name, channel := range c {
+		base.collectorChannels[name] = channel
+	}
+}
+
 // Name : the name of the handler
 func (base BaseHandler) Name() string {
 	return base.name
@@ -220,13 +240,13 @@ func (base *BaseHandler) SetCollectorBlackList(blackList []string) {
 }
 
 // IsCollectorBlackListed : return true if collectorName is blacklisted in the handler
-func (base *BaseHandler) IsCollectorBlackListed(collectorName string) (bool, bool) {
+func (base BaseHandler) IsCollectorBlackListed(collectorName string) (bool, bool) {
 	val, exists := base.blackListedCollectors[collectorName]
 	return val, exists
 }
 
 // CollectorBlackList : return handler specific black listed collectors
-func (base *BaseHandler) CollectorBlackList() map[string]bool {
+func (base BaseHandler) CollectorBlackList() map[string]bool {
 	return base.blackListedCollectors
 }
 
@@ -239,19 +259,47 @@ func (base *BaseHandler) SetCollectorWhiteList(whiteList []string) {
 }
 
 // IsCollectorWhiteListed : return true if collectorName is blacklisted in the handler
-func (base *BaseHandler) IsCollectorWhiteListed(collectorName string) (bool, bool) {
+func (base BaseHandler) IsCollectorWhiteListed(collectorName string) (bool, bool) {
 	val, exists := base.whiteListedCollectors[collectorName]
 	return val, exists
 }
 
 // CollectorWhiteList : return handler specific black listed collectors
-func (base *BaseHandler) CollectorWhiteList() map[string]bool {
+func (base BaseHandler) CollectorWhiteList() map[string]bool {
 	return base.whiteListedCollectors
 }
 
 // MaxIdleConnectionsPerHost : return max idle connections per host
 func (base BaseHandler) MaxIdleConnectionsPerHost() int {
 	return base.maxIdleConnectionsPerHost
+}
+
+// InitListeners - initiate listener channels for collectors
+func (base *BaseHandler) InitListeners(globalConfig config.Config) {
+	collectorChannels := make(map[string]chan metric.Metric)
+	for _, c := range append(globalConfig.Collectors, globalConfig.DiamondCollectors...) {
+
+		// If the handler's whitelist is set, then only metrics from collectors in it will be emitted. If the same
+		// collector is also in the blacklist, it will be skipped.
+		// If the handler's whitelist is not set and its blacklist is not empty, only metrics from collectors not in
+		// the blacklist will be emitted.
+		isWhiteListed, _ := base.IsCollectorWhiteListed(c)
+		isBlackListed, _ := base.IsCollectorBlackListed(c)
+
+		// If the handler's whitelist is not nil and not empty, only the whitelisted collectors should be considered
+		if base.CollectorWhiteList() != nil && len(base.CollectorWhiteList()) > 0 {
+			if !isWhiteListed || isBlackListed {
+				continue
+			}
+		} else {
+			// If the handler's whitelist is nil, all collector except the ones in the blacklist are enabled
+			if isBlackListed {
+				continue
+			}
+		}
+		collectorChannels[c] = make(chan metric.Metric, 1)
+	}
+	base.SetCollectorChannels(collectorChannels)
 }
 
 // KeepAliveInterval - return keep alive interval
@@ -344,32 +392,45 @@ func (base *BaseHandler) configureCommonParams(configMap map[string]interface{})
 }
 
 func (base *BaseHandler) run(emitFunc func([]metric.Metric) bool) {
-	metrics := make([]metric.Metric, 0, base.maxBufferSize)
-
 	emissionResults := make(chan emissionTiming)
+	go base.recordEmissions(emissionResults)
 
-	ticker := time.NewTicker(time.Duration(base.interval) * time.Second)
+	go base.listenForMetrics(emitFunc, base.Channel(), emissionResults)
+	for k := range base.CollectorChannels() {
+		go base.listenForMetrics(emitFunc, base.CollectorChannels()[k], emissionResults)
+	}
+}
+
+func (base *BaseHandler) listenForMetrics(
+	emitFunc func([]metric.Metric) bool,
+	c <-chan metric.Metric,
+	emissionResults chan<- emissionTiming) {
+
+	metrics := make([]metric.Metric, 0, base.MaxBufferSize())
+	currentBufferSize := 0
+
+	ticker := time.NewTicker(time.Duration(base.Interval()) * time.Second)
 	flusher := ticker.C
 
-	go base.recordEmissions(emissionResults)
 	for {
 		select {
-		case incomingMetric := <-base.Channel():
-			base.log.Debug(base.name, " metric: ", incomingMetric)
+		case incomingMetric := <-c:
+			base.log.Debug(base.Name(), " metric: ", incomingMetric)
 			metrics = append(metrics, incomingMetric)
+			currentBufferSize++
 
-			bufferSizeLimitReached := len(metrics) >= base.maxBufferSize
-
-			if bufferSizeLimitReached {
+			if int(currentBufferSize) >= base.MaxBufferSize() {
 				go base.emitAndTime(metrics, emitFunc, emissionResults)
 
 				// will get copied into this call, meaning it's ok to clear it
-				metrics = make([]metric.Metric, 0, base.maxBufferSize)
+				metrics = make([]metric.Metric, 0, base.MaxBufferSize())
+				currentBufferSize = 0
 			}
 		case <-flusher:
-			if len(metrics) > 0 {
+			if currentBufferSize > 0 {
 				go base.emitAndTime(metrics, emitFunc, emissionResults)
-				metrics = make([]metric.Metric, 0, base.maxBufferSize)
+				metrics = make([]metric.Metric, 0, base.MaxBufferSize())
+				currentBufferSize = 0
 			}
 		}
 	}
@@ -379,14 +440,14 @@ func (base *BaseHandler) run(emitFunc func([]metric.Metric) bool) {
 // manages the rolling window of emissions
 // the emissions are a timesorted list, and we purge things older than
 // the base handler's interval
-func (base *BaseHandler) recordEmissions(timingsChannel chan emissionTiming) {
+func (base *BaseHandler) recordEmissions(timingsChannel <-chan emissionTiming) {
 	for timing := range timingsChannel {
 		atomic.AddUint64(&base.totalEmissions, 1)
 		now := time.Now()
 
 		base.emissionTimes.PushBack(timing)
 
-		// now kull the list of old times, iterate through the list until we find
+		// now kill the list of old times, iterate through the list until we find
 		// a timestamp that is within the interval
 		minTime := now.Add(time.Duration(-1*base.interval) * time.Second)
 		toRemove := []*list.Element{}
@@ -394,8 +455,8 @@ func (base *BaseHandler) recordEmissions(timingsChannel chan emissionTiming) {
 			toRemove = append(toRemove, e)
 		}
 
-		for _, entry := range toRemove {
-			base.emissionTimes.Remove(entry)
+		for i := range toRemove {
+			base.emissionTimes.Remove(toRemove[i])
 		}
 		base.log.Debug("We removed ", len(toRemove), " entries and now have ", base.emissionTimes.Len())
 	}
@@ -404,7 +465,7 @@ func (base *BaseHandler) recordEmissions(timingsChannel chan emissionTiming) {
 func (base *BaseHandler) emitAndTime(
 	metrics []metric.Metric,
 	emitFunc func([]metric.Metric) bool,
-	callbackChannel chan emissionTiming,
+	callbackChannel chan<- emissionTiming,
 ) {
 	numMetrics := len(metrics)
 	beforeEmission := time.Now()

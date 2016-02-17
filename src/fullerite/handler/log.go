@@ -5,21 +5,27 @@ import (
 
 	"encoding/json"
 	"fmt"
+	"time"
 
 	l "github.com/Sirupsen/logrus"
 )
+
+func init() {
+	RegisterHandler("Log", newLog)
+}
 
 // Log type
 type Log struct {
 	BaseHandler
 }
 
-// NewLog returns a new Debug handler.
-func NewLog(
+// newLog returns a new Debug handler.
+func newLog(
 	channel chan metric.Metric,
 	initialInterval int,
 	initialBufferSize int,
-	log *l.Entry) *Log {
+	initialTimeout time.Duration,
+	log *l.Entry) Handler {
 
 	inst := new(Log)
 	inst.name = "Log"
@@ -42,7 +48,7 @@ func (h *Log) Run() {
 	h.run(h.emitMetrics)
 }
 
-func (h *Log) convertToLog(incomingMetric metric.Metric) (string, error) {
+func (h Log) convertToLog(incomingMetric metric.Metric) (string, error) {
 	jsonOut, err := json.Marshal(incomingMetric)
 	return string(jsonOut), err
 }

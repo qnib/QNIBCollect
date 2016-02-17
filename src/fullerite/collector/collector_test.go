@@ -2,15 +2,17 @@ package collector
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestNew(t *testing.T) {
-	names := []string{"Test", "Diamond", "Fullerite", "ProcStatus"}
+	names := []string{"Test", "Diamond", "Fullerite", "ProcStatus", "ProcStatus Instance2"}
 	for _, name := range names {
 		c := New(name)
+		name = strings.Split(name, " ")[0]
 		assert.NotNil(t, c, "should create a Collector for "+name)
 		assert.Equal(t, name, c.Name())
 		assert.Equal(

@@ -11,6 +11,10 @@ import (
 	"github.com/golang/protobuf/proto"
 )
 
+func init() {
+	RegisterHandler("SignalFx", newSignalFx)
+}
+
 // SignalFx Handler
 type SignalFx struct {
 	BaseHandler
@@ -19,13 +23,13 @@ type SignalFx struct {
 	httpClient *util.HTTPAlive
 }
 
-// NewSignalFx returns a new SignalFx handler.
-func NewSignalFx(
+// newSignalFx returns a new SignalFx handler.
+func newSignalFx(
 	channel chan metric.Metric,
 	initialInterval int,
 	initialBufferSize int,
 	initialTimeout time.Duration,
-	log *l.Entry) *SignalFx {
+	log *l.Entry) Handler {
 
 	inst := new(SignalFx)
 	inst.name = "SignalFx"
@@ -58,7 +62,7 @@ func (s *SignalFx) Configure(configMap map[string]interface{}) {
 }
 
 // Endpoint returns SignalFx' API endpoint
-func (s *SignalFx) Endpoint() string {
+func (s SignalFx) Endpoint() string {
 	return s.endpoint
 }
 
@@ -73,7 +77,7 @@ func (s *SignalFx) Run() {
 	s.run(s.emitMetrics)
 }
 
-func (s *SignalFx) convertToProto(incomingMetric metric.Metric) *DataPoint {
+func (s SignalFx) convertToProto(incomingMetric metric.Metric) *DataPoint {
 	// Create a new values for the Datapoint that requires pointers.
 	outname := s.Prefix() + incomingMetric.Name
 	value := incomingMetric.Value

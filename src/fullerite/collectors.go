@@ -3,6 +3,7 @@ package main
 import (
 	"fullerite/collector"
 	"fullerite/config"
+	"fullerite/handler"
 	"fullerite/metric"
 
 	"fmt"
@@ -77,18 +78,32 @@ func runCollector(collector collector.Collector) {
 	ticker.Stop()
 }
 
-func readFromCollectors(collectors []collector.Collector, metrics chan metric.Metric) {
-	for _, collector := range collectors {
-		go readFromCollector(collector, metrics)
+func readFromCollectors(collectors []collector.Collector, handlers []handler.Handler) {
+	for i := range collectors {
+		go readFromCollector(collectors[i], handlers)
 	}
 }
 
-func readFromCollector(collector collector.Collector, metrics chan metric.Metric) {
+func readFromCollector(collector collector.Collector, handlers []handler.Handler) {
 	for metric := range collector.Channel() {
-		if _, exists := metric.GetDimensionValue("collector"); !exists {
+		var exists bool
+		c := collector.CanonicalName()
+		if _, exists = metric.GetDimensionValue("collector"); !exists {
 			metric.AddDimension("collector", collector.Name())
 		}
-		metrics <- metric
+		// We allow external collectors to provide us their collector's CanonicalName
+		// by sending it as a metric dimension. For example in the case of Diamond the
+		// individual python collectors can send their names this way.
+		if val, ok := metric.GetDimensionValue("collectorCanonicalName"); ok {
+			c = val
+			metric.RemoveDimension("collectorCanonicalName")
+		}
+
+		for i := range handlers {
+			if _, exists := handlers[i].CollectorChannels()[c]; exists {
+				handlers[i].CollectorChannels()[c] <- metric
+			}
+		}
 	}
 }
 

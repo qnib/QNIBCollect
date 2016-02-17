@@ -27,6 +27,18 @@ func TestAddDimension(t *testing.T) {
 	assert.Equal(m.Dimensions["TestDimension"], "test value")
 }
 
+func TestRemoveDimension(t *testing.T) {
+	m := metric.New("TestMetric")
+	m.AddDimension("TestDimension", "test value")
+	m.AddDimension("TestDimension1", "test value")
+
+	assert := assert.New(t)
+	assert.Equal(len(m.Dimensions), 2, "should have 2 dimensions")
+	m.RemoveDimension("TestDimension1")
+	assert.Equal(len(m.Dimensions), 1, "should have 1 dimension")
+	assert.Equal(m.Dimensions["TestDimension"], "test value")
+}
+
 func TestGetDimensionsWithNoDimensions(t *testing.T) {
 	defaultDimensions := make(map[string]string)
 	m := metric.New("TestMetric")

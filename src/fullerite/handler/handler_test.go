@@ -102,7 +102,7 @@ func TestEmissionAndRecord(t *testing.T) {
 	metrics := []metric.Metric{metric.New("example")}
 
 	base := BaseHandler{}
-	base.log = l.WithField("testing", "basehandler")
+	base.log = l.WithField("testing", "basehandler_emit")
 	go base.emitAndTime(metrics, emitFunc, callbackChannel)
 
 	select {
@@ -121,7 +121,7 @@ func TestEmissionAndRecord(t *testing.T) {
 
 func TestRecordTimings(t *testing.T) {
 	base := BaseHandler{}
-	base.log = l.WithField("testing", "basehandler")
+	base.log = l.WithField("testing", "basehandler_record")
 	base.interval = 2
 
 	minusFiveSec := -1 * 5 * time.Second
@@ -143,7 +143,7 @@ func TestRecordTimings(t *testing.T) {
 
 func TestHandlerRunFlushInterval(t *testing.T) {
 	base := BaseHandler{}
-	base.log = l.WithField("testing", "basehandler")
+	base.log = l.WithField("testing", "basehandler_flush")
 	base.interval = 1
 	base.maxBufferSize = 2
 	base.channel = make(chan metric.Metric)
@@ -152,6 +152,10 @@ func TestHandlerRunFlushInterval(t *testing.T) {
 	emitCalledTwice := false
 	emitCalledThrice := false
 	emitFunc := func(metrics []metric.Metric) bool {
+		if emitCalledOnce && emitCalledTwice {
+			emitCalledThrice = true
+			close(base.channel)
+		}
 		if emitCalledOnce && !emitCalledTwice {
 			assert.Equal(t, 1, len(metrics))
 			emitCalledTwice = true
@@ -176,13 +180,11 @@ func TestHandlerRunFlushInterval(t *testing.T) {
 	assert.Equal(t, uint64(3), base.metricsSent)
 	assert.Equal(t, uint64(0), base.metricsDropped)
 	assert.Equal(t, uint64(2), base.totalEmissions)
-	assertEmpty(t, base.channel)
-	base.channel = nil
 }
 
 func TestHandlerRun(t *testing.T) {
 	base := BaseHandler{}
-	base.log = l.WithField("testing", "basehandler")
+	base.log = l.WithField("testing", "basehandler_run")
 	base.interval = 1
 	base.maxBufferSize = 1
 	base.channel = make(chan metric.Metric)

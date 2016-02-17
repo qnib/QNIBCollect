@@ -17,7 +17,7 @@ func getTestScribeHandler(interval, buffsize, timeoutsec int) *Scribe {
 	testLog := l.WithField("testing", "scribe_handler")
 	timeout := time.Duration(timeoutsec) * time.Second
 
-	return NewScribe(testChannel, interval, buffsize, timeout, testLog)
+	return newScribe(testChannel, interval, buffsize, timeout, testLog).(*Scribe)
 }
 
 type MockScribeClient struct {

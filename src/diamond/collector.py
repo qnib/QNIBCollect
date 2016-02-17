@@ -353,6 +353,7 @@ class Collector(object):
             'dimensions': {
                 'prefix': metric.getPathPrefix(),
                 'collector': metric.getCollectorPath(),
+                'collectorCanonicalName': self.name,
             }
         }
 

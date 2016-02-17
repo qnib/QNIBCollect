@@ -4,25 +4,25 @@ import (
 	"fmt"
 	"os"
 
+	"fullerite/handler"
 	"fullerite/metric"
 
 	"github.com/Sirupsen/logrus"
 )
 
-// LogErrorHook to send errors via collector channel.
+// LogErrorHook to send errors via handlers.
 type LogErrorHook struct {
-	metricsChannel chan metric.Metric
+	handlers []handler.Handler
 
 	// intentionally exported
 	log *logrus.Entry
 }
 
 // NewLogErrorHook creates a hook to be added to the collector logger
-// so that errors are forwards as a metric to the collecot
-// channel.
-func NewLogErrorHook(metricsChannel chan metric.Metric) *LogErrorHook {
+// so that errors are forwarded as a metric to the handlers.
+func NewLogErrorHook(handlers []handler.Handler) *LogErrorHook {
 	hookLog := log.WithFields(logrus.Fields{"hook": "LogErrorHook"})
-	return &LogErrorHook{metricsChannel, hookLog}
+	return &LogErrorHook{handlers, hookLog}
 }
 
 // Fire action to take when log is fired.
@@ -52,6 +52,7 @@ func (hook *LogErrorHook) reportErrors(entry *logrus.Entry) {
 	if val, exists := entry.Data["collector"]; exists {
 		metric.AddDimension("collector", val.(string))
 	}
-	hook.metricsChannel <- metric
+
+	writeToHandlers(hook.handlers, metric)
 	return
 }

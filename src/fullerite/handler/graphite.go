@@ -10,6 +10,10 @@ import (
 	l "github.com/Sirupsen/logrus"
 )
 
+func init() {
+	RegisterHandler("Graphite", newGraphite)
+}
+
 // Graphite type
 type Graphite struct {
 	BaseHandler
@@ -17,13 +21,13 @@ type Graphite struct {
 	port   string
 }
 
-// NewGraphite returns a new Graphite handler.
-func NewGraphite(
+// newGraphite returns a new Graphite handler.
+func newGraphite(
 	channel chan metric.Metric,
 	initialInterval int,
 	initialBufferSize int,
 	initialTimeout time.Duration,
-	log *l.Entry) *Graphite {
+	log *l.Entry) Handler {
 
 	inst := new(Graphite)
 	inst.name = "Graphite"
@@ -38,12 +42,12 @@ func NewGraphite(
 }
 
 // Server returns the Graphite server's name or IP
-func (g *Graphite) Server() string {
+func (g Graphite) Server() string {
 	return g.server
 }
 
 // Port returns the Graphite server's port number
-func (g *Graphite) Port() string {
+func (g Graphite) Port() string {
 	return g.port
 }
 
@@ -68,7 +72,7 @@ func (g *Graphite) Run() {
 	g.run(g.emitMetrics)
 }
 
-func (g *Graphite) convertToGraphite(incomingMetric metric.Metric) (datapoint string) {
+func (g Graphite) convertToGraphite(incomingMetric metric.Metric) (datapoint string) {
 	//orders dimensions so datapoint keeps consistent name
 	var keys []string
 	dimensions := incomingMetric.GetDimensions(g.DefaultDimensions())
