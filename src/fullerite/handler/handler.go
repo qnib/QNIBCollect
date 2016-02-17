@@ -407,7 +407,7 @@ func (base *BaseHandler) listenForMetrics(
 	emissionResults chan<- emissionTiming) {
 
 	metrics := make([]metric.Metric, 0, base.MaxBufferSize())
-	currentBufferSize := int64(0)
+	currentBufferSize := 0
 
 	ticker := time.NewTicker(time.Duration(base.Interval()) * time.Second)
 	flusher := ticker.C
@@ -417,20 +417,20 @@ func (base *BaseHandler) listenForMetrics(
 		case incomingMetric := <-c:
 			base.log.Debug(base.Name(), " metric: ", incomingMetric)
 			metrics = append(metrics, incomingMetric)
-			atomic.AddInt64(&currentBufferSize, 1)
+			currentBufferSize += 1
 
 			if int(currentBufferSize) >= base.MaxBufferSize() {
 				go base.emitAndTime(metrics, emitFunc, emissionResults)
 
 				// will get copied into this call, meaning it's ok to clear it
 				metrics = make([]metric.Metric, 0, base.MaxBufferSize())
-				atomic.StoreInt64(&currentBufferSize, 0)
+				currentBufferSize = 0
 			}
 		case <-flusher:
 			if currentBufferSize > 0 {
 				go base.emitAndTime(metrics, emitFunc, emissionResults)
 				metrics = make([]metric.Metric, 0, base.MaxBufferSize())
-				atomic.StoreInt64(&currentBufferSize, 0)
+				currentBufferSize = 0
 			}
 		}
 	}
