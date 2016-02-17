@@ -54,7 +54,7 @@ Finally, fullerite is just a simple go binary. You can manually invoke it and pa
 # AdHoc collectors
 
 Fullerite comes with a cli that makes it possible to run adhoc collectors from a file. All that
-is required is for the result of running that file to be a `JSON` object adhering to a certain [schema](examples/adhoc/schema.json).
+is required is for that file, once executed, to **write to stdout** a `JSON` object adhering to a certain [schema](examples/adhoc/schema.json).
 
 The file can be written in the language of your choice **as long as**
 you can provide a proper **[shebang](https://en.wikipedia.org/wiki/Shebang_(Unix))** for the kernel to know how to execute that file.
