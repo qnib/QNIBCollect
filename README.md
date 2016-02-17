@@ -51,6 +51,37 @@ Finally, fullerite is just a simple go binary. You can manually invoke it and pa
  * [Datadog](https://www.datadoghq.com)
  * [Scribe](https://github.com/facebookarchive/scribe)
 
+# AdHoc collectors
+
+Fullerite comes with a cli that makes it possible to run adhoc collectors from a file. All that
+is required is for that file, once executed, to **write to stdout** a `JSON` object adhering to a certain [schema](examples/adhoc/schema.json).
+
+The file can be written in the language of your choice **as long as**
+you can provide a proper **[shebang](https://en.wikipedia.org/wiki/Shebang_(Unix))** for the kernel to know how to execute that file.
+
+The following is the result of running `fullerite help visualize`:
+
+    NAME:
+    fullerite visualize - shortest path from your terminal to your graphs
+    USAGE:
+    fullerite visualize [command options] [arguments...]
+    OPTIONS:
+    --die-after, -d "600"                How long (in seconds) to run the collector
+    --interval, -i "10"                  How frequent (in seconds) to run your collector
+    --config, -c "/etc/fullerite.conf"   JSON formatted configuration file
+    --log_level, -l "info"               Logging level (debug, info, warn, error, fatal, panic)
+    --profile                            Enable profiling
+
+Example adhoc collectors have been provided for a few languages:
+ * [Bash](examples/adhoc/example.sh)
+ * [Perl](examples/adhoc/example.pl)
+ * [Python](examples/adhoc/example.py)
+ * [Ruby](examples/adhoc/example.rb)
+ 
+To run any an adhoc collector from a file you can simply:
+
+    fullerite visualize -i 5 -d 30 examples/adhoc/example.pl
+
 # Contributing to fullerite
 
 We welcome all contribution to fullerite, If you have a feature request or you want to improve
