@@ -412,9 +412,13 @@ func (base *BaseHandler) listenForMetrics(
 	ticker := time.NewTicker(time.Duration(base.Interval()) * time.Second)
 	flusher := ticker.C
 
+stopReading:
 	for {
 		select {
 		case incomingMetric := <-c:
+			if incomingMetric.ZeroValue() {
+				break stopReading
+			}
 			base.log.Debug(base.Name(), " metric: ", incomingMetric)
 			metrics = append(metrics, incomingMetric)
 			currentBufferSize++
@@ -435,6 +439,7 @@ func (base *BaseHandler) listenForMetrics(
 		}
 	}
 	ticker.Stop()
+
 }
 
 // manages the rolling window of emissions

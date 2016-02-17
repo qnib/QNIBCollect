@@ -202,6 +202,7 @@ func TestHandlerRun(t *testing.T) {
 	assert.Equal(t, uint64(1), base.metricsSent)
 	assert.Equal(t, uint64(0), base.metricsDropped)
 	assert.Equal(t, uint64(1), base.totalEmissions)
+	base.channel <- metric.Metric{}
 }
 
 func TestInternalMetrics(t *testing.T) {
