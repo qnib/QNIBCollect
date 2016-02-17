@@ -79,7 +79,7 @@ func runCollector(collector collector.Collector) {
 }
 
 func readFromCollectors(collectors []collector.Collector, handlers []handler.Handler) {
-	for i, _ := range collectors {
+	for i := range collectors {
 		go readFromCollector(collectors[i], handlers)
 	}
 }
@@ -99,7 +99,7 @@ func readFromCollector(collector collector.Collector, handlers []handler.Handler
 			metric.RemoveDimension("collectorCanonicalName")
 		}
 
-		for i, _ := range handlers {
+		for i := range handlers {
 			if _, exists := handlers[i].CollectorChannels()[c]; exists {
 				handlers[i].CollectorChannels()[c] <- metric
 			}

@@ -396,7 +396,7 @@ func (base *BaseHandler) run(emitFunc func([]metric.Metric) bool) {
 	go base.recordEmissions(emissionResults)
 
 	go base.listenForMetrics(emitFunc, base.Channel(), emissionResults)
-	for k, _ := range base.CollectorChannels() {
+	for k := range base.CollectorChannels() {
 		go base.listenForMetrics(emitFunc, base.CollectorChannels()[k], emissionResults)
 	}
 }
