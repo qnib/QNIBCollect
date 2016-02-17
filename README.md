@@ -54,7 +54,7 @@ Finally, fullerite is just a simple go binary. You can manually invoke it and pa
 # AdHoc collectors
 
 Fullerite comes with a cli that makes it possible to run adhoc collectors from a file. All that
-is required is that the result of running that file is a `JSON` object adhering to a certain [schema](examples/adhoc/schema.json).
+is required is for the result of running that file to be a `JSON` object adhering to a certain [schema](examples/adhoc/schema.json).
 
 The following is the result of running `fullerite help visualize`:
 
@@ -69,7 +69,7 @@ The following is the result of running `fullerite help visualize`:
     --log_level, -l "info"               Logging level (debug, info, warn, error, fatal, panic)
     --profile                            Enable profiling
 
-Example adhoc collecotors have been provided for a few languages:-
+Example adhoc collectors have been provided for a few languages:
  * [Bash](examples/adhoc/example.sh)
  * [Perl](examples/adhoc/example.pl)
  * [Python](examples/adhoc/example.py)
@@ -77,7 +77,7 @@ Example adhoc collecotors have been provided for a few languages:-
  
 It is possible to do the same with any other language as long as the `JSON` schema is valid.
 
-To run any of those files you can simply:
+To run any an adhoc collector from a file you can simply:
 
     fullerite visualize -i 5 -d 30 examples/adhoc/example.pl
 
