@@ -65,6 +65,14 @@ func (m *Metric) GetDimensionValue(dimension string) (value string, ok bool) {
 	return
 }
 
+// ZeroValue is metric zero value
+func (m *Metric) ZeroValue() bool {
+	return (len(m.Name) == 0) &&
+		(len(m.MetricType) == 0) &&
+		(m.Value == 0.0) &&
+		(len(m.Dimensions) == 0)
+}
+
 // AddToAll adds a map of dimensions to a list of metrics
 func AddToAll(metrics *[]Metric, dims map[string]string) {
 	for _, m := range *metrics {
