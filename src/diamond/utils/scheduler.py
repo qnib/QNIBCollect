@@ -110,14 +110,14 @@ def collector_process(collector, log):
             }
             collector.publish('fullerite.collection_time_exceeded', 1)
             try:
-                log.error('%s took too long to run! Killed!', collector.name)
+                collector.log.warn("Took too long to run, Killed!")
                 children = get_children(pid)
                 for child in children:
                     os.kill(int(child), signal.SIGKILL)
             except OSError as e:
                 log.debug('Process died on its own!')
             except Exception as e:
-                log.exception('%s Killing children failed', collector.name)
+                collector.log.warn("Killing children failed")
 
         except SIGHUPException:
             # Reload the config if requested
