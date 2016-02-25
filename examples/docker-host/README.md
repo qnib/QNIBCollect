@@ -13,10 +13,19 @@ Install `docker` and `docker-compose` and fire up the `docker-compose.yml` file.
 
 ```
 $ docker-compose up -d
-Creating dockerhost_consul_1...
-Creating dockerhost_carbon_1...
-Creating dockerhost_gapi_1...
-Creating dockerhost_grafana_1...
+Creating consul
+Creating fullerite
+Creating grafana
+Creating carbon
+Creating graphite-api
+$ docker-compose ps
+    Name                  Command               State           Ports
+------------------------------------------------------------------------------
+carbon         /opt/qnib/bin/start_superv ...   Up      0.0.0.0:2003->2003/tcp
+consul         /opt/qnib/bin/start_superv ...   Up      0.0.0.0:8500->8500/tcp
+fullerite      /opt/qnib/supervisor/bin/s ...   Up
+grafana        /opt/qnib/bin/start_superv ...   Up      0.0.0.0:80->80/tcp
+graphite-api   /opt/qnib/supervisor/bin/s ...   Up      0.0.0.0:8888->80/tcp
 $
 ```
 
@@ -28,7 +37,7 @@ Head over to the grafana dashboard to see the metrics (`<docker_host>:80`).
 
 ![](pics/grafana_dashboard.png)
 
-The metrics you see are collected on the containers - using diamond; that might change soon. :)
+The metrics you see are collected via `DockerStats` on a `fullerite` container.
 
 ## Build Fullerite
 

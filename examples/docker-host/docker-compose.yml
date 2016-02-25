@@ -1,6 +1,6 @@
 consul:
     hostname: consul
-    constainer_name: consul
+    container_name: consul
     image: qnib/consul
     environment:
      - DC_NAME=dc1
