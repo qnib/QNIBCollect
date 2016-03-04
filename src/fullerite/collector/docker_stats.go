@@ -69,16 +69,16 @@ func (d *DockerStats) Configure(configMap map[string]interface{}) {
 	} else {
 		d.statsTimeout = d.interval
 	}
-	if endpoint, exists := configMap["dockerEndPoint"]; exists {
-		if str, ok := endpoint.(string); ok {
+	if dockerEndpoint, exists := configMap["dockerEndPoint"]; exists {
+		if str, ok := dockerEndpoint.(string); ok {
 			d.endpoint = str
 		} else {
-    		etype := fmt.Sprintf("%T", endpoint)
+    		etype := fmt.Sprintf("%T", dockerEndpoint)
 			d.log.Warn("Failed to cast dokerEndPoint: ", etype)
 
 		}
 	} else {
-		d.endpoint = "unix:///var/run/docker.sock"
+		d.endpoint = endpoint
 	}
 	d.dockerClient, _ = docker.NewClient(d.endpoint)
 	if generatedDimensions, exists := configMap["generatedDimensions"]; exists {
