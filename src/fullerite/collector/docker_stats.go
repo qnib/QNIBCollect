@@ -73,7 +73,7 @@ func (d *DockerStats) Configure(configMap map[string]interface{}) {
 		if str, ok := dockerEndpoint.(string); ok {
 			d.endpoint = str
 		} else {
-			reflect.TypeOf(dockerEndpoint)
+			d.log.Warn("Failed to cast dokerEndPoint: ", reflect.TypeOf(dockerEndpoint))
 		}
 	} else {
 		d.endpoint = endpoint
