@@ -3,7 +3,7 @@ package collector
 import (
 	"fullerite/config"
 	"fullerite/metric"
-	"fmt"
+	"reflect"
 	"regexp"
 	"strings"
 	"time"
@@ -73,9 +73,7 @@ func (d *DockerStats) Configure(configMap map[string]interface{}) {
 		if str, ok := dockerEndpoint.(string); ok {
 			d.endpoint = str
 		} else {
-    		etype := fmt.Sprintf("%T", dockerEndpoint)
-			d.log.Warn("Failed to cast dokerEndPoint: ", etype)
-
+			reflect.TypeOf(dockerEndpoint)
 		}
 	} else {
 		d.endpoint = endpoint
