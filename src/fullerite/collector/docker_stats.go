@@ -1,6 +1,7 @@
 package collector
 
 import (
+	"fmt"
 	"fullerite/config"
 	"fullerite/metric"
 	"reflect"
@@ -170,12 +171,16 @@ func (d *DockerStats) extractMetrics(container *docker.Container, stats *docker.
 
 // buildMetrics creates the actual metrics for the given container.
 func (d DockerStats) buildMetrics(container *docker.Container, containerStats *docker.Stats, cpuPercentage float64) []metric.Metric {
+	//var netiface string
 	ret := []metric.Metric{
-		buildDockerMetric("DockerRxBytes", metric.CumulativeCounter, float64(containerStats.Network.RxBytes)),
-		buildDockerMetric("DockerTxBytes", metric.CumulativeCounter, float64(containerStats.Network.TxBytes)),
 		buildDockerMetric("DockerMemoryUsed", metric.Gauge, float64(containerStats.MemoryStats.Usage)),
 		buildDockerMetric("DockerMemoryLimit", metric.Gauge, float64(containerStats.MemoryStats.Limit)),
+		buildDockerMetric("DockerCpuUser", metric.Gauge, cpuPercentage),
 		buildDockerMetric("DockerCpuPercentage", metric.Gauge, cpuPercentage),
+	}
+	for netiface, _ := range containerStats.Networks {
+		ret = append(ret, buildDockerMetric(fmt.Sprintf("DockerTxBytes.%s", netiface), metric.CumulativeCounter, float64(containerStats.Networks[netiface].TxBytes)))
+		ret = append(ret, buildDockerMetric(fmt.Sprintf("DockerRxBytes.%s", netiface), metric.CumulativeCounter, float64(containerStats.Networks[netiface].RxBytes)))
 	}
 	additionalDimensions := map[string]string{
 		"container_id":   container.ID,
