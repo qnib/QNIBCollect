@@ -74,8 +74,8 @@ func TestDockerStatsBuildMetrics(t *testing.T) {
 	config["generatedDimensions"] = val
 
 	stats := new(docker.Stats)
-	stats.Network.RxBytes = 10
-	stats.Network.TxBytes = 20
+	stats.Networks.eth0.RxBytes = 10
+	stats.Networks.eth0.TxBytes = 20
 	stats.MemoryStats.Usage = 50
 	stats.MemoryStats.Limit = 70
 
@@ -98,6 +98,7 @@ func TestDockerStatsBuildMetrics(t *testing.T) {
 		"container_name": "test-container",
 		"service_name":   "my_service",
 		"instance_name":  "main",
+		"iface":          "eth0",
 	}
 
 	expectedDimsGen := map[string]string{

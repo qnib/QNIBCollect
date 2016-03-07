@@ -1,7 +1,6 @@
 package collector
 
 import (
-	"fmt"
 	"fullerite/config"
 	"fullerite/metric"
 	"reflect"
@@ -179,8 +178,29 @@ func (d DockerStats) buildMetrics(container *docker.Container, containerStats *d
 		buildDockerMetric("DockerCpuPercentage", metric.Gauge, cpuPercentage),
 	}
 	for netiface, _ := range containerStats.Networks {
-		ret = append(ret, buildDockerMetric(fmt.Sprintf("DockerTxBytes.%s", netiface), metric.CumulativeCounter, float64(containerStats.Networks[netiface].TxBytes)))
-		ret = append(ret, buildDockerMetric(fmt.Sprintf("DockerRxBytes.%s", netiface), metric.CumulativeCounter, float64(containerStats.Networks[netiface].RxBytes)))
+		// legacy format
+		txb := buildDockerMetric("DockerTxBytes", metric.CumulativeCounter, float64(containerStats.Networks[netiface].TxBytes))
+		txb.AddDimension("iface", netiface)
+		ret = append(ret, txb)
+		rxb := buildDockerMetric("DockerRxBytes", metric.CumulativeCounter, float64(containerStats.Networks[netiface].RxBytes))
+		rxb.AddDimension("iface", netiface)
+		ret = append(ret, rxb)
+		// metrics2.0 format (something ChristianKniep would like to push... :)
+		m20Name := "network_traffic"
+		xb = buildDockerMetric(m20Name, metric.CumulativeCounter, float64(containerStats.Networks[netiface].TxBytes))
+		netDims := map[string]string{
+			"type":        "send",
+			"unit":        "B",
+			"metric_type": "cumcounter",
+			"interface":   netiface,
+		}
+		xb.AddDimensions(netDims)
+		ret = append(ret, xb)
+		rxb = buildDockerMetric(m20Name, metric.CumulativeCounter, float64(containerStats.Networks[netiface].RxBytes))
+		netDims["type"] = "receive"
+		xb.AddDimensions(netDims)
+		ret = append(ret, xb)
+
 	}
 	additionalDimensions := map[string]string{
 		"container_id":   container.ID,
