@@ -80,7 +80,7 @@ class JolokiaCollector(diamond.collector.Collector):
             'port': 'Port',
             'rewrite': "This sub-section of the config contains pairs of"
                        " from-to regex rewrites.",
-            'path': 'Path to jolokia.  typically "jmx" or "jolokia"',
+            'url_path': 'Path to jolokia.  typically "jmx" or "jolokia"',
             'listing_max_depth': 'max depth of domain listings tree, 0=deepest, 1=keys only, 2=weird',
             'read_limit': 'Request size to read from jolokia, defaults to 1000, 0 = no limit'
         })
@@ -92,7 +92,7 @@ class JolokiaCollector(diamond.collector.Collector):
             'mbeans': [],
             'regex': False,
             'rewrite': [],
-            'path': 'jolokia',
+            'url_path': 'jolokia',
             'host': 'localhost',
             'port': 8778,
             'listing_max_depth': 1,
@@ -155,7 +155,7 @@ class JolokiaCollector(diamond.collector.Collector):
                                         self.config['listing_max_depth'])
             url = "http://%s:%s/%s%s" % (self.config['host'],
                                          self.config['port'],
-                                         self.config['path'],
+                                         self.config['url_path'],
                                          url_path)
             response = urllib2.urlopen(url)
             return self.read_json(response)
@@ -169,7 +169,7 @@ class JolokiaCollector(diamond.collector.Collector):
                                         self.escape_domain(domain))
             url = "http://%s:%s/%s%s" % (self.config['host'],
                                          self.config['port'],
-                                         self.config['path'],
+                                         self.config['url_path'],
                                          url_path)
             response = urllib2.urlopen(url)
             return self.read_json(response)
