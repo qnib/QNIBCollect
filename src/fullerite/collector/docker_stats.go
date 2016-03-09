@@ -173,7 +173,6 @@ func (d DockerStats) buildMetrics(container *docker.Container, containerStats *d
 	ret := []metric.Metric{
 		buildDockerMetric("DockerMemoryUsed", metric.Gauge, float64(containerStats.MemoryStats.Usage)),
 		buildDockerMetric("DockerMemoryLimit", metric.Gauge, float64(containerStats.MemoryStats.Limit)),
-		buildDockerMetric("DockerCpuUser", metric.Gauge, cpuPercentage),
 		buildDockerMetric("DockerCpuPercentage", metric.Gauge, cpuPercentage),
 	}
 	for netiface, _ := range containerStats.Networks {
