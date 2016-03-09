@@ -62,7 +62,7 @@ func newDockerStats(channel chan metric.Metric, initialInterval int, log *l.Entr
 	return d
 }
 
-// Returns endpoint of DockerStats instance
+// GetEndpoint Returns endpoint of DockerStats instance
 func (d *DockerStats) GetEndpoint() string {
 	return d.endpoint
 }
