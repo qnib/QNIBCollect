@@ -31,7 +31,7 @@ class TestKafkaJolokiaCollector(CollectorTestCase):
         self.assertTrue(KafkaJolokiaCollector)
 
     @patch.object(Collector, 'flush')
-    def test_should_create_dimension(self, publish_mock):
+    def test_should_create_type(self, publish_mock):
         def se(url):
             return self.getFixture("kafka_server.json")
 
@@ -39,27 +39,11 @@ class TestKafkaJolokiaCollector(CollectorTestCase):
 
         with patch_urlopen:
             self.collector.collect()
-            self.assertEquals(len(self.collector.payload), 3828)
+            self.assertEquals(len(self.collector.payload), 72)
 
-        metrics = find_metric(self.collector.payload, "org.apache.cassandra.metrics.ColumnFamily.LiveSSTableCount")
+        metrics = find_metric(self.collector.payload, "kafka.server.BrokerTopicMetrics.MessagesInPerSec.count")
         self.assertNotEqual(len(metrics), 0)
-        metric = find_by_dimension(metrics, "type", "compaction_history")
-        self.assertEquals(metric["type"], "GAUGE")
-
-    @patch.object(Collector, 'flush')
-    def test_should_create_type(self, publish_mock):
-        def se(url):
-            return self.getFixture("metrics.json")
-
-        patch_urlopen = patch('urllib2.urlopen', Mock(side_effect=se))
-
-        with patch_urlopen:
-            self.collector.collect()
-            self.assertEquals(len(self.collector.payload), 3828)
-
-        metrics = find_metric(self.collector.payload, "org.apache.cassandra.metrics.ColumnFamily.CoordinatorReadLatency.count")
-        self.assertNotEqual(len(metrics), 0)
-        metric = find_by_dimension(metrics, "keyspace", "OpsCenter")
+        metric = find_by_dimension(metrics, "topic", "foobar")
         self.assertEquals(metric["type"], "CUMCOUNTER")
 
 
