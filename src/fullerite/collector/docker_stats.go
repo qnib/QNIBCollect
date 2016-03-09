@@ -175,7 +175,7 @@ func (d DockerStats) buildMetrics(container *docker.Container, containerStats *d
 		buildDockerMetric("DockerMemoryLimit", metric.Gauge, float64(containerStats.MemoryStats.Limit)),
 		buildDockerMetric("DockerCpuPercentage", metric.Gauge, cpuPercentage),
 	}
-	for netiface, _ := range containerStats.Networks {
+	for netiface := range containerStats.Networks {
 		// legacy format
 		txb := buildDockerMetric("DockerTxBytes", metric.CumulativeCounter, float64(containerStats.Networks[netiface].TxBytes))
 		txb.AddDimension("iface", netiface)
