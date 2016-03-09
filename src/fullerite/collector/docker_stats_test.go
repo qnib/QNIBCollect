@@ -72,8 +72,8 @@ func TestDockerStatsBuildMetrics(t *testing.T) {
 	config["generatedDimensions"] = val
 
 	stats := new(docker.Stats)
-	stats.Networks.eth0.RxBytes = 10
-	stats.Networks.eth0.TxBytes = 20
+	stats.Networks = make(map[string]docker.NetworkStats)
+	stats.Networks["eth0"] = docker.NetworkStats{RxBytes: 10, TxBytes: 20}
 	stats.MemoryStats.Usage = 50
 	stats.MemoryStats.Limit = 70
 
@@ -91,7 +91,13 @@ func TestDockerStatsBuildMetrics(t *testing.T) {
 	err = json.Unmarshal(containerJSON, &container)
 	assert.Equal(t, err, nil)
 
-	expectedDims := map[string]string{
+	baseDims := map[string]string{
+		"container_id":   "test-id",
+		"container_name": "test-container",
+		"service_name":   "my_service",
+		"instance_name":  "main",
+	}
+	netDims := map[string]string{
 		"container_id":   "test-id",
 		"container_name": "test-container",
 		"service_name":   "my_service",
@@ -104,18 +110,17 @@ func TestDockerStatsBuildMetrics(t *testing.T) {
 		"instance_name": "main",
 	}
 	expectedMetrics := []metric.Metric{
-		metric.Metric{"DockerRxBytes", "cumcounter", 10, expectedDims},
-		metric.Metric{"DockerTxBytes", "cumcounter", 20, expectedDims},
-		metric.Metric{"DockerMemoryUsed", "gauge", 50, expectedDims},
-		metric.Metric{"DockerMemoryLimit", "gauge", 70, expectedDims},
-		metric.Metric{"DockerCpuPercentage", "gauge", 0.5, expectedDims},
+		metric.Metric{"DockerMemoryUsed", "gauge", 50, baseDims},
+		metric.Metric{"DockerMemoryLimit", "gauge", 70, baseDims},
+		metric.Metric{"DockerCpuPercentage", "gauge", 0.5, baseDims},
+		metric.Metric{"DockerTxBytes", "cumcounter", 20, netDims},
+		metric.Metric{"DockerRxBytes", "cumcounter", 10, netDims},
 		metric.Metric{"DockerContainerCount", "counter", 1, expectedDimsGen},
 	}
 
 	d := getSUT()
 	d.Configure(config)
 	ret := d.buildMetrics(container, stats, 0.5)
-
 	assert.Equal(t, ret, expectedMetrics)
 }
 
@@ -134,8 +139,6 @@ func TestDockerStatsBuildMetricsWithNameAsEnvVariable(t *testing.T) {
 	config["generatedDimensions"] = val
 
 	stats := new(docker.Stats)
-	stats.Network.RxBytes = 10
-	stats.Network.TxBytes = 20
 	stats.MemoryStats.Usage = 50
 	stats.MemoryStats.Limit = 70
 
@@ -162,8 +165,6 @@ func TestDockerStatsBuildMetricsWithNameAsEnvVariable(t *testing.T) {
 		"service_name": "my_service",
 	}
 	expectedMetrics := []metric.Metric{
-		metric.Metric{"DockerRxBytes", "cumcounter", 10, expectedDims},
-		metric.Metric{"DockerTxBytes", "cumcounter", 20, expectedDims},
 		metric.Metric{"DockerMemoryUsed", "gauge", 50, expectedDims},
 		metric.Metric{"DockerMemoryLimit", "gauge", 70, expectedDims},
 		metric.Metric{"DockerCpuPercentage", "gauge", 0.5, expectedDims},
