@@ -65,5 +65,4 @@ fullerite:
     links:
      - consul:consul
     volumes:
-     - /Users/kniepbert/src/github.com/qnib/fullerite/:/fullerite/
      - /var/run/docker.sock:/var/run/docker.sock:ro
