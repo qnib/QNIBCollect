@@ -19,6 +19,7 @@ func getSUT() *DockerStats {
 	return newDockerStats(expectedChan, 10, expectedLogger).(*DockerStats)
 }
 
+
 func TestDockerStatsNewDockerStats(t *testing.T) {
 	expectedChan := make(chan metric.Metric)
 	var expectedLogger = defaultLog.WithFields(l.Fields{"collector": "fullerite"})
@@ -32,8 +33,8 @@ func TestDockerStatsNewDockerStats(t *testing.T) {
 	assert.Equal(t, d.name, "DockerStats")
 	assert.Equal(t, reflect.TypeOf(d.previousCPUValues), reflect.TypeOf(expectedType))
 	assert.Equal(t, len(d.previousCPUValues), 0)
-	assert.Equal(t, d.dockerClient.Endpoint(), endpoint)
 }
+
 
 func TestDockerStatsConfigureEmptyConfig(t *testing.T) {
 	config := make(map[string]interface{})

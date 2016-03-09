@@ -62,6 +62,11 @@ func newDockerStats(channel chan metric.Metric, initialInterval int, log *l.Entr
 	return d
 }
 
+// Returns endpoint of DockerStats instance
+func (d *DockerStats) GetEndpoint() string {
+	return d.endpoint
+}
+
 // Configure takes a dictionary of values with which the handler can configure itself.
 func (d *DockerStats) Configure(configMap map[string]interface{}) {
 	if timeout, exists := configMap["dockerStatsTimeout"]; exists {
