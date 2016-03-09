@@ -40,7 +40,7 @@ class TestJolokiaCollector(CollectorTestCase):
         metrics = self.get_metrics()
         self.setDocExample(collector=self.collector.__class__.__name__,
                            metrics=metrics,
-                           defaultpath=self.collector.config['path'])
+                           defaultpath=self.collector.config['url_path'])
         self.assertPublishedMany(publish_mock, metrics)
 
     @patch.object(Collector, 'publish')
@@ -89,7 +89,7 @@ class TestJolokiaCollector(CollectorTestCase):
         metrics = self.get_metrics()
         self.setDocExample(collector=self.collector.__class__.__name__,
                            metrics=metrics,
-                           defaultpath=self.collector.config['path'])
+                           defaultpath=self.collector.config['url_path'])
         self.assertPublishedMany(publish_mock, metrics)
 
     def test_should_escape_jolokia_domains(self):

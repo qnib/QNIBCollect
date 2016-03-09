@@ -49,6 +49,8 @@ def get_collector_config(key, value):
     config['collectors'] = {}
     config['collectors']['default'] = {}
     config['collectors']['default']['hostname_method'] = "uname_short"
+    config['fulleritePort'] = 19190
+    config['interval'] = 10
     config['collectors'][key] = value
     return config
 
