@@ -185,22 +185,6 @@ func (d DockerStats) buildMetrics(container *docker.Container, containerStats *d
 		rxb := buildDockerMetric("DockerRxBytes", metric.CumulativeCounter, float64(containerStats.Networks[netiface].RxBytes))
 		rxb.AddDimension("iface", netiface)
 		ret = append(ret, rxb)
-		// metrics2.0 format (something ChristianKniep would like to push... :)
-		m20Name := "network_traffic"
-		xb = buildDockerMetric(m20Name, metric.CumulativeCounter, float64(containerStats.Networks[netiface].TxBytes))
-		netDims := map[string]string{
-			"type":        "send",
-			"unit":        "B",
-			"metric_type": "cumcounter",
-			"interface":   netiface,
-		}
-		xb.AddDimensions(netDims)
-		ret = append(ret, xb)
-		rxb = buildDockerMetric(m20Name, metric.CumulativeCounter, float64(containerStats.Networks[netiface].RxBytes))
-		netDims["type"] = "receive"
-		xb.AddDimensions(netDims)
-		ret = append(ret, xb)
-
 	}
 	additionalDimensions := map[string]string{
 		"container_id":   container.ID,
