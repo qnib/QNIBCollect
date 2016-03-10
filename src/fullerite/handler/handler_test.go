@@ -134,9 +134,12 @@ func TestRecordTimings(t *testing.T) {
 	base.emissionTimes.PushBack(emissionTiming{now.Add(minusSixSec), someDur, 0})
 	base.emissionTimes.PushBack(emissionTiming{now.Add(minusFiveSec), someDur, 0})
 
-	go base.recordEmissions(timingsChannel)
-	timingsChannel <- emissionTiming{now, someDur, 0}
+	go func() {
+		timingsChannel <- emissionTiming{now, someDur, 0}
+		close(timingsChannel)
+	}()
 
+	base.recordEmissions(timingsChannel)
 	assert.Equal(t, 1, base.emissionTimes.Len())
 	timingsChannel = nil
 }
