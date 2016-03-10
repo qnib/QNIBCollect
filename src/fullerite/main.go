@@ -1,8 +1,11 @@
 package main
 
 import (
+	"fullerite/collector"
 	"fullerite/config"
+	"fullerite/handler"
 	"fullerite/internalserver"
+	"fullerite/metric"
 
 	"os"
 	"path/filepath"
@@ -118,7 +121,9 @@ func start(ctx *cli.Context) {
 	collectors := startCollectors(c)
 	handlers := startHandlers(c)
 
-	internalServer := internalserver.New(c, &handlers)
+	internalServer := internalserver.New(c,
+		handlerStatFunc(handlers),
+		collectorStatFunc(collectors))
 	go internalServer.Run()
 
 	readFromCollectors(collectors, handlers)
@@ -127,6 +132,28 @@ func start(ctx *cli.Context) {
 	log.Logger.Hooks.Add(hook)
 
 	<-quit
+}
+
+func handlerStatFunc(handlers []handler.Handler) internalserver.InternalStatFunc {
+	return func() map[string]metric.InternalMetrics {
+		stats := map[string]metric.InternalMetrics{}
+		for _, inst := range handlers {
+			stats[inst.Name()] = inst.InternalMetrics()
+		}
+		return stats
+	}
+}
+
+func collectorStatFunc(collectors []collector.Collector) internalserver.InternalStatFunc {
+	return func() map[string]metric.InternalMetrics {
+		stats := map[string]metric.InternalMetrics{}
+		for _, inst := range collectors {
+			for k, v := range inst.InternalMetrics() {
+				stats[k] = v
+			}
+		}
+		return stats
+	}
 }
 
 func visualize(ctx *cli.Context) {

@@ -30,6 +30,7 @@ type Collector interface {
 	SetCollectorType(string)
 	CanonicalName() string
 	SetCanonicalName(string)
+	InternalMetrics() map[string]metric.InternalMetrics
 }
 
 var collectorConstructs map[string]func(chan metric.Metric, int, *l.Entry) Collector
@@ -74,6 +75,8 @@ type baseCollector struct {
 	interval      int
 	collectorType string
 	canonicalName string
+
+	metricCounter uint64
 
 	// intentionally exported
 	log *l.Entry
@@ -128,4 +131,19 @@ func (col baseCollector) Interval() int {
 // String returns the collector name in printable format.
 func (col baseCollector) String() string {
 	return col.Name() + "Collector"
+}
+
+// InternalMetrics returns internal metrics of collector
+func (col *baseCollector) InternalMetrics() map[string]metric.InternalMetrics {
+	counters := map[string]float64{}
+
+	gauges := map[string]float64{
+		"metric_emission": float64(col.metricCounter),
+	}
+
+	m := metric.InternalMetrics{
+		Counters: counters,
+		Gauges:   gauges,
+	}
+	return map[string]metric.InternalMetrics{col.Name(): m}
 }
