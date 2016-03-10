@@ -1,12 +1,16 @@
 # -*- coding: utf-8 -*-
 
 """
-Collectors Kafka metrics from jolokia agent.
+Collect Kafka metrics using jolokia agent
 
 ### Example Configuration
+
+```
+    host = localhost
+    port = 8778
+```
 """
 
-from diamond.collector import str_to_bool
 from jolokia import JolokiaCollector
 
 class KafkaJolokiaCollector(JolokiaCollector):
