@@ -1,6 +1,10 @@
 package metric
 
-import "strings"
+import (
+	"strings"
+	"fmt"
+	"time"
+)
 
 // The different types of metrics that are supported
 const (
@@ -15,6 +19,7 @@ type Metric struct {
 	Name       string            `json:"name"`
 	MetricType string            `json:"type"`
 	Value      float64           `json:"value"`
+	MetricTime string            `json:"time"`
 	Dimensions map[string]string `json:"dimensions"`
 }
 
@@ -25,6 +30,7 @@ func New(name string) Metric {
 		Name:       sanitizeString(name),
 		MetricType: "gauge",
 		Value:      0.0,
+		MetricTime: fmt.Sprintf("%d", time.Now().Unix()),
 		Dimensions: make(map[string]string),
 	}
 }
