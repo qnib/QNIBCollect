@@ -12,8 +12,12 @@ Collect Kafka metrics using jolokia agent
 """
 
 from jolokia import JolokiaCollector
+import re
 
 class KafkaJolokiaCollector(JolokiaCollector):
+    BLACK_LIST = [
+        re.compile('.*kafka\.server\..+rate$')
+    ]
     def collect_bean(self, prefix, obj):
         for k, v in obj.iteritems():
             if type(v) in [int, float, long]:
@@ -42,6 +46,9 @@ class KafkaJolokiaCollector(JolokiaCollector):
             self.dimensions = {}
             return
 
+        if self.check_blacklist(metric_name):
+            return
+
         if key.lower() == 'count':
             self.publish_cumulative_counter(metric_name, value)
         else:
@@ -55,3 +62,9 @@ class KafkaJolokiaCollector(JolokiaCollector):
         metric_name = dimensions.pop("name", None)
         metric_type = dimensions.pop("type", None)
         return metric_name, metric_type, dimensions
+
+    def check_blacklist(self, metric_name):
+        for checkmetric in self.BLACK_LIST:
+            if re.match(checkmetric, metric_name):
+                return True
+        return False
