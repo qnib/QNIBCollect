@@ -13,3 +13,9 @@ func NewInternalMetrics() *InternalMetrics {
 	inst.Gauges = make(map[string]float64)
 	return inst
 }
+
+// CollectorEmission counts collector emissions
+type CollectorEmission struct {
+	Name          string
+	EmissionCount uint64
+}

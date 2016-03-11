@@ -98,7 +98,6 @@ class Collector(object):
         self.handlers = handlers
         self.last_values = {}
         self.payload = []
-        self.metric_counter = 0
 
         self.config = {}
         self.configfile = configfile or {}
@@ -297,12 +296,6 @@ class Collector(object):
         """
         raise NotImplementedError()
 
-    def report_metric_emissions(self):
-        """
-        Report metric emissions per collection
-        """
-        self.publish("metric_emission", self.metric_counter)
-
     def publish(self, name, value, raw_value=None, precision=0,
                 metric_type='GAUGE', instance=None):
         """
@@ -338,7 +331,6 @@ class Collector(object):
                             'value=%r'), path, value)
             raise
 
-        self.metric_counter += 1
         # Publish Metric
         self.publish_metric(metric)
 
@@ -470,7 +462,6 @@ class Collector(object):
 
             # Collect Data
             self.default_dimensions = None
-            self.metric_counter = 0
             self.collect()
 
             end_time = time.time()
@@ -491,9 +482,7 @@ class Collector(object):
         finally:
             # After collector run, invoke a flush
             # method on each handler.
-            self.report_metric_emissions()
             self.flush()
-            self.metric_counter = 0
             self.default_dimensions = None
             for handler in self.handlers:
                 handler._flush()

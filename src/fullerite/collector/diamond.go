@@ -21,10 +21,9 @@ const (
 // Diamond collector type
 type Diamond struct {
 	baseCollector
-	port           string
-	serverStarted  bool
-	metricCounters map[string]float64
-	incoming       chan []byte
+	port          string
+	serverStarted bool
+	incoming      chan []byte
 }
 
 func init() {
@@ -44,7 +43,6 @@ func newDiamond(channel chan metric.Metric, initialInterval int, log *l.Entry) C
 	d.port = DefaultDiamondCollectorPort
 	d.serverStarted = false
 	d.SetCollectorType("listener")
-	d.metricCounters = make(map[string]float64)
 	return d
 }
 
@@ -121,20 +119,9 @@ func (d *Diamond) Collect() {
 	for line := range d.incoming {
 		if metrics, ok := d.parseMetrics(line); ok {
 			for _, metric := range metrics {
-				if metric.Name == "metric_emission" {
-					d.addToMetricCounter(metric)
-				} else {
-					d.Channel() <- metric
-				}
-
+				d.Channel() <- metric
 			}
 		}
-	}
-}
-
-func (d *Diamond) addToMetricCounter(metric metric.Metric) {
-	if val, ok := metric.GetDimensionValue("collectorCanonicalName"); ok {
-		d.metricCounters[val] = metric.Value
 	}
 }
 
@@ -151,23 +138,4 @@ func (d *Diamond) parseMetrics(line []byte) ([]metric.Metric, bool) {
 		metrics[i].AddDimension("diamond", "yes")
 	}
 	return metrics, true
-}
-
-// InternalMetrics returns internal metrics of collector
-func (d *Diamond) InternalMetrics() map[string]metric.InternalMetrics {
-	metricStats := map[string]metric.InternalMetrics{}
-	for k, v := range d.metricCounters {
-		counters := map[string]float64{}
-
-		gauges := map[string]float64{
-			"metric_emission": float64(v),
-		}
-
-		m := metric.InternalMetrics{
-			Counters: counters,
-			Gauges:   gauges,
-		}
-		metricStats[k] = m
-	}
-	return metricStats
 }

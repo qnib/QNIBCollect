@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fullerite/collector"
 	"fullerite/config"
 	"fullerite/handler"
 	"fullerite/internalserver"
@@ -120,13 +119,14 @@ func start(ctx *cli.Context) {
 	}
 	collectors := startCollectors(c)
 	handlers := startHandlers(c)
+	collectorStatChan := make(chan metric.CollectorEmission)
 
 	internalServer := internalserver.New(c,
 		handlerStatFunc(handlers),
-		collectorStatFunc(collectors))
+		readCollectorStat(collectorStatChan))
 	go internalServer.Run()
 
-	readFromCollectors(collectors, handlers)
+	readFromCollectors(collectors, handlers, collectorStatChan)
 
 	hook := NewLogErrorHook(handlers)
 	log.Logger.Hooks.Add(hook)
@@ -144,15 +144,26 @@ func handlerStatFunc(handlers []handler.Handler) internalserver.InternalStatFunc
 	}
 }
 
-func collectorStatFunc(collectors []collector.Collector) internalserver.InternalStatFunc {
-	return func() map[string]metric.InternalMetrics {
-		stats := map[string]metric.InternalMetrics{}
-		for _, inst := range collectors {
-			for k, v := range inst.InternalMetrics() {
-				stats[k] = v
-			}
+func readCollectorStat(collectorStatChan <-chan metric.CollectorEmission) internalserver.InternalStatFunc {
+	collectorMetrics := map[string]uint64{}
+	go func() {
+		for collectorMetric := range collectorStatChan {
+			collectorMetrics[collectorMetric.Name] = collectorMetric.EmissionCount
 		}
-		return stats
+	}()
+	return func() map[string]metric.InternalMetrics {
+		metricStats := map[string]metric.InternalMetrics{}
+		for k, v := range collectorMetrics {
+			counters := map[string]float64{"metric_emission": float64(v)}
+			gauges := map[string]float64{}
+
+			m := metric.InternalMetrics{
+				Counters: counters,
+				Gauges:   gauges,
+			}
+			metricStats[k] = m
+		}
+		return metricStats
 	}
 }
 
