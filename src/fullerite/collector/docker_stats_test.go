@@ -6,6 +6,7 @@ import (
 
 	"reflect"
 	"testing"
+	"time"
 
 	l "github.com/Sirupsen/logrus"
 	"github.com/fsouza/go-dockerclient"
@@ -101,20 +102,27 @@ func TestDockerStatsBuildMetrics(t *testing.T) {
 		"service_name":  "my_service",
 		"instance_name": "main",
 	}
+	now := time.Now()
 	expectedMetrics := []metric.Metric{
-		metric.Metric{"DockerRxBytes", "cumcounter", 10, expectedDims},
-		metric.Metric{"DockerTxBytes", "cumcounter", 20, expectedDims},
-		metric.Metric{"DockerMemoryUsed", "gauge", 50, expectedDims},
-		metric.Metric{"DockerMemoryLimit", "gauge", 70, expectedDims},
-		metric.Metric{"DockerCpuPercentage", "gauge", 0.5, expectedDims},
-		metric.Metric{"DockerContainerCount", "counter", 1, expectedDimsGen},
+		metric.Metric{"DockerRxBytes", "cumcounter", 10, expectedDims, now},
+		metric.Metric{"DockerTxBytes", "cumcounter", 20, expectedDims, now},
+		metric.Metric{"DockerMemoryUsed", "gauge", 50, expectedDims, now},
+		metric.Metric{"DockerMemoryLimit", "gauge", 70, expectedDims, now},
+		metric.Metric{"DockerCpuPercentage", "gauge", 0.5, expectedDims, now},
+		metric.Metric{"DockerContainerCount", "counter", 1, expectedDimsGen, now},
 	}
 
 	d := getSUT()
 	d.Configure(config)
 	ret := d.buildMetrics(container, stats, 0.5)
 
-	assert.Equal(t, ret, expectedMetrics)
+	var newMet metric.Metric
+	res := []metric.Metric{}
+	for _, met := range ret {
+		newMet = metric.Metric{met.Name, met.MetricType, met.Value, met.Dimensions, now}
+		res = append(res, newMet)
+	}
+	assert.Equal(t, res, expectedMetrics)
 }
 
 func TestDockerStatsBuildMetricsWithNameAsEnvVariable(t *testing.T) {
@@ -159,20 +167,28 @@ func TestDockerStatsBuildMetricsWithNameAsEnvVariable(t *testing.T) {
 	expectedDimsGen := map[string]string{
 		"service_name": "my_service",
 	}
+	//waitForFullTime(time.Second)
+	now := time.Now()
 	expectedMetrics := []metric.Metric{
-		metric.Metric{"DockerRxBytes", "cumcounter", 10, expectedDims},
-		metric.Metric{"DockerTxBytes", "cumcounter", 20, expectedDims},
-		metric.Metric{"DockerMemoryUsed", "gauge", 50, expectedDims},
-		metric.Metric{"DockerMemoryLimit", "gauge", 70, expectedDims},
-		metric.Metric{"DockerCpuPercentage", "gauge", 0.5, expectedDims},
-		metric.Metric{"DockerContainerCount", "counter", 1, expectedDimsGen},
+		metric.Metric{"DockerRxBytes", "cumcounter", 10, expectedDims, now},
+		metric.Metric{"DockerTxBytes", "cumcounter", 20, expectedDims, now},
+		metric.Metric{"DockerMemoryUsed", "gauge", 50, expectedDims, now},
+		metric.Metric{"DockerMemoryLimit", "gauge", 70, expectedDims, now},
+		metric.Metric{"DockerCpuPercentage", "gauge", 0.5, expectedDims, now},
+		metric.Metric{"DockerContainerCount", "counter", 1, expectedDimsGen, now},
 	}
 
 	d := getSUT()
 	d.Configure(config)
 	ret := d.buildMetrics(container, stats, 0.5)
 
-	assert.Equal(t, ret, expectedMetrics)
+	var newMet metric.Metric
+	res := []metric.Metric{}
+	for _, met := range ret {
+		newMet = metric.Metric{met.Name, met.MetricType, met.Value, met.Dimensions, now}
+		res = append(res, newMet)
+	}
+	assert.Equal(t, res, expectedMetrics)
 }
 
 func TestDockerStatsCalculateCPUPercent(t *testing.T) {
