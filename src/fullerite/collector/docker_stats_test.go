@@ -146,7 +146,6 @@ func TestDockerStatsBuildMetrics(t *testing.T) {
 		newMet = metric.Metric{met.Name, met.MetricType, met.Value, met.Dimensions, now}
 		contains(t, expectedMetrics, newMet)
 	}
-
 }
 
 func TestDockerStatsBuildMetricsWithNameAsEnvVariable(t *testing.T) {
