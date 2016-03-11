@@ -61,6 +61,22 @@ class TestKafkaJolokiaCollector(CollectorTestCase):
         self.assertEquals(len(metrics), 0)
 
 
+    @patch.object(Collector, 'flush')
+    def test_total_topic(self, publish_mock):
+        def se(url):
+            return self.getFixture("kafka_server.json")
+
+        patch_urlopen = patch('urllib2.urlopen', Mock(side_effect=se))
+
+        with patch_urlopen:
+            self.collector.collect()
+            self.assertEquals(len(self.collector.payload), 24)
+
+        metrics = find_metric(self.collector.payload, "kafka.server.BrokerTopicMetrics.BytesRejectedPerSec.count")
+        self.assertNotEqual(len(metrics), 0)
+        metric = find_by_dimension(metrics, "topic", "_TOTAL_")
+        self.assertEquals(metric["type"], "CUMCOUNTER")
+
 
 ################################################################################
 if __name__ == "__main__":

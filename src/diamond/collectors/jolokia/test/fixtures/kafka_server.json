@@ -23,7 +23,7 @@
       "OneMinuteRate": 0.9920596720992548,
       "RateUnit": "NANOSECONDS"
     },
-    "kafka.server:name=MessagesInPerSec,type=BrokerTopicMetrics,topic=foobar": {
+    "kafka.server:name=MessagesInPerSec,topic=foobar,type=BrokerTopicMetrics": {
       "MeanRate": 0.0,
       "FiveMinuteRate": 0.0,
       "Count": 0,

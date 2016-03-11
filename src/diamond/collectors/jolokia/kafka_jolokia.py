@@ -15,21 +15,30 @@ from jolokia import JolokiaCollector
 import re
 
 class KafkaJolokiaCollector(JolokiaCollector):
-    BLACK_LIST = [
-        re.compile('.*kafka\.server\..+rate$')
-    ]
+    TOTAL_TOPICS = re.compile('kafka\.server:name=.*PerSec,type=BrokerTopicMetrics')
+
     def collect_bean(self, prefix, obj):
-        for k, v in obj.iteritems():
-            if type(v) in [int, float, long]:
-                self.parse_and_publish(prefix, k, v)
-            elif isinstance(v, dict):
-                self.collect_bean("%s.%s" % (prefix, k), v)
-            elif isinstance(v, list):
-                self.interpret_bean_with_list("%s.%s" % (prefix, k), v)
+        if isinstance(obj, dict) and "Count" in obj:
+            self.report_counter(prefix, obj)
+        else:
+            for k, v in obj.iteritems():
+                if type(v) in [int, float, long]:
+                    self.parse_and_publish(prefix, k, v)
+                elif isinstance(v, dict):
+                    self.collect_bean("%s.%s" % (prefix, k), v)
+                elif isinstance(v, list):
+                    self.interpret_bean_with_list("%s.%s" % (prefix, k), v)
+
+    def report_counter(self, prefix, obj):
+        counter_val = obj["Count"]
+        self.parse_and_publish(prefix, "count", counter_val)
 
     def parse_and_publish(self, prefix, key, value):
         metric_prefix, meta = prefix.split(':', 2)
         name, metric_type, self.dimensions = self.parse_meta(meta)
+
+        if re.match(self.TOTAL_TOPICS, prefix):
+            self.dimensions["topic"] = "_TOTAL_"
 
         metric_name_list = [metric_prefix]
         if self.config.get('prefix', None):
@@ -46,9 +55,6 @@ class KafkaJolokiaCollector(JolokiaCollector):
             self.dimensions = {}
             return
 
-        if self.check_blacklist(metric_name):
-            return
-
         if key.lower() == 'count':
             self.publish_cumulative_counter(metric_name, value)
         else:
@@ -62,9 +68,3 @@ class KafkaJolokiaCollector(JolokiaCollector):
         metric_name = dimensions.pop("name", None)
         metric_type = dimensions.pop("type", None)
         return metric_name, metric_type, dimensions
-
-    def check_blacklist(self, metric_name):
-        for checkmetric in self.BLACK_LIST:
-            if re.match(checkmetric, metric_name):
-                return True
-        return False
