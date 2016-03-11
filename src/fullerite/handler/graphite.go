@@ -85,7 +85,7 @@ func (g Graphite) convertToGraphite(incomingMetric metric.Metric) (datapoint str
 	for _, key := range keys {
 		datapoint = fmt.Sprintf("%s.%s.%s", datapoint, key, dimensions[key])
 	}
-	datapoint = fmt.Sprintf("%s %f %s\n", datapoint, incomingMetric.Value, incomingMetric.MetricTime)
+	datapoint = fmt.Sprintf("%s %f %d\n", datapoint, incomingMetric.Value, incomingMetric.MetricTime.Unix())
 	return datapoint
 }
 
