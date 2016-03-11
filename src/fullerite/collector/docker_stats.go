@@ -3,7 +3,7 @@ package collector
 import (
 	"fullerite/config"
 	"fullerite/metric"
-
+	"reflect"
 	"regexp"
 	"strings"
 	"time"
@@ -26,6 +26,7 @@ type DockerStats struct {
 	dockerClient      *docker.Client
 	statsTimeout      int
 	compiledRegex     map[string]*Regex
+	endpoint          string
 }
 
 // CPUValues struct contains the last cpu-usage values in order to compute properly the current values.
@@ -56,10 +57,14 @@ func newDockerStats(channel chan metric.Metric, initialInterval int, log *l.Entr
 
 	d.name = "DockerStats"
 	d.previousCPUValues = make(map[string]*CPUValues)
-	d.dockerClient, _ = docker.NewClient(endpoint)
 	d.compiledRegex = make(map[string]*Regex)
 
 	return d
+}
+
+// GetEndpoint Returns endpoint of DockerStats instance
+func (d *DockerStats) GetEndpoint() string {
+	return d.endpoint
 }
 
 // Configure takes a dictionary of values with which the handler can configure itself.
@@ -69,6 +74,16 @@ func (d *DockerStats) Configure(configMap map[string]interface{}) {
 	} else {
 		d.statsTimeout = d.interval
 	}
+	if dockerEndpoint, exists := configMap["dockerEndPoint"]; exists {
+		if str, ok := dockerEndpoint.(string); ok {
+			d.endpoint = str
+		} else {
+			d.log.Warn("Failed to cast dokerEndPoint: ", reflect.TypeOf(dockerEndpoint))
+		}
+	} else {
+		d.endpoint = endpoint
+	}
+	d.dockerClient, _ = docker.NewClient(d.endpoint)
 	if generatedDimensions, exists := configMap["generatedDimensions"]; exists {
 		for dimension, generator := range generatedDimensions.(map[string]interface{}) {
 			for key, regx := range config.GetAsMap(generator) {

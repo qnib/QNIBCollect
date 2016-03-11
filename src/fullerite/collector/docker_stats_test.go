@@ -32,7 +32,10 @@ func TestDockerStatsNewDockerStats(t *testing.T) {
 	assert.Equal(t, d.name, "DockerStats")
 	assert.Equal(t, reflect.TypeOf(d.previousCPUValues), reflect.TypeOf(expectedType))
 	assert.Equal(t, len(d.previousCPUValues), 0)
-	assert.Equal(t, d.dockerClient.Endpoint(), endpoint)
+
+	d.Configure(make(map[string]interface{}))
+	assert.Equal(t, d.GetEndpoint(), endpoint)
+
 }
 
 func TestDockerStatsConfigureEmptyConfig(t *testing.T) {
