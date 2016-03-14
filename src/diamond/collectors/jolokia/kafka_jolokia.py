@@ -19,7 +19,8 @@ class KafkaJolokiaCollector(JolokiaCollector):
 
     def collect_bean(self, prefix, obj):
         if isinstance(obj, dict) and "Count" in obj:
-            self.report_counter(prefix, obj)
+            counter_val = obj["Count"]
+            self.parse_and_publish(prefix, "count", counter_val)
         else:
             for k, v in obj.iteritems():
                 if type(v) in [int, float, long]:
@@ -29,14 +30,12 @@ class KafkaJolokiaCollector(JolokiaCollector):
                 elif isinstance(v, list):
                     self.interpret_bean_with_list("%s.%s" % (prefix, k), v)
 
-    def report_counter(self, prefix, obj):
-        counter_val = obj["Count"]
-        self.parse_and_publish(prefix, "count", counter_val)
-
     def parse_and_publish(self, prefix, key, value):
         metric_prefix, meta = prefix.split(':', 2)
         name, metric_type, self.dimensions = self.parse_meta(meta)
 
+        # If the prefix matches the TOTAL_TOPICS regular expression it means
+        # that, metric has no topic associated with it and is really for all topics on that broker
         if re.match(self.TOTAL_TOPICS, prefix):
             self.dimensions["topic"] = "_TOTAL_"
 
