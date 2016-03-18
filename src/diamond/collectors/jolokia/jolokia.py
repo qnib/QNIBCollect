@@ -58,7 +58,8 @@ import urllib2
 
 class JolokiaCollector(diamond.collector.Collector):
     LIST_URL = "/list?ifModifiedSince=%s&maxDepth=%s"
-    READ_URL = "/?ignoreErrors=true&includeStackTrace=false&maxCollectionSize=%s&p=read/%s:*"
+    READ_URL = "/?ignoreErrors=true&includeStackTrace=false&maxCollectionSize=%s&p=read/%s"
+    LIST_QUERY_URL = "/list/%s?maxDepth=%s"
 
     """
     These domains contain MBeans that are for management purposes,
@@ -78,6 +79,7 @@ class JolokiaCollector(diamond.collector.Collector):
                        " False by default.",
             'host': 'Hostname',
             'port': 'Port',
+            'mbean_whitelist': 'A list of whitelisted mbeans',
             'rewrite': "This sub-section of the config contains pairs of"
                        " from-to regex rewrites.",
             'url_path': 'Path to jolokia.  typically "jmx" or "jolokia"',
@@ -94,6 +96,7 @@ class JolokiaCollector(diamond.collector.Collector):
             'rewrite': [],
             'url_path': 'jolokia',
             'host': 'localhost',
+            'mbean_whitelist': None,
             'port': 8778,
             'listing_max_depth': 1,
             'read_limit': 1000,
@@ -128,6 +131,47 @@ class JolokiaCollector(diamond.collector.Collector):
                 return True
 
     def collect(self):
+        if self.config['mbean_whitelist'] is None:
+            self.use_jolokia_list()
+        else:
+            self.use_jolokia_whitelist()
+
+    def use_jolokia_whitelist(self):
+        for key, value in self.config['mbean_whitelist'].iteritems():
+            if value.get('whitelist') == '*':
+                self.publish_metric_from_domain(key)
+                continue
+            elif value.get('whitelist') and value['whitelist'] != "*" and len(value['whitelist']) > 0:
+                for path in value['whitelist']:
+                    self.read_metric_path(key, path)
+                continue
+            elif value.get('blacklist') and value['blacklist'] and len(value['blacklist']) > 0:
+                self.read_except_blacklist(key, value['blacklist'])
+
+    def read_metric_path(self, prefix, path):
+        full_path = prefix + ":" + path
+        obj = self.read_request(bean_path=full_path)
+        mbeans = obj['value'] if obj['status'] == 200 else {}
+        self.collect_bean(full_path, mbeans)
+
+    def read_except_blacklist(self, prefix, blacklists):
+        listing = self.list_request(prefix)
+        try:
+            domains = listing['value'] if listing['status'] == 200 else {}
+            domain_keys = domains.keys()
+            for path in domain_keys:
+                if self.check_mbean_blacklist(path, blacklists):
+                    self.read_metric_path(prefix, path)
+        except KeyError:
+            self.log.error("Unable to retrieve mbean listing")
+
+    def check_mbean_blacklist(self, mbean, blacklists):
+        for blacklist_pattern in blacklists:
+            if re.match(blacklist_pattern, mbean) is not None:
+                return False
+        return True
+
+    def use_jolokia_list(self):
         listing = self.list_request()
         try:
             domains = listing['value'] if listing['status'] == 200 else {}
@@ -136,23 +180,31 @@ class JolokiaCollector(diamond.collector.Collector):
                 self.last_list_request = listing.get('timestamp', int(time.time()))
             for domain in self.domain_keys:
                 if domain not in self.IGNORE_DOMAINS:
-                    obj = self.read_request(domain)
-                    mbeans = obj['value'] if obj['status'] == 200 else {}
-                    for k, v in mbeans.iteritems():
-                        if self.check_mbean(k):
-                            self.collect_bean(k, v)
+                    self.publish_metric_from_domain(domain)
         except KeyError:
             # The reponse was totally empty, or not an expected format
             self.log.error('Unable to retrieve MBean listing.')
+
+    def publish_metric_from_domain(self, domain):
+        obj = self.read_request(domain=domain)
+        mbeans = obj['value'] if obj['status'] == 200 else {}
+        for k, v in mbeans.iteritems():
+            if self.check_mbean(k):
+                self.collect_bean(k, v)
+
 
     def read_json(self, request):
         json_str = request.read()
         return json.loads(json_str)
 
-    def list_request(self):
+    def list_request(self, bean_path=None):
         try:
-            url_path = self.LIST_URL % (self.last_list_request,
-                                        self.config['listing_max_depth'])
+            if bean_path:
+                url_path = self.LIST_QUERY_URL % (bean_path,
+                                                  self.config['listing_max_depth'])
+            else:
+                url_path = self.LIST_URL % (self.last_list_request,
+                                            self.config['listing_max_depth'])
             url = "http://%s:%s/%s%s" % (self.config['host'],
                                          self.config['port'],
                                          self.config['url_path'],
@@ -163,10 +215,14 @@ class JolokiaCollector(diamond.collector.Collector):
             self.log.error('Unable to read JSON response.')
             return {}
 
-    def read_request(self, domain):
+    def read_request(self, domain=None, bean_path=None):
         try:
-            url_path = self.READ_URL % (self.config['read_limit'],
-                                        self.escape_domain(domain))
+            if domain:
+                url_path = self.READ_URL % (self.config['read_limit'],
+                                            self.escape_domain(domain)) + ":*"
+            else:
+                url_path = self.READ_URL % (self.config['read_limit'],
+                                            self.escape_domain(bean_path))
             url = "http://%s:%s/%s%s" % (self.config['host'],
                                          self.config['port'],
                                          self.config['url_path'],
