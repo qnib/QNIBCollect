@@ -77,13 +77,14 @@ class TestCassandraJolokiaCollector(CollectorTestCase):
                 return self.getFixture("cas_db.json")
             elif url.find("org.apache.cassandra.db:type=StorageService") > 0:
                 return Exception('storage service should be blacklisted')
+            elif url.find("list?ifModifiedSince") > 0:
+                return self.getFixture("cas_list.json")
             else:
                 return self.getFixture("storage_proc.json")
         patch_urlopen = patch('urllib2.urlopen', Mock(side_effect=se))
-        self.collector.config['mbean_whitelist'] = {
-            'org.apache.cassandra.metrics': {'whitelist': '*'},
-            'org.apache.cassandra.db': {'blacklist': ['type=StorageService']},
-        }
+        self.collector.config['mbean_blacklist'] = [
+            'org.apache.cassandra.db:type=StorageService'
+        ]
 
         with patch_urlopen:
             self.collector.collect()
