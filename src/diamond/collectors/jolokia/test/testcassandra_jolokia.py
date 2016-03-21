@@ -69,7 +69,7 @@ class TestCassandraJolokiaCollector(CollectorTestCase):
         self.assertEquals(metric["type"], "CUMCOUNTER")
 
     @patch.object(Collector, 'flush')
-    def test_mbean_whitelisting(self, publish_mock):
+    def test_mbean_blacklisting(self, publish_mock):
         def se(url):
             if url.find("org.apache.cassandra.metrics") > 0:
                 return self.getFixture("metrics.json")
