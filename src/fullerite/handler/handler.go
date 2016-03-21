@@ -53,20 +53,6 @@ func New(name string) Handler {
 	return nil
 }
 
-// InternalMetrics holds the key:value pairs for counters/gauges
-type InternalMetrics struct {
-	Counters map[string]float64
-	Gauges   map[string]float64
-}
-
-// NewInternalMetrics initializes the internal components of InternalMetrics
-func NewInternalMetrics() *InternalMetrics {
-	inst := new(InternalMetrics)
-	inst.Counters = make(map[string]float64)
-	inst.Gauges = make(map[string]float64)
-	return inst
-}
-
 // Handler defines the interface of a generic handler.
 type Handler interface {
 	Run()
@@ -75,7 +61,7 @@ type Handler interface {
 
 	// InternalMetrics is to publish a set of values
 	// that are relevant to the handler itself.
-	InternalMetrics() InternalMetrics
+	InternalMetrics() metric.InternalMetrics
 
 	// taken care of by the base
 	Name() string
@@ -313,7 +299,7 @@ func (base BaseHandler) String() string {
 }
 
 // InternalMetrics : Returns the internal metrics that are being collected by this handler
-func (base BaseHandler) InternalMetrics() InternalMetrics {
+func (base BaseHandler) InternalMetrics() metric.InternalMetrics {
 	counters := map[string]float64{
 		"totalEmissions": float64(base.totalEmissions),
 		"metricsDropped": float64(base.metricsDropped),
@@ -342,7 +328,7 @@ func (base BaseHandler) InternalMetrics() InternalMetrics {
 		gauges["maxEmissionTiming"] = max
 	}
 
-	return InternalMetrics{
+	return metric.InternalMetrics{
 		Counters: counters,
 		Gauges:   gauges,
 	}

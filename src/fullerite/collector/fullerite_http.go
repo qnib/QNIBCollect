@@ -108,9 +108,9 @@ func (inst fulleriteHTTP) parseResponseText(raw *[]byte) ([]metric.Metric, error
 		return []metric.Metric{}, err
 	}
 
-	appendHandlerDim := func(metrics *[]metric.Metric, handlerName string) {
+	appendDim := func(metrics *[]metric.Metric, key, value string) {
 		for _, m := range *metrics {
-			m.AddDimension("handler", handlerName)
+			m.AddDimension(key, value)
 		}
 	}
 
@@ -123,11 +123,21 @@ func (inst fulleriteHTTP) parseResponseText(raw *[]byte) ([]metric.Metric, error
 	for handler, metrics := range parsedRsp.Handlers {
 		handlerCounters := inst.buildMetrics(&metrics.Counters, true)
 		handlerGauges := inst.buildMetrics(&metrics.Gauges, false)
-		appendHandlerDim(&handlerCounters, handler)
-		appendHandlerDim(&handlerGauges, handler)
+		appendDim(&handlerCounters, "handler", handler)
+		appendDim(&handlerGauges, "handler", handler)
 
 		results = append(results, handlerCounters...)
 		results = append(results, handlerGauges...)
+	}
+
+	for collector, metrics := range parsedRsp.Collectors {
+		collectorCounters := inst.buildMetrics(&metrics.Counters, true)
+		collectorGauges := inst.buildMetrics(&metrics.Gauges, false)
+		appendDim(&collectorCounters, "collector", collector)
+		appendDim(&collectorGauges, "collector", collector)
+
+		results = append(results, collectorCounters...)
+		results = append(results, collectorGauges...)
 	}
 
 	return results, nil

@@ -2,7 +2,7 @@ package internalserver
 
 import (
 	"fullerite/config"
-	"fullerite/handler"
+	"fullerite/metric"
 
 	"encoding/json"
 	"fmt"
@@ -21,23 +21,29 @@ const (
 
 // InternalServer will collect from each handler the status and return it over HTTP
 type InternalServer struct {
-	log      *l.Entry
-	handlers *[]handler.Handler
-	port     int
-	path     string
+	log               *l.Entry
+	handlerStatFunc   InternalStatFunc
+	collectorStatFunc InternalStatFunc
+	port              int
+	path              string
 }
+
+// InternalStatFunc can be used to extract metrics
+type InternalStatFunc func() (stats map[string]metric.InternalMetrics)
 
 // ResponseFormat is the structure of the response from an http request
 type ResponseFormat struct {
-	Memory   handler.InternalMetrics
-	Handlers map[string]handler.InternalMetrics
+	Memory     metric.InternalMetrics
+	Handlers   map[string]metric.InternalMetrics
+	Collectors map[string]metric.InternalMetrics
 }
 
 // New createse a new internal server instance
-func New(cfg config.Config, handlers *[]handler.Handler) *InternalServer {
+func New(cfg config.Config, h InternalStatFunc, c InternalStatFunc) *InternalServer {
 	srv := new(InternalServer)
 	srv.log = l.WithFields(l.Fields{"app": "fullerite", "pkg": "internalserver"})
-	srv.handlers = handlers
+	srv.handlerStatFunc = h
+	srv.collectorStatFunc = c
 	srv.configure(cfg.InternalServerConfig)
 	return srv
 }
@@ -99,8 +105,6 @@ func (srv *InternalServer) configure(cfgMap map[string]interface{}) {
 //	}
 //
 func (srv InternalServer) handleInternalMetricsRequest(writer http.ResponseWriter, req *http.Request) {
-	srv.log.Debug("Starting to handle request for internal metrics, checking ", len(*srv.handlers), " handlers")
-
 	rspString := string(*srv.buildResponse())
 
 	srv.log.Debug("Finished building response: ", rspString)
@@ -110,16 +114,10 @@ func (srv InternalServer) handleInternalMetricsRequest(writer http.ResponseWrite
 // responsible for querying each handler and serializing the total response
 func (srv InternalServer) buildResponse() *[]byte {
 	memoryStats := getMemoryStats()
-
-	handlerStats := make(map[string]handler.InternalMetrics)
-	for _, inst := range *srv.handlers {
-		handlerStats[inst.Name()] = inst.InternalMetrics()
-	}
-
 	rsp := ResponseFormat{}
-	rsp.Handlers = handlerStats
 	rsp.Memory = *memoryStats
-
+	rsp.Handlers = srv.handlerStatFunc()
+	rsp.Collectors = srv.collectorStatFunc()
 	asString, err := json.Marshal(rsp)
 	if err != nil {
 		srv.log.Warn("Failed to marshal response ", rsp, " because of error ", err)
@@ -136,7 +134,7 @@ func memoryStats() *runtime.MemStats {
 }
 
 // converts the memory stats to a map. The response is in the form like this: {counters: [], gauges: []}
-func getMemoryStats() *handler.InternalMetrics {
+func getMemoryStats() *metric.InternalMetrics {
 	m := memoryStats()
 
 	counters := map[string]float64{
@@ -171,7 +169,7 @@ func getMemoryStats() *handler.InternalMetrics {
 		"LastGC":       float64(m.LastGC),
 	}
 
-	rsp := handler.InternalMetrics{
+	rsp := metric.InternalMetrics{
 		Counters: counters,
 		Gauges:   gauges,
 	}

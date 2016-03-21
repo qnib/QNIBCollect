@@ -3,6 +3,7 @@ package internalserver
 import (
 	"fullerite/config"
 	"fullerite/handler"
+	"fullerite/metric"
 
 	"encoding/json"
 	"fmt"
@@ -17,13 +18,13 @@ import (
 
 type testHandler struct {
 	handler.BaseHandler
-	metrics handler.InternalMetrics
+	metrics metric.InternalMetrics
 	name    string
 }
 
 func (h testHandler) Run()                             {} // noop
 func (h testHandler) Configure(map[string]interface{}) {} // noop
-func (h testHandler) InternalMetrics() handler.InternalMetrics {
+func (h testHandler) InternalMetrics() metric.InternalMetrics {
 	return h.metrics
 }
 func (h testHandler) Name() string {
@@ -31,7 +32,7 @@ func (h testHandler) Name() string {
 }
 
 func buildTestHandler(name string, counters, gauges map[string]float64) handler.Handler {
-	testMetrics := handler.NewInternalMetrics()
+	testMetrics := metric.NewInternalMetrics()
 	for name, value := range counters {
 		testMetrics.Counters[name] = value
 	}
@@ -43,6 +44,20 @@ func buildTestHandler(name string, counters, gauges map[string]float64) handler.
 	h.metrics = *testMetrics
 	h.name = name
 	return h
+}
+
+func handlerStatFunc(handlers []handler.Handler) InternalStatFunc {
+	return func() map[string]metric.InternalMetrics {
+		stats := map[string]metric.InternalMetrics{}
+		for _, inst := range handlers {
+			stats[inst.Name()] = inst.InternalMetrics()
+		}
+		return stats
+	}
+}
+
+func collectorStatFunc() map[string]metric.InternalMetrics {
+	return map[string]metric.InternalMetrics{}
 }
 
 func TestServerConfigure(t *testing.T) {
@@ -60,8 +75,9 @@ func TestBuildResponse(t *testing.T) {
 	testHandlers := []handler.Handler{h}
 
 	srv := InternalServer{
-		log:      testLog,
-		handlers: &testHandlers,
+		log:               testLog,
+		handlerStatFunc:   handlerStatFunc(testHandlers),
+		collectorStatFunc: collectorStatFunc,
 	}
 
 	rsp := srv.buildResponse()
@@ -87,8 +103,9 @@ func TestBuildResponseMemory(t *testing.T) {
 	emptyHandlers := []handler.Handler{}
 
 	srv := InternalServer{
-		log:      testLog,
-		handlers: &emptyHandlers,
+		log:               testLog,
+		handlerStatFunc:   handlerStatFunc(emptyHandlers),
+		collectorStatFunc: collectorStatFunc,
 	}
 
 	rspFormat := new(ResponseFormat)
@@ -120,8 +137,7 @@ func TestRespondToHttp(t *testing.T) {
 		map[string]float64{"secondgauge": 890.2},
 	)
 	testHandlers := []handler.Handler{h1, h2}
-
-	srv := New(cfg, &testHandlers)
+	srv := New(cfg, handlerStatFunc(testHandlers), collectorStatFunc)
 	go srv.Run()
 
 	time.Sleep(100 * time.Millisecond) // wait for server to bind on port

@@ -224,7 +224,7 @@ func TestInternalMetrics(t *testing.T) {
 	base.emissionTimes.PushBack(timing)
 
 	results := base.InternalMetrics()
-	expected := InternalMetrics{
+	expected := metric.InternalMetrics{
 		Counters: map[string]float64{
 			"metricsDropped": 100,
 			"metricsSent":    2,
@@ -243,7 +243,7 @@ func TestInternalMetrics(t *testing.T) {
 func TestInternalMetricsWithNan(t *testing.T) {
 	base := BaseHandler{}
 
-	expected := InternalMetrics{
+	expected := metric.InternalMetrics{
 		Counters: map[string]float64{
 			"metricsDropped": 0,
 			"metricsSent":    0,

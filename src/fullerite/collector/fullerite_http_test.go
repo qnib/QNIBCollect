@@ -45,7 +45,15 @@ func getTestResponse() string {
 					"secondgauge": 245.3
 				}
 			}
-		}
+		}, "collectors": {
+			"firstcollector": {
+				"counters": {
+					"metric_emission": 314
+				}, "gauges": {
+					"last_count": 111
+				}
+			}
+                }
 	}
 	`
 	return testString
@@ -113,7 +121,7 @@ func TestHandlePopulatedResponseFulleriteHTTP(t *testing.T) {
 	metrics, err := inst.parseResponseText(&asBytes)
 
 	assert.Nil(t, err)
-	assert.Equal(t, 7, len(metrics))
+	assert.Equal(t, 9, len(metrics))
 
 	assertDimension := func(m *metric.Metric, key, val string) {
 		actual, exists := m.GetDimensionValue(key)
@@ -147,6 +155,9 @@ func TestHandlePopulatedResponseFulleriteHTTP(t *testing.T) {
 		case "secondgauge":
 			assert.Equal(t, 245.3, m.Value)
 			assertDimension(&m, "handler", "secondhandler")
+		case "metric_emission":
+			assert.Equal(t, 314.0, m.Value)
+			assertDimension(&m, "collector", "firstcollector")
 		}
 	}
 }

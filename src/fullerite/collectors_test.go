@@ -1,7 +1,11 @@
 package main
 
 import (
+	"fullerite/collector"
 	"fullerite/config"
+	"fullerite/handler"
+	"fullerite/metric"
+	"sync"
 
 	"io/ioutil"
 	"os"
@@ -96,4 +100,34 @@ func TestStartCollectorTooLong(t *testing.T) {
 	case <-time.After(5 * time.Second):
 		t.Fail()
 	}
+}
+
+func TestReadFromCollector(t *testing.T) {
+	logrus.SetLevel(logrus.ErrorLevel)
+	c := make(map[string]interface{})
+	c["interval"] = 1
+	collector := collector.New("Test")
+	collector.SetInterval(1)
+	collector.Configure(c)
+
+	var wg sync.WaitGroup
+	wg.Add(2)
+	collectorStatChannel := make(chan metric.CollectorEmission)
+	go func() {
+		defer wg.Done()
+		collector.Channel() <- metric.New("hello")
+		time.Sleep(time.Duration(3) * time.Second)
+		collector.Channel() <- metric.New("world")
+		close(collector.Channel())
+	}()
+	collectorMetrics := map[string]uint64{}
+	go func() {
+		defer wg.Done()
+		for collectorMetric := range collectorStatChannel {
+			collectorMetrics[collectorMetric.Name] = collectorMetric.EmissionCount
+		}
+	}()
+	readFromCollector(collector, []handler.Handler{}, collectorStatChannel)
+	wg.Wait()
+	assert.Equal(t, uint64(2), collectorMetrics["Test"])
 }
