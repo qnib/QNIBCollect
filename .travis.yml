@@ -1,6 +1,8 @@
 language: go
 
-install: "pip install --user -r requirements-dev.txt"
+install:
+  - "pip install --user -r requirements-dev.txt"
+  - bash scripts/gitcookie.sh
 go:
   - 1.5
   - 1.5.1
