@@ -11,6 +11,7 @@ from mock import patch
 from diamond.collector import Collector
 
 from cassandra_jolokia import CassandraJolokiaCollector
+import re
 
 ################################################################################
 
@@ -28,13 +29,14 @@ class TestCassandraJolokiaCollector(CollectorTestCase):
         config = get_collector_config('CassandraJolokiaCollector', {})
 
         self.collector = CassandraJolokiaCollector(config, None)
-        self.collector.list_request = list_request
 
     def test_import(self):
         self.assertTrue(CassandraJolokiaCollector)
 
     @patch.object(Collector, 'flush')
     def test_should_create_dimension(self, publish_mock):
+        self.collector.list_request = list_request
+
         def se(url):
             return self.getFixture("metrics.json")
 
@@ -51,6 +53,7 @@ class TestCassandraJolokiaCollector(CollectorTestCase):
 
     @patch.object(Collector, 'flush')
     def test_should_create_type(self, publish_mock):
+        self.collector.list_request = list_request
         def se(url):
             return self.getFixture("metrics.json")
 
@@ -64,6 +67,29 @@ class TestCassandraJolokiaCollector(CollectorTestCase):
         self.assertNotEqual(len(metrics), 0)
         metric = find_by_dimension(metrics, "keyspace", "OpsCenter")
         self.assertEquals(metric["type"], "CUMCOUNTER")
+
+    @patch.object(Collector, 'flush')
+    def test_mbean_blacklisting(self, publish_mock):
+        def se(url):
+            if url.find("org.apache.cassandra.metrics") > 0:
+                return self.getFixture("metrics.json")
+            elif url.find("list/org.apache.cassandra.db") > 0:
+                return self.getFixture("cas_db.json")
+            elif url.find("org.apache.cassandra.db:type=StorageService") > 0:
+                return Exception('storage service should be blacklisted')
+            elif url.find("list?ifModifiedSince") > 0:
+                return self.getFixture("cas_list.json")
+            else:
+                return self.getFixture("storage_proc.json")
+        patch_urlopen = patch('urllib2.urlopen', Mock(side_effect=se))
+        self.collector.config['mbean_blacklist'] = [
+            'org.apache.cassandra.db:type=StorageService'
+        ]
+
+        with patch_urlopen:
+            self.collector.collect()
+        metrics = find_metric(self.collector.payload, "org.apache.cassandra.db.StorageProxy.cascontentiontimeout")
+        self.assertNotEqual(len(metrics), 0)
 
 
 ################################################################################
