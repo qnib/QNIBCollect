@@ -90,6 +90,8 @@ func readFromCollector(collector collector.Collector,
 	handlers []handler.Handler,
 	collectorStatChans ...chan<- metric.CollectorEmission) {
 	emissionCounter := 0
+	lastEmission := time.Now()
+	statDuration := time.Duration(collector.Interval()) * time.Second
 	for m := range collector.Channel() {
 		var exists bool
 		c := collector.CanonicalName()
@@ -104,12 +106,16 @@ func readFromCollector(collector collector.Collector,
 			m.RemoveDimension("collectorCanonicalName")
 		}
 		emissionCounter++
+		// collectorStatChans is an optional parameter. In case of ad-hoc collector
+		// this parameter is not supplied at all. Using variadic arguments is pretty much
+		// only way of doing this in go.
 		if len(collectorStatChans) > 0 {
 			collectorStatChan := collectorStatChans[0]
-			if emissionCounter%30 == 0 {
+			currentTime := time.Now()
+			if currentTime.After(lastEmission.Add(statDuration)) {
 				collectorStatChan <- metric.CollectorEmission{c, uint64(emissionCounter)}
+				lastEmission = time.Now()
 			}
-
 		}
 
 		for i := range handlers {
@@ -117,6 +123,10 @@ func readFromCollector(collector collector.Collector,
 				handlers[i].CollectorChannels()[c] <- m
 			}
 		}
+	}
+	// Closing the stat channel after collector loop finishes
+	for _, statChannel := range collectorStatChans {
+		close(statChannel)
 	}
 }
 
