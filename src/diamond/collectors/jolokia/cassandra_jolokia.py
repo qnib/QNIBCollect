@@ -73,7 +73,7 @@ class CassandraJolokiaCollector(JolokiaCollector):
                 self.interpret_bean_with_list("%s.%s" % (prefix, k), v)
 
     def parse_and_publish(self, prefix, key, value):
-        metric_prefix, meta = prefix.split(':', 2)
+        metric_prefix, meta = prefix.split(':', 1)
         name, metric_type, self.dimensions = self.parse_meta(meta)
 
         metric_name_list = [metric_prefix]
