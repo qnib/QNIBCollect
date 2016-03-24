@@ -46,6 +46,10 @@ class TestKafkaJolokiaCollector(CollectorTestCase):
         metric = find_by_dimension(metrics, "topic", "foobar")
         self.assertEquals(metric["type"], "CUMCOUNTER")
 
+        metrics_dots = find_metric(self.collector.payload,
+                                   "kafka.server.KafkaServer4.2.BrokerState.value")
+        self.assertNotEqual(len(metrics_dots), 0)
+
     @patch.object(Collector, 'flush')
     def test_blacklisting(self, publish_mock):
         def se(url):

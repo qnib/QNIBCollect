@@ -86,7 +86,7 @@
     "kafka.server:name=NumDelayedRequests,type=ProducerRequestPurgatory": {
       "Value": 0
     },
-    "kafka.server:name=BrokerState,type=KafkaServer": {
+    "kafka.server:name=BrokerState,type=KafkaServer{4:2}": {
       "Value": 4
     },
     "kafka.server:name=UnderReplicatedPartitions,type=ReplicaManager": {

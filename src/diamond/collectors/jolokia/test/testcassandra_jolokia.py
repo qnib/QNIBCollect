@@ -51,6 +51,10 @@ class TestCassandraJolokiaCollector(CollectorTestCase):
         metric = find_by_dimension(metrics, "type", "compaction_history")
         self.assertEquals(metric["type"], "GAUGE")
 
+        pending_task = find_metric(self.collector.payload,
+                                   "org.apache.cassandra.metrics.CommitLog4.2.PendingTasks")
+        self.assertNotEqual(len(pending_task), 0)
+
     @patch.object(Collector, 'flush')
     def test_should_create_type(self, publish_mock):
         self.collector.list_request = list_request
