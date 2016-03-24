@@ -89,6 +89,9 @@ func readFromCollectors(collectors []collector.Collector,
 func readFromCollector(collector collector.Collector,
 	handlers []handler.Handler,
 	collectorStatChans ...chan<- metric.CollectorEmission) {
+	// In case of Diamond collectors, metric from multiple collectors are read
+	// from Single channel (owned by Go Diamond Collector) and hence we use a map
+	// for keeping track of metrics from each individual collector
 	emissionCounter := map[string]uint64{}
 	lastEmission := time.Now()
 	statDuration := time.Duration(collector.Interval()) * time.Second
