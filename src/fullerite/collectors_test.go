@@ -116,8 +116,13 @@ func TestReadFromCollector(t *testing.T) {
 	go func() {
 		defer wg.Done()
 		collector.Channel() <- metric.New("hello")
-		time.Sleep(time.Duration(3) * time.Second)
-		collector.Channel() <- metric.New("world")
+		time.Sleep(time.Duration(2) * time.Second)
+		m2 := metric.New("world")
+		m2.AddDimension("collectorCanonicalName", "Foobar")
+		collector.Channel() <- m2
+		time.Sleep(time.Duration(2) * time.Second)
+		m2.AddDimension("collectorCanonicalName", "Foobar")
+		collector.Channel() <- m2
 		close(collector.Channel())
 	}()
 	collectorMetrics := map[string]uint64{}
@@ -129,5 +134,6 @@ func TestReadFromCollector(t *testing.T) {
 	}()
 	readFromCollector(collector, []handler.Handler{}, collectorStatChannel)
 	wg.Wait()
-	assert.Equal(t, uint64(2), collectorMetrics["Test"])
+	assert.Equal(t, uint64(1), collectorMetrics["Test"])
+	assert.Equal(t, uint64(2), collectorMetrics["Foobar"])
 }
