@@ -107,6 +107,37 @@ func getTestUWSGIResponse() string {
 	`
 }
 
+func getTestSchemaUWSGIResponse() string {
+	return `{
+    "service_dims": {
+        "firstdim": "first",
+        "seconddim": "second"
+    },
+	"counters": {
+		"Acounter":{
+			"firstrollup": 134,
+			"secondrollup": 89
+		}
+	},
+	"meters": {},
+	"timers": {
+		"some_timer": {
+			"average": 123
+		},
+		"othertimer": {
+			"mean": 345
+		}
+	},
+	"gauges": {
+		"some_random_metric": {
+			"rollup1": 12
+		}
+	},
+	"histograms": {}
+	}
+	`
+}
+
 func validateUWSGIResults(t *testing.T, actual []metric.Metric) {
 	assert.Equal(t, 5, len(actual))
 
@@ -156,6 +187,29 @@ func validateFullDimensions(t *testing.T, actual []metric.Metric, serviceName, p
 		val, exists = m.GetDimensionValue("port")
 		assert.True(t, exists)
 		assert.Equal(t, port, val)
+	}
+
+}
+
+func validateFullSchemaDimensions(t *testing.T, actual []metric.Metric, serviceName, port string) {
+	for _, m := range actual {
+		assert.Equal(t, 6, len(m.Dimensions))
+
+		val, exists := m.GetDimensionValue("service")
+		assert.True(t, exists)
+		assert.Equal(t, serviceName, val)
+
+		val, exists = m.GetDimensionValue("port")
+		assert.True(t, exists)
+		assert.Equal(t, port, val)
+
+		val, exists = m.GetDimensionValue("firstdim")
+		assert.True(t, exists)
+		assert.Equal(t, "first", val)
+
+		val, exists = m.GetDimensionValue("seconddim")
+		assert.True(t, exists)
+		assert.Equal(t, "second", val)
 	}
 
 }
@@ -331,7 +385,7 @@ func TestUWSGIMetricConversion(t *testing.T) {
 func TestUWSGIResponseConversion(t *testing.T) {
 	uwsgiRsp := []byte(getTestUWSGIResponse())
 
-	actual, err := parseUWSGIMetrics(&uwsgiRsp)
+	actual, err := parseDefault(&uwsgiRsp)
 	assert.Nil(t, err)
 	validateUWSGIResults(t, actual)
 	for _, m := range actual {
@@ -384,6 +438,54 @@ func TestNerveUWSGICollect(t *testing.T) {
 
 	validateUWSGIResults(t, actual)
 	validateFullDimensions(t, actual, "test_service", port)
+	validateEmptyChannel(t, inst.Channel())
+}
+
+func TestNerveUWSGICollectWithSchema(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, rsp *http.Request) {
+		w.Header().Set("Metrics-Schema", "uwsgi.1.1")
+		fmt.Fprint(w, getTestSchemaUWSGIResponse())
+	}))
+	defer server.Close()
+
+	// assume format is http://ipaddr:port
+	ip, port := parseURL(server.URL)
+
+	minimalNerveConfig := make(map[string]map[string]map[string]interface{})
+	minimalNerveConfig["services"] = map[string]map[string]interface{}{
+		"test_service.things.and.stuff": {
+			"host": ip,
+			"port": port,
+		},
+	}
+
+	tmpFile, err := ioutil.TempFile("", "fullerite_testing")
+	defer os.Remove(tmpFile.Name())
+	assert.Nil(t, err)
+
+	marshalled, err := json.Marshal(minimalNerveConfig)
+	assert.Nil(t, err)
+
+	_, err = tmpFile.Write(marshalled)
+	assert.Nil(t, err)
+
+	cfg := map[string]interface{}{
+		"configFilePath": tmpFile.Name(),
+		"queryPath":      "",
+	}
+
+	inst := getTestNerveUWSGI()
+	inst.Configure(cfg)
+
+	go inst.Collect()
+
+	actual := []metric.Metric{}
+	for i := 0; i < 5; i++ {
+		actual = append(actual, <-inst.Channel())
+	}
+
+	validateUWSGIResults(t, actual)
+	validateFullSchemaDimensions(t, actual, "test_service", port)
 	validateEmptyChannel(t, inst.Channel())
 }
 
@@ -459,7 +561,7 @@ func TestDropwizardCounter(t *testing.T) {
 }
         `)
 
-	metrics, err := parseUWSGIMetrics(&rawData)
+	metrics, err := parseDefault(&rawData)
 	assert.Nil(t, err)
 	assert.Equal(t, 1, len(metrics))
 }
@@ -475,7 +577,7 @@ func TestInvalidDropwizard(t *testing.T) {
 }
         `)
 
-	metrics, err := parseUWSGIMetrics(&rawData)
+	metrics, err := parseDefault(&rawData)
 	assert.Nil(t, err)
 	assert.Equal(t, 0, len(metrics))
 }
@@ -514,7 +616,7 @@ func TestDropJVMMetrics(t *testing.T) {
 }
         `)
 
-	metrics, err := parseUWSGIMetrics(&rawData)
+	metrics, err := parseDefault(&rawData)
 	assert.Nil(t, err)
 	assert.Equal(t, 14, len(metrics))
 }
@@ -547,7 +649,7 @@ func TestDropwizardTimer(t *testing.T) {
   }
 }
         `)
-	metrics, err := parseUWSGIMetrics(&rawData)
+	metrics, err := parseDefault(&rawData)
 	assert.Nil(t, err)
 	assert.Equal(t, 9, len(metrics))
 
@@ -572,7 +674,7 @@ func TestDropwizardGauge(t *testing.T) {
   }
 }
         `)
-	metrics, err := parseUWSGIMetrics(&rawData)
+	metrics, err := parseDefault(&rawData)
 	assert.Nil(t, err)
 	assert.Equal(t, 1, len(metrics))
 }
@@ -583,7 +685,7 @@ func TestDropwizardJsonInput(t *testing.T) {
 
 	assert.Nil(t, err)
 
-	metrics, err := parseUWSGIMetrics(&dat)
+	metrics, err := parseDefault(&dat)
 	assert.Nil(t, err)
 	assert.Equal(t, 560, len(metrics))
 }
@@ -609,7 +711,7 @@ func TestDropwizardHistogram(t *testing.T) {
   }
 }
         `)
-	metrics, err := parseUWSGIMetrics(&rawData)
+	metrics, err := parseDefault(&rawData)
 	assert.Nil(t, err)
 	assert.Equal(t, 11, len(metrics))
 	counterMetric, ok := extractMetricWithType(metrics, "COUNTER")

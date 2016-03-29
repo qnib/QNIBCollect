@@ -75,12 +75,13 @@ type releventNerveConfig struct {
 //			"count": ###,
 // 	}
 // }
-type uwsgiJSONFormat struct {
-	Counters   map[string]map[string]interface{}
-	Gauges     map[string]map[string]interface{}
-	Histograms map[string]map[string]interface{}
-	Meters     map[string]map[string]interface{}
-	Timers     map[string]map[string]interface{}
+type uwsgiJSONFormat_1_x struct {
+	ServiceDims map[string]interface{} `json:"service_dims"`
+	Counters    map[string]map[string]interface{}
+	Gauges      map[string]map[string]interface{}
+	Histograms  map[string]map[string]interface{}
+	Meters      map[string]map[string]interface{}
+	Timers      map[string]map[string]interface{}
 }
 
 // For parsing Dropwizard json output
@@ -89,8 +90,16 @@ type nestedMetricMap struct {
 	metricMap      map[string]interface{}
 }
 
+// Parser map for schema matching
+var schemaMap map[string]func(*[]byte) ([]metric.Metric, error)
+
 func init() {
 	RegisterCollector("NerveUWSGI", newNerveUWSGI)
+	// Enumerate schema-parser map:
+	schemaMap = make(map[string]func(*[]byte) ([]metric.Metric, error))
+	schemaMap["uwsgi.1.0"] = parseUWSGIMetrics_1_0
+	schemaMap["uwsgi.1.1"] = parseUWSGIMetrics_1_1
+	schemaMap["default"] = parseDefault
 }
 
 func newNerveUWSGI(channel chan metric.Metric, initialInterval int, log *l.Entry) Collector {
@@ -147,13 +156,12 @@ func (n *nerveUWSGICollector) queryService(serviceName string, port int) {
 	endpoint := fmt.Sprintf("http://localhost:%d/%s", port, n.queryPath)
 	serviceLog.Debug("making GET request to ", endpoint)
 
-	rawResponse, err := queryEndpoint(endpoint, n.timeout)
+	rawResponse, schemaVer, err := queryEndpoint(endpoint, n.timeout)
 	if err != nil {
 		serviceLog.Warn("Failed to query endpoint ", endpoint, ": ", err)
 		return
 	}
-
-	metrics, err := parseUWSGIMetrics(&rawResponse)
+	metrics, err := schemaMap[schemaVer](&rawResponse)
 	if err != nil {
 		serviceLog.Warn("Failed to parse response into metrics: ", err)
 		return
@@ -216,11 +224,27 @@ func (n *nerveUWSGICollector) parseNerveConfig(raw *[]byte, ips []string) (map[i
 	return results, nil
 }
 
-// parseUWSGIMetrics takes the json returned from the endpoint and converts
+// parseDefault is the fallback parser if no 'Metrics-Schema' is provided in the
+// response header from a service query
+func parseDefault(raw *[]byte) ([]metric.Metric, error) {
+	results, err := parseUWSGIMetrics_1_0(raw)
+	if err != nil {
+		return results, err
+	}
+
+	if len(results) == 0 {
+		// If parsing using UWSGI format did not work, the output is probably
+		// in Dropwizard format and should be handled as such.
+		return parseDropwizardMetric(raw)
+	}
+	return results, nil
+}
+
+// parseUWSGIMetrics_1_0 takes the json returned from the endpoint and converts
 // it into raw metrics. We first check that the metrics returned have a float value
 // otherwise we skip the metric.
-func parseUWSGIMetrics(raw *[]byte) ([]metric.Metric, error) {
-	parsed := new(uwsgiJSONFormat)
+func parseUWSGIMetrics_1_0(raw *[]byte) ([]metric.Metric, error) {
+	parsed := new(uwsgiJSONFormat_1_x)
 
 	err := json.Unmarshal(*raw, parsed)
 	if err != nil {
@@ -239,10 +263,41 @@ func parseUWSGIMetrics(raw *[]byte) ([]metric.Metric, error) {
 	appendIt(convertToMetrics(&parsed.Histograms, metric.Gauge), "histogram")
 	appendIt(convertToMetrics(&parsed.Timers, metric.Gauge), "timer")
 
-	if len(results) == 0 {
-		// If parsing using UWSGI format did not work, the output is probably
-		// in Dropwizard format and should be handled as such.
-		return parseDropwizardMetric(raw)
+	return results, nil
+}
+
+// parseUWSGIMetrics_1_1 will parse UWSGI metrics under the assumption of
+// the response header containing a Metrics-Schema version 'uwsgi.1.1'.
+// This function should really wrap the 1_0 parse function for better
+// code reuse, but this creates some problems with dependencies that I
+// don't want to tackle at the moment.
+func parseUWSGIMetrics_1_1(raw *[]byte) ([]metric.Metric, error) {
+	parsed := new(uwsgiJSONFormat_1_x)
+
+	err := json.Unmarshal(*raw, parsed)
+	if err != nil {
+		return []metric.Metric{}, err
+	}
+
+	results := []metric.Metric{}
+	appendIt := func(metrics []metric.Metric, typeDimVal string) {
+		metric.AddToAll(&metrics, map[string]string{"type": typeDimVal})
+		results = append(results, metrics...)
+	}
+
+	appendIt(convertToMetrics(&parsed.Gauges, metric.Gauge), "gauge")
+	appendIt(convertToMetrics(&parsed.Meters, metric.Gauge), "meter")
+	appendIt(convertToMetrics(&parsed.Counters, metric.Counter), "counter")
+	appendIt(convertToMetrics(&parsed.Histograms, metric.Gauge), "histogram")
+	appendIt(convertToMetrics(&parsed.Timers, metric.Gauge), "timer")
+
+	// This is necessary as Go doesn't allow us to type assert
+	// map[string]interface{} as map[string]string.
+	// Basically go doesn't allow type assertions for interface{}'s nested
+	// inside data structures across the entire structure since it is a linearly
+	// complex action
+	for k, v := range parsed.ServiceDims {
+		metric.AddToAll(&results, map[string]string{k: v.(string)})
 	}
 	return results, nil
 }
@@ -336,23 +391,28 @@ func getIps() ([]string, error) {
 	return results, nil
 }
 
-func queryEndpoint(endpoint string, timeout int) ([]byte, error) {
+func queryEndpoint(endpoint string, timeout int) ([]byte, string, error) {
 	client := http.Client{
 		Timeout: time.Duration(timeout) * time.Second,
 	}
 
 	rsp, err := client.Get(endpoint)
 	if err != nil {
-		return []byte{}, err
+		return []byte{}, "", err
+	}
+
+	schemaVer := rsp.Header.Get("Metrics-Schema")
+	if schemaVer == "" {
+		schemaVer = "default"
 	}
 
 	txt, err := ioutil.ReadAll(rsp.Body)
 	defer rsp.Body.Close()
 	if err != nil {
-		return []byte{}, err
+		return []byte{}, "", err
 	}
 
-	return txt, nil
+	return txt, schemaVer, nil
 }
 
 // parseDropwizardMetric takes json string in following format::
