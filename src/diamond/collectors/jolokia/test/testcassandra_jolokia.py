@@ -44,7 +44,7 @@ class TestCassandraJolokiaCollector(CollectorTestCase):
 
         with patch_urlopen:
             self.collector.collect()
-        self.assertEquals(len(self.collector.payload), 3828)
+        self.assertEquals(len(self.collector.payload), 3827)
 
         metrics = find_metric(self.collector.payload, "org.apache.cassandra.metrics.ColumnFamily.LiveSSTableCount")
         self.assertNotEqual(len(metrics), 0)
@@ -65,7 +65,7 @@ class TestCassandraJolokiaCollector(CollectorTestCase):
 
         with patch_urlopen:
             self.collector.collect()
-        self.assertEquals(len(self.collector.payload), 3828)
+        self.assertEquals(len(self.collector.payload), 3827)
 
         metrics = find_metric(self.collector.payload, "org.apache.cassandra.metrics.ColumnFamily.CoordinatorReadLatency.count")
         self.assertNotEqual(len(metrics), 0)
