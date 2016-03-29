@@ -68,8 +68,8 @@ class MBean(object):
         raw_name_list = [metric_prefix]
         if self.metric_type:
             raw_name_list.append(self.metric_type)
-            if self.metric_name:
-                raw_name_list.append(self.metric_name)
+        if self.metric_name:
+            raw_name_list.append(self.metric_name)
 
         metric_name_list = patch_metric_name(self, raw_name_list)
         return metric_name_list, self.dimensions
