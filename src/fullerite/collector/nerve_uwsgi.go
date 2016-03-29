@@ -75,7 +75,7 @@ type releventNerveConfig struct {
 //			"count": ###,
 // 	}
 // }
-type uwsgiJSONFormat_1_x struct {
+type uwsgiJSONFormat1X struct {
 	ServiceDims map[string]interface{} `json:"service_dims"`
 	Counters    map[string]map[string]interface{}
 	Gauges      map[string]map[string]interface{}
@@ -97,8 +97,8 @@ func init() {
 	RegisterCollector("NerveUWSGI", newNerveUWSGI)
 	// Enumerate schema-parser map:
 	schemaMap = make(map[string]func(*[]byte) ([]metric.Metric, error))
-	schemaMap["uwsgi.1.0"] = parseUWSGIMetrics_1_0
-	schemaMap["uwsgi.1.1"] = parseUWSGIMetrics_1_1
+	schemaMap["uwsgi.1.0"] = parseUWSGIMetrics10
+	schemaMap["uwsgi.1.1"] = parseUWSGIMetrics11
 	schemaMap["default"] = parseDefault
 }
 
@@ -227,7 +227,7 @@ func (n *nerveUWSGICollector) parseNerveConfig(raw *[]byte, ips []string) (map[i
 // parseDefault is the fallback parser if no 'Metrics-Schema' is provided in the
 // response header from a service query
 func parseDefault(raw *[]byte) ([]metric.Metric, error) {
-	results, err := parseUWSGIMetrics_1_0(raw)
+	results, err := parseUWSGIMetrics10(raw)
 	if err != nil {
 		return results, err
 	}
@@ -240,11 +240,11 @@ func parseDefault(raw *[]byte) ([]metric.Metric, error) {
 	return results, nil
 }
 
-// parseUWSGIMetrics_1_0 takes the json returned from the endpoint and converts
+// parseUWSGIMetrics10 takes the json returned from the endpoint and converts
 // it into raw metrics. We first check that the metrics returned have a float value
 // otherwise we skip the metric.
-func parseUWSGIMetrics_1_0(raw *[]byte) ([]metric.Metric, error) {
-	parsed := new(uwsgiJSONFormat_1_x)
+func parseUWSGIMetrics10(raw *[]byte) ([]metric.Metric, error) {
+	parsed := new(uwsgiJSONFormat1X)
 
 	err := json.Unmarshal(*raw, parsed)
 	if err != nil {
@@ -266,13 +266,10 @@ func parseUWSGIMetrics_1_0(raw *[]byte) ([]metric.Metric, error) {
 	return results, nil
 }
 
-// parseUWSGIMetrics_1_1 will parse UWSGI metrics under the assumption of
+// parseUWSGIMetrics11 will parse UWSGI metrics under the assumption of
 // the response header containing a Metrics-Schema version 'uwsgi.1.1'.
-// This function should really wrap the 1_0 parse function for better
-// code reuse, but this creates some problems with dependencies that I
-// don't want to tackle at the moment.
-func parseUWSGIMetrics_1_1(raw *[]byte) ([]metric.Metric, error) {
-	parsed := new(uwsgiJSONFormat_1_x)
+func parseUWSGIMetrics11(raw *[]byte) ([]metric.Metric, error) {
+	parsed := new(uwsgiJSONFormat1X)
 
 	err := json.Unmarshal(*raw, parsed)
 	if err != nil {
