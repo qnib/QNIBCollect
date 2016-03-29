@@ -34,7 +34,7 @@
       "StdDev": 0,
       "Mean": 0
     },
-    "org.apache.cassandra.metrics:name=ActiveTasks,path=internal,scope=CompactionExecutor,type=ThreadPools": {
+    "org.apache.cassandra.metrics:name=ActiveTasks,path=internal,scope=CompactionExecutor,type=ThreadPools{1,2}": {
       "Value": 0
     },
     "org.apache.cassandra.metrics:keyspace=system_traces,name=AllMemtablesLiveDataSize,scope=sessions,type=ColumnFamily": {

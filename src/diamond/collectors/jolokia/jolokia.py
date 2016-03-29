@@ -55,6 +55,31 @@ import time
 import urllib
 import urllib2
 
+class MBean(object):
+    def __init__(self, prefix, bean_key, bean_value):
+        self.prefix = prefix
+        self.bean_key = bean_key
+        self.bean_value = bean_value
+
+    def parse(self, patch_dimensions, patch_metric_name):
+        metric_prefix, meta = self.prefix.split(':', 1)
+        raw_dims = self.parse_dimension(meta)
+        self.metric_name, self.metric_type, self.dimensions = patch_dimensions(self, raw_dims)
+        raw_name_list = [metric_prefix]
+        if self.metric_type:
+            raw_name_list.append(self.metric_type)
+            if self.metric_name:
+                raw_name_list.append(self.metric_name)
+
+        metric_name_list = patch_metric_name(self, raw_name_list)
+        return metric_name_list, self.dimensions
+
+    def parse_dimension(self, meta):
+        dimensions = {}
+        for k, v in [kv.split('=') for kv in meta.split(',')]:
+            dimensions[str(k)] = v
+        return dimensions
+
 
 class JolokiaCollector(diamond.collector.Collector):
     LIST_URL = "/list?ifModifiedSince=%s&maxDepth=%s"

@@ -21,10 +21,11 @@ CassandraJolokiaCollector.conf
 """
 
 from diamond.collector import str_to_bool
-from jolokia import JolokiaCollector
+from jolokia import JolokiaCollector, MBean
 import math
 import string
 import re
+import sys
 
 
 class CassandraJolokiaCollector(JolokiaCollector):
@@ -72,45 +73,41 @@ class CassandraJolokiaCollector(JolokiaCollector):
             elif isinstance(v, list) and str_to_bool(self.config['nested']):
                 self.interpret_bean_with_list("%s.%s" % (prefix, k), v)
 
-    def parse_and_publish(self, prefix, key, value):
-        metric_prefix, meta = prefix.split(':', 1)
-        name, metric_type, self.dimensions = self.parse_meta(meta)
-
-        metric_name_list = [metric_prefix]
-        if self.config.get('prefix', None):
-            metric_name_list = [self.config['prefix'], metric_prefix]
-        if metric_type:
-            metric_name_list.append(metric_type)
-        if name:
-            metric_name_list.append(name)
-        if key.lower() != 'value':
-            metric_name_list.append(key.lower())
-
-        metric_name = '.'.join(metric_name_list)
-        metric_name = self.clean_up(metric_name)
-        if metric_name == "":
-            self.dimensions = {}
-            return
-
-        if key.lower() == 'count':
-            self.publish_cumulative_counter(metric_name, value)
-        else:
-            self.publish(metric_name, value)
-
-    def parse_meta(self, meta):
-        dimensions = {}
-        for k, v in [kv.split('=') for kv in meta.split(',')]:
-            dimensions[str(k)] = v
-
-        # We can have no name defined for metrics like:
-        # org.apache.cassandra.auth:type=PermissionsCache
-        metric_name = dimensions.pop("name", None)
-        metric_type = dimensions.pop("type", None)
-        scope_type = dimensions.pop("scope", None)
+    def patch_dimensions(self, bean, dims):
+        metric_name = dims.pop("name", None)
+        metric_type = dims.pop("type", None)
+        scope_type = dims.pop("scope", None)
         if scope_type:
-            dimensions["type"] = scope_type
+            dims["type"] = scope_type
 
-        return metric_name, metric_type, dimensions
+        return metric_name, metric_type, dims
+
+    def patch_metric_name(self, bean, metric_name_list):
+        if self.config.get('prefix', None):
+            metric_name_list = [self.config['prefix']] + metric_name_list
+
+        if bean.bean_key.lower() != 'value':
+            metric_name_list.append(bean.bean_key.lower())
+
+        return metric_name_list
+
+
+    def parse_and_publish(self, prefix, key, value):
+        mbean = MBean(prefix, key, value)
+        try:
+            metric_name_list, self.dimensions = mbean.parse(self.patch_dimensions, self.patch_metric_name)
+            metric_name = '.'.join(metric_name_list)
+            metric_name = self.clean_up(metric_name)
+            if metric_name == "":
+                self.dimensions = {}
+                return
+            if key.lower() == 'count':
+                self.publish_cumulative_counter(metric_name, value)
+            else:
+                self.publish(metric_name, value)
+        except:
+            exctype, value = sys.exc_info()[:2]
+            self.log.error(str(value))
 
     # override: Interpret beans that match the `histogram_regex` as histograms,
     # and collect percentiles from them.
