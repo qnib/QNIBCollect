@@ -25,7 +25,6 @@ from jolokia import JolokiaCollector, MBean
 import math
 import string
 import re
-import sys
 
 
 class CassandraJolokiaCollector(JolokiaCollector):
@@ -67,7 +66,7 @@ class CassandraJolokiaCollector(JolokiaCollector):
     def collect_bean(self, prefix, obj):
         for k, v in obj.iteritems():
             if type(v) in [int, float, long]:
-                self.parse_and_publish(prefix, k, v)
+                self.parse_dimension_bean(prefix, k, v)
             elif isinstance(v, dict) and str_to_bool(self.config['nested']):
                 self.collect_bean("%s.%s" % (prefix, k), v)
             elif isinstance(v, list) and str_to_bool(self.config['nested']):
@@ -90,24 +89,6 @@ class CassandraJolokiaCollector(JolokiaCollector):
             metric_name_list.append(bean.bean_key.lower())
 
         return metric_name_list
-
-
-    def parse_and_publish(self, prefix, key, value):
-        mbean = MBean(prefix, key, value)
-        try:
-            metric_name_list, self.dimensions = mbean.parse(self.patch_dimensions, self.patch_metric_name)
-            metric_name = '.'.join(metric_name_list)
-            metric_name = self.clean_up(metric_name)
-            if metric_name == "":
-                self.dimensions = {}
-                return
-            if key.lower() == 'count':
-                self.publish_cumulative_counter(metric_name, value)
-            else:
-                self.publish(metric_name, value)
-        except:
-            exctype, value = sys.exc_info()[:2]
-            self.log.error(str(value))
 
     # override: Interpret beans that match the `histogram_regex` as histograms,
     # and collect percentiles from them.

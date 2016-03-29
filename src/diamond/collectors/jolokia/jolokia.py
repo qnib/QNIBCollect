@@ -54,6 +54,7 @@ import re
 import time
 import urllib
 import urllib2
+import sys
 
 class MBean(object):
     def __init__(self, prefix, bean_key, bean_value):
@@ -279,6 +280,30 @@ class JolokiaCollector(diamond.collector.Collector):
                 self.collect_bean("%s.%s" % (prefix, k), v)
             elif type(v) in [list]:
                 self.interpret_bean_with_list("%s.%s" % (prefix, k), v)
+
+    def patch_dimensions(self, bean, dims):
+        raise NotImplementedError()
+
+    def patch_metric_name(self, bean, metric_name_list):
+        raise NotImplementedError()
+
+    def parse_dimension_bean(self, prefix, key, value):
+        mbean = MBean(prefix, key, value)
+        try:
+            metric_name_list, self.dimensions = mbean.parse(self.patch_dimensions, self.patch_metric_name)
+            metric_name = '.'.join(metric_name_list)
+            metric_name = self.clean_up(metric_name)
+            if metric_name == "":
+                self.dimensions = {}
+                return
+            if key.lower() == 'count':
+                self.publish_cumulative_counter(metric_name, value)
+            else:
+                self.publish(metric_name, value)
+        except:
+            exctype, value = sys.exc_info()[:2]
+            self.log.error(str(value))
+
 
     # There's no unambiguous way to interpret list values, so
     # this hook lets subclasses handle them.
