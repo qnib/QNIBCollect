@@ -51,14 +51,12 @@ class Server(object):
         # Initialize Members
         self.configfile = configfile
         self.config = None
-        self.modules = {}
 
         # We do this weird process title swap around to get the sync manager
         # title correct for ps
         if setproctitle:
             oldproctitle = getproctitle()
             setproctitle('%s - SyncManager' % getproctitle())
-        self.manager = multiprocessing.Manager()
         if setproctitle:
             setproctitle(oldproctitle)
 
