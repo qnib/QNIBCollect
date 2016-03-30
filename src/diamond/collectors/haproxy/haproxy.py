@@ -252,7 +252,6 @@ class HAProxyCollector(diamond.collector.Collector):
             status = self._sanitize(row[17].lower())
             check_status = self._sanitize(row[36].lower())
             check_code = self._sanitize(str(row[37]).lower())
-            last_chk = self._sanitize(row[56].lower())
 
             for index, metric_string in enumerate(row):
                 try:
@@ -272,8 +271,6 @@ class HAProxyCollector(diamond.collector.Collector):
                     self.dimensions.update({'check_code': check_code})
                 if status:
                     self.dimensions.update({'status': status})
-                if last_chk:
-                    self.dimensions.update({'last_chk': last_chk})
 
                 metric_name = '.'.join(['haproxy', headings[index]])
                 if section_name:
