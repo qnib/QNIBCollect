@@ -130,7 +130,7 @@ func (d *DockerStats) Collect() {
 func (d DockerStats) getDockerContainerInfo(container *docker.Container) {
 	errC := make(chan error, 1)
 	statsC := make(chan *docker.Stats, 1)
-	done := make(chan bool)
+	done := make(chan bool, 1)
 
 	go func() {
 		errC <- d.dockerClient.Stats(docker.StatsOptions{container.ID, statsC, false, done, time.Second * time.Duration(d.interval)})
