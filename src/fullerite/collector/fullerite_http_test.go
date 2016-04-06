@@ -48,7 +48,7 @@ func getTestResponse() string {
 		}, "collectors": {
 			"firstcollector": {
 				"counters": {
-					"fullerite.metric_emission": 314
+					"fullerite.collector_datapoints": 314
 				}, "gauges": {
 					"last_count": 111
 				}
@@ -155,7 +155,7 @@ func TestHandlePopulatedResponseFulleriteHTTP(t *testing.T) {
 		case "secondgauge":
 			assert.Equal(t, 245.3, m.Value)
 			assertDimension(&m, "handler", "secondhandler")
-		case "fullerite.metric_emission":
+		case "fullerite.collector_datapoints":
 			assert.Equal(t, 314.0, m.Value)
 			assertDimension(&m, "collector", "firstcollector")
 		}
