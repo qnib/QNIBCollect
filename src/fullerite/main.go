@@ -154,7 +154,7 @@ func readCollectorStat(collectorStatChan <-chan metric.CollectorEmission) intern
 	return func() map[string]metric.InternalMetrics {
 		metricStats := map[string]metric.InternalMetrics{}
 		for k, v := range collectorMetrics {
-			counters := map[string]float64{"metric_emission": float64(v)}
+			counters := map[string]float64{"fullerite.collector_datapoints": float64(v)}
 			gauges := map[string]float64{}
 
 			m := metric.InternalMetrics{

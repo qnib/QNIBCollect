@@ -46,12 +46,3 @@ class KafkaJolokiaCollector(JolokiaCollector):
 
         metric_name_list.append(bean.bean_key.lower())
         return metric_name_list
-
-    def parse_meta(self, meta):
-        dimensions = {}
-        for k, v in [kv.split('=') for kv in meta.split(',')]:
-            dimensions[str(k)] = v
-
-        metric_name = dimensions.pop("name", None)
-        metric_type = dimensions.pop("type", None)
-        return metric_name, metric_type, dimensions
