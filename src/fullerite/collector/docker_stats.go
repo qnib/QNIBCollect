@@ -147,14 +147,7 @@ func (d *DockerStats) getDockerContainerInfo(container *docker.Container) {
 		}
 		done <- true
 
-		d.mu.Lock()
-
-		metrics := d.buildMetrics(container, stats, calculateCPUPercent(d.previousCPUValues[container.ID].totCPU, d.previousCPUValues[container.ID].systemCPU, stats))
-
-		d.previousCPUValues[container.ID].totCPU = stats.CPUStats.CPUUsage.TotalUsage
-		d.previousCPUValues[container.ID].systemCPU = stats.CPUStats.SystemCPUUsage
-		d.mu.Unlock()
-
+		metrics := d.extractMetrics(container, stats)
 		d.sendMetrics(metrics)
 
 		break
@@ -163,6 +156,16 @@ func (d *DockerStats) getDockerContainerInfo(container *docker.Container) {
 		done <- true
 		break
 	}
+}
+
+func (d *DockerStats) extractMetrics(container *docker.Container, stats *docker.Stats) []metric.Metric {
+	defer d.mu.Unlock()
+	d.mu.Lock()
+	metrics := d.buildMetrics(container, stats, calculateCPUPercent(d.previousCPUValues[container.ID].totCPU, d.previousCPUValues[container.ID].systemCPU, stats))
+
+	d.previousCPUValues[container.ID].totCPU = stats.CPUStats.CPUUsage.TotalUsage
+	d.previousCPUValues[container.ID].systemCPU = stats.CPUStats.SystemCPUUsage
+	return metrics
 }
 
 // buildMetrics creates the actual metrics for the given container.
