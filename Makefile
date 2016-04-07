@@ -30,6 +30,9 @@ export GOPATH
 PATH := bin:$(PATH)
 export PATH
 
+GO15VENDOREXPERIMENT := 0
+export GO15VENDOREXPERIMENT
+
 all: clean fmt lint $(FULLERITE) $(BEATIT) test
 
 .PHONY: clean
