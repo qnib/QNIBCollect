@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
 
 	l "github.com/Sirupsen/logrus"
@@ -27,6 +28,7 @@ type DockerStats struct {
 	statsTimeout      int
 	compiledRegex     map[string]*Regex
 	endpoint          string
+	mu                *sync.Mutex
 }
 
 // CPUValues struct contains the last cpu-usage values in order to compute properly the current values.
@@ -54,6 +56,7 @@ func newDockerStats(channel chan metric.Metric, initialInterval int, log *l.Entr
 	d.log = log
 	d.channel = channel
 	d.interval = initialInterval
+	d.mu = new(sync.Mutex)
 
 	d.name = "DockerStats"
 	d.previousCPUValues = make(map[string]*CPUValues)
@@ -127,7 +130,7 @@ func (d *DockerStats) Collect() {
 
 // getDockerContainerInfo gets container statistics for the given container.
 // results is a channel to make possible the synchronization between the main process and the gorutines (wait-notify pattern).
-func (d DockerStats) getDockerContainerInfo(container *docker.Container) {
+func (d *DockerStats) getDockerContainerInfo(container *docker.Container) {
 	errC := make(chan error, 1)
 	statsC := make(chan *docker.Stats, 1)
 	done := make(chan bool, 1)
@@ -144,12 +147,8 @@ func (d DockerStats) getDockerContainerInfo(container *docker.Container) {
 		}
 		done <- true
 
-		ret := d.buildMetrics(container, stats, calculateCPUPercent(d.previousCPUValues[container.ID].totCPU, d.previousCPUValues[container.ID].systemCPU, stats))
-
-		d.sendMetrics(ret)
-
-		d.previousCPUValues[container.ID].totCPU = stats.CPUStats.CPUUsage.TotalUsage
-		d.previousCPUValues[container.ID].systemCPU = stats.CPUStats.SystemCPUUsage
+		metrics := d.extractMetrics(container, stats)
+		d.sendMetrics(metrics)
 
 		break
 	case <-time.After(time.Duration(d.statsTimeout) * time.Second):
@@ -157,6 +156,16 @@ func (d DockerStats) getDockerContainerInfo(container *docker.Container) {
 		done <- true
 		break
 	}
+}
+
+func (d *DockerStats) extractMetrics(container *docker.Container, stats *docker.Stats) []metric.Metric {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	metrics := d.buildMetrics(container, stats, calculateCPUPercent(d.previousCPUValues[container.ID].totCPU, d.previousCPUValues[container.ID].systemCPU, stats))
+
+	d.previousCPUValues[container.ID].totCPU = stats.CPUStats.CPUUsage.TotalUsage
+	d.previousCPUValues[container.ID].systemCPU = stats.CPUStats.SystemCPUUsage
+	return metrics
 }
 
 // buildMetrics creates the actual metrics for the given container.
