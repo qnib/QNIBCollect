@@ -1,6 +1,6 @@
 gom 'github.com/Sirupsen/logrus', :commit => '446d1c146faa8ed3f4218f056fcd165f6bcfda81'
 gom 'github.com/alyu/configparser', :commit => '26b2fe18bee125de2a3090d6fadb7e280e63eba6'
-gom 'github.com/andygrunwald/megos', :commit => 'd6fb0031a1e9431aac72df5e8c8f28116b05551b'
+gom 'github.com/andygrunwald/megos', :commit => '5a1b5a99315853a986abab3905011f00772b2e4f'
 gom 'github.com/codegangsta/cli', :commit => '8cea2901d4b2c28b97001e67a7d2d60e227f3da6'
 gom 'github.com/prometheus/procfs'
 gom 'github.com/davecheney/profile', :commit => 'c29d1a1565bca9fbeed5eed0e5d52ba78469a16b'
