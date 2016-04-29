@@ -171,11 +171,18 @@ func (d *DockerStats) extractMetrics(container *docker.Container, stats *docker.
 // buildMetrics creates the actual metrics for the given container.
 func (d DockerStats) buildMetrics(container *docker.Container, containerStats *docker.Stats, cpuPercentage float64) []metric.Metric {
 	ret := []metric.Metric{
-		buildDockerMetric("DockerRxBytes", metric.CumulativeCounter, float64(containerStats.Network.RxBytes)),
-		buildDockerMetric("DockerTxBytes", metric.CumulativeCounter, float64(containerStats.Network.TxBytes)),
 		buildDockerMetric("DockerMemoryUsed", metric.Gauge, float64(containerStats.MemoryStats.Usage)),
 		buildDockerMetric("DockerMemoryLimit", metric.Gauge, float64(containerStats.MemoryStats.Limit)),
 		buildDockerMetric("DockerCpuPercentage", metric.Gauge, cpuPercentage),
+	}
+	for netiface := range containerStats.Networks {
+		// legacy format
+		txb := buildDockerMetric("DockerTxBytes", metric.CumulativeCounter, float64(containerStats.Networks[netiface].TxBytes))
+		txb.AddDimension("iface", netiface)
+		ret = append(ret, txb)
+		rxb := buildDockerMetric("DockerRxBytes", metric.CumulativeCounter, float64(containerStats.Networks[netiface].RxBytes))
+		rxb.AddDimension("iface", netiface)
+		ret = append(ret, rxb)
 	}
 	additionalDimensions := map[string]string{
 		"container_id":   container.ID,
