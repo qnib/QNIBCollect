@@ -103,8 +103,7 @@ func (d *DockerStats) Configure(configMap map[string]interface{}) {
 	if skipRegex, skipExists := configMap["skipContainerRegex"]; skipExists {
 		d.skipRegex = regexp.MustCompile(skipRegex.(string))
 	} else {
-		defRegex := ".+_.+" // skip ad-hoc container, which are not named properly
-		d.skipRegex = regexp.MustCompile(defRegex)
+		d.skipRegex = nil
 	}
 }
 
@@ -129,9 +128,9 @@ func (d *DockerStats) Collect() {
 			continue
 		}
 
-		if d.skipRegex.MatchString(container.Name) {
-			continue
+		if d.skipRegex != nil && d.skipRegex.MatchString(container.Name) {
 			d.log.Info("Skip container: ", container.Name)
+			continue
 		}
 		if _, ok := d.previousCPUValues[container.ID]; !ok {
 			d.previousCPUValues[container.ID] = new(CPUValues)
