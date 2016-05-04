@@ -102,8 +102,6 @@ func (d *DockerStats) Configure(configMap map[string]interface{}) {
 	d.configureCommonParams(configMap)
 	if skipRegex, skipExists := configMap["skipContainerRegex"]; skipExists {
 		d.skipRegex = regexp.MustCompile(skipRegex.(string))
-	} else {
-		d.skipRegex = nil
 	}
 }
 
