@@ -7,6 +7,9 @@ import (
 	"strings"
 )
 
+// For dependency injection
+var ipGetter = getIps
+
 // example configuration::
 //
 // {
@@ -25,8 +28,6 @@ import (
 type releventNerveConfig struct {
 	Services map[string]map[string]interface{}
 }
-
-var ipGetter = getIps
 
 // ParseNerveConfig is responsible for taking the JSON string coming in into a map of service:port
 // it will also filter based on only services runnign on this host.
