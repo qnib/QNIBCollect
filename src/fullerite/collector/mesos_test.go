@@ -141,7 +141,8 @@ func TestMesosStatsSendMetrics(t *testing.T) {
 	oldGetMetrics := getMetrics
 	defer func() { getMetrics = oldGetMetrics }()
 
-	expected := metric.Metric{"mesos.test", "gauge", 0.1, map[string]string{}}
+	now := time.Now()
+	expected := metric.Metric{"mesos.test", "gauge", 0.1, map[string]string{}, now}
 	getMetrics = func(m *MesosStats, ip string) map[string]float64 {
 		return map[string]float64{
 			"test": 0.1,
@@ -153,7 +154,7 @@ func TestMesosStatsSendMetrics(t *testing.T) {
 
 	go sut.sendMetrics()
 	actual := <-c
-
+	actual.SetTime(now)
 	assert.Equal(t, expected, actual)
 }
 
@@ -224,17 +225,19 @@ func TestMesosStatsGetMetricsHandleNon200s(t *testing.T) {
 }
 
 func TestMesosStatsBuildMetric(t *testing.T) {
-	expected := metric.Metric{"mesos.test", "gauge", 0.1, map[string]string{}}
+	now := time.Now()
+	expected := metric.Metric{"mesos.test", "gauge", 0.1, map[string]string{}, now}
 
 	actual := buildMetric("test", 0.1)
-
+	actual.SetTime(now)
 	assert.Equal(t, expected, actual)
 }
 
 func TestMesosStatsBuildMetricCumCounter(t *testing.T) {
-	expected := metric.Metric{"mesos.master.slave_reregistrations", metric.CumulativeCounter, 0.1, map[string]string{}}
+	now := time.Now()
+	expected := metric.Metric{"mesos.master.slave_reregistrations", metric.CumulativeCounter, 0.1, map[string]string{}, now}
 
 	actual := buildMetric("master.slave_reregistrations", 0.1)
-
+	actual.SetTime(now)
 	assert.Equal(t, expected, actual)
 }

@@ -61,7 +61,6 @@ func newDockerStats(channel chan metric.Metric, initialInterval int, log *l.Entr
 	d.name = "DockerStats"
 	d.previousCPUValues = make(map[string]*CPUValues)
 	d.compiledRegex = make(map[string]*Regex)
-
 	return d
 }
 
@@ -227,6 +226,7 @@ func buildDockerMetric(name string, metricType string, value float64) (m metric.
 	m = metric.New(name)
 	m.MetricType = metricType
 	m.Value = value
+	m.MetricTime = time.Now()
 	return m
 }
 

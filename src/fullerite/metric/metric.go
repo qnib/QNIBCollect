@@ -1,6 +1,9 @@
 package metric
 
-import "strings"
+import (
+	"strings"
+	"time"
+)
 
 // The different types of metrics that are supported
 const (
@@ -16,6 +19,7 @@ type Metric struct {
 	MetricType string            `json:"type"`
 	Value      float64           `json:"value"`
 	Dimensions map[string]string `json:"dimensions"`
+	MetricTime time.Time         `json:"time"`
 }
 
 // New returns a new metric with name. Default metric type is "gauge"
@@ -26,7 +30,13 @@ func New(name string) Metric {
 		MetricType: "gauge",
 		Value:      0.0,
 		Dimensions: make(map[string]string),
+		MetricTime: time.Now(),
 	}
+}
+
+// SetTime to metric
+func (m *Metric) SetTime(mtime time.Time) {
+	m.MetricTime = mtime
 }
 
 // AddDimension adds a new dimension to the Metric.
