@@ -258,43 +258,6 @@ func getTestNerveUWSGI() *nerveUWSGICollector {
 	return newNerveUWSGI(make(chan metric.Metric), 12, l.WithField("testing", "nerveuwsgi")).(*nerveUWSGICollector)
 }
 
-func TestNerveConfigParsing(t *testing.T) {
-	expected := map[int]string{
-		22222: "example_service",
-		13752: "example_service",
-	}
-
-	cfgString := getTestNerveConfig()
-	results, err := getTestNerveUWSGI().parseNerveConfig(&cfgString, []string{"10.56.5.21"})
-	assert.Nil(t, err)
-	assert.Equal(t, expected, results)
-}
-
-func TestNerveFilterOnIP(t *testing.T) {
-	cfgString := getTestNerveConfig()
-	results, err := getTestNerveUWSGI().parseNerveConfig(&cfgString, []string{"10.56.2.3"})
-	assert.Nil(t, err)
-	assert.NotNil(t, results)
-	assert.Equal(t, 0, len(results))
-}
-
-func TestHandleBadNerveConfig(t *testing.T) {
-	// b/c there is valid json coming in it won't error, just have an empty response
-	cfgString := []byte("{}")
-	results, err := getTestNerveUWSGI().parseNerveConfig(&cfgString, []string{"10.56.2.3"})
-	assert.Nil(t, err)
-	assert.NotNil(t, results)
-	assert.Equal(t, 0, len(results))
-}
-
-func TestHandlePoorlyFormedJson(t *testing.T) {
-	cfgString := []byte("notjson")
-	results, err := getTestNerveUWSGI().parseNerveConfig(&cfgString, []string{"10.56.2.3"})
-	assert.NotNil(t, err)
-	assert.NotNil(t, results)
-	assert.Equal(t, 0, len(results))
-}
-
 func TestDefaultConfigNerveUWSGI(t *testing.T) {
 	inst := getTestNerveUWSGI()
 	inst.Configure(make(map[string]interface{}))
