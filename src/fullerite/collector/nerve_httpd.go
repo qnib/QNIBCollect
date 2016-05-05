@@ -3,12 +3,14 @@ package collector
 import (
 	"bufio"
 	"bytes"
+	"errors"
 	"fmt"
 	"fullerite/metric"
 	"fullerite/util"
 	"io/ioutil"
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -18,14 +20,32 @@ import (
 
 var (
 	getNerveHTTPDMetrics = (*NerveHTTPD).getMetrics
-	knownApacheMetrics   = []string{
-		"ReqPerSec", "BytesPerSec", "BytesPerReq", "BusyWorkers",
-		"Total Accesses", "IdleWorkers", "StartingWorkers",
-		"ReadingWorkers", "WritingWorkers", "KeepaliveWorkers",
-		"DnsWorkers", "ClosingWorkers", "LoggingWorkers",
-		"FinishingWorkers", "CleanupWorkers", "StandbyWorkers", "CPULoad",
+	knownApacheMetrics   = map[string]bool{
+		"ReqPerSec":        true,
+		"BytesPerSec":      true,
+		"BytesPerReq":      true,
+		"BusyWorkers":      true,
+		"Total Accesses":   true,
+		"IdleWorkers":      true,
+		"StartingWorkers":  true,
+		"ReadingWorkers":   true,
+		"WritingWorkers":   true,
+		"KeepaliveWorkers": true,
+		"DnsWorkers":       true,
+		"ClosingWorkers":   true,
+		"LoggingWorkers":   true,
+		"FinishingWorkers": true,
+		"CleanupWorkers":   true,
+		"StandbyWorkers":   true,
+		"CPULoad":          true,
 	}
-	metricRegexp = regexp.MustCompile(`^([A-Za-z ]+):\s+(.+)$`)
+	metricRegexp        = regexp.MustCompile(`^([A-Za-z ]+):\s+(.+)$`)
+	metricWithPrecision = map[string]bool{
+		"ReqPerSec":   true,
+		"BytesPerSec": true,
+		"BytesPerReq": true,
+		"CPULoad":     true,
+	}
 )
 
 // NerveHTTPD discovers Apache servers via Nerve config
@@ -150,7 +170,7 @@ func extractApacheMetrics(data []byte) []metric.Metric {
 	scanner := bufio.NewScanner(reader)
 	for scanner.Scan() {
 		metricLine := scanner.Text()
-		resultMatch := metricRegexp.FindStringSubmatch(metricLine, -1)
+		resultMatch := metricRegexp.FindStringSubmatch(metricLine)
 		k := resultMatch[0]
 		v := resultMatch[1]
 		if k == "IdleWorkers" {
@@ -159,31 +179,48 @@ func extractApacheMetrics(data []byte) []metric.Metric {
 
 		if k == "Scoreboard" {
 			scoreBoardMetrics := extractScoreBoardMetrics(k, v)
-			results = append(results, scoreBoardMetrics)
+			results = append(results, scoreBoardMetrics...)
 		}
 
-		results = append(results, buildApacheMetric(k, v))
+		metric, err := buildApacheMetric(k, v)
+		if err == nil {
+			results = append(results, metric)
+		}
 	}
 	return results
 }
 
-func buildApacheMetric(key, value string) metric.Metric {
+func buildApacheMetric(key, value string) (metric.Metric, error) {
+	var tmpMetric metric.Metric
+	if _, ok := knownApacheMetrics[key]; ok {
+		whiteRegexp := regexp.MustCompile(`\s+`)
+		metricName := whiteRegexp.ReplaceAllString(key, "")
+		metricValue, err := strconv.ParseFloat(value, 64)
 
+		if err != nil {
+			return tmpMetric, err
+		}
+		return metric.WithValue(metricName, metricValue), nil
+	}
+	return tmpMetric, errors.New("invalid metric")
 }
 
 func extractScoreBoardMetrics(key, value string) []metric.Metric {
 	results := []metric.Metric{}
-	results = append(results, metric.WithValue("IdleWorkers", strings.Count(value, "_")))
-	results = append(results, metric.WithValue("StartingWorkers", strings.Count(value, "S")))
-	results = append(results, metric.WithValue("ReadingWorkers", strings.Count(value, "R")))
-	results = append(results, metric.WithValue("WritingWorkers", strings.Count(value, "W")))
-	results = append(results, metric.WithValue("KeepaliveWorkers", strings.Count(value, "K")))
-	results = append(results, metric.WithValue("DnsWorkers", strings.Count(value, "D")))
-	results = append(results, metric.WithValue("ClosingWorkers", strings.Count(value, "C")))
-	results = append(results, metric.WithValue("LoggingWorkers", strings.Count(value, "L")))
-	results = append(results, metric.WithValue("FinishingWorkers", strings.Count(value, "G")))
-	results = append(results, metric.WithValue("CleanupWorkers", strings.Count(value, "I")))
-	results = append(results, metric.WithValue("StandbyWorkers", strings.Count(value, "_")))
+	charCounter := func(str string, pattern string) float64 {
+		return float64(strings.Count(str, pattern))
+	}
+	results = append(results, metric.WithValue("IdleWorkers", charCounter(value, "_")))
+	results = append(results, metric.WithValue("StartingWorkers", charCounter(value, "S")))
+	results = append(results, metric.WithValue("ReadingWorkers", charCounter(value, "R")))
+	results = append(results, metric.WithValue("WritingWorkers", charCounter(value, "W")))
+	results = append(results, metric.WithValue("KeepaliveWorkers", charCounter(value, "K")))
+	results = append(results, metric.WithValue("DnsWorkers", charCounter(value, "D")))
+	results = append(results, metric.WithValue("ClosingWorkers", charCounter(value, "C")))
+	results = append(results, metric.WithValue("LoggingWorkers", charCounter(value, "L")))
+	results = append(results, metric.WithValue("FinishingWorkers", charCounter(value, "G")))
+	results = append(results, metric.WithValue("CleanupWorkers", charCounter(value, "I")))
+	results = append(results, metric.WithValue("StandbyWorkers", charCounter(value, "_")))
 	return results
 }
 
@@ -194,7 +231,6 @@ func (c *NerveHTTPD) updateFailedStatus(serviceName string, port int, statusCode
 		endpoint := fmt.Sprintf("%s:%d", serviceName, port)
 		c.failedEndPoints[endpoint] = time.Now().Unix()
 	}
-
 }
 
 func fetchApacheMetrics(endpoint string, timeout int) *nerveHTTPDResponse {

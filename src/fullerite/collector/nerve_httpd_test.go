@@ -41,7 +41,7 @@ func TestExtractApacheMetrics(t *testing.T) {
 	metrics := extractApacheMetrics(getRawApacheStat())
 	metricMap := map[string]metric.Metric{}
 	for _, m := range metrics {
-		metricMap[m.metricName] = m
+		metricMap[m.Name] = m
 	}
 	assert.Equal(t, 68, metricMap["Uptime"])
 }
