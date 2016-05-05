@@ -2,6 +2,8 @@ package collector
 
 import (
 	"fullerite/metric"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	l "github.com/Sirupsen/logrus"
@@ -47,4 +49,17 @@ func TestExtractApacheMetrics(t *testing.T) {
 	assert.Equal(t, 34.0, metricMap["WritingWorkers"].Value)
 	assert.Equal(t, 6.0, metricMap["IdleWorkers"].Value)
 	assert.Equal(t, 6.0, metricMap["StandbyWorkers"].Value)
+	assert.Equal(t, 901.485, metricMap["CPULoad"].Value)
+	assert.Equal(t, 1.45588, metricMap["ReqPerSec"].Value)
+	assert.Equal(t, 1626.35, metricMap["BytesPerSec"].Value)
+}
+
+func TestFetchApacheMetrics(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(404)
+	}))
+	defer ts.Close()
+	endpoint := ts.URL + "/server-status?auto=close"
+	httpResponse := fetchApacheMetrics(endpoint, 10)
+	assert.Equal(t, 404, httpResponse.status)
 }
