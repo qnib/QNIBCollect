@@ -155,7 +155,12 @@ func (c *NerveHTTPD) getMetrics(serviceName string, port int) []metric.Metric {
 		serviceLog.Warn("Failed to query endpoint ", endpoint, ": ", httpResponse.err)
 		return results
 	}
-	return extractApacheMetrics(httpResponse.data)
+	apacheMetrics := extractApacheMetrics(httpResponse.data)
+	metric.AddToAll(&apacheMetrics, map[string]string{
+		"service": serviceName,
+		"port":    strconv.Itoa(port),
+	})
+	return apacheMetrics
 }
 
 func extractApacheMetrics(data []byte) []metric.Metric {

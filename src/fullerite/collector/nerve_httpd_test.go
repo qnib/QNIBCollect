@@ -1,9 +1,13 @@
 package collector
 
 import (
+	"encoding/json"
+	"fmt"
 	"fullerite/metric"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
 	l "github.com/Sirupsen/logrus"
@@ -62,4 +66,57 @@ func TestFetchApacheMetrics(t *testing.T) {
 	endpoint := ts.URL + "/server-status?auto=close"
 	httpResponse := fetchApacheMetrics(endpoint, 10)
 	assert.Equal(t, 404, httpResponse.status)
+}
+
+func TestNerveHTTPDCollect(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, rsp *http.Request) {
+		fmt.Fprint(w, string(getRawApacheStat()))
+	}))
+	defer server.Close()
+	ip, port := parseURL(server.URL)
+
+	minimalNerveConfig := make(map[string]map[string]map[string]interface{})
+	minimalNerveConfig["services"] = map[string]map[string]interface{}{
+		"test_service.things.and.stuff": {
+			"host": ip,
+			"port": port,
+		},
+	}
+	tmpFile, err := ioutil.TempFile("", "fullerite_testing")
+	defer os.Remove(tmpFile.Name())
+	assert.Nil(t, err)
+
+	marshalled, err := json.Marshal(minimalNerveConfig)
+	assert.Nil(t, err)
+
+	_, err = tmpFile.Write(marshalled)
+	assert.Nil(t, err)
+
+	cfg := map[string]interface{}{
+		"configFilePath": tmpFile.Name(),
+		"queryPath":      "",
+	}
+
+	inst := getNerveHTTPDCollector()
+	inst.Configure(cfg)
+
+	inst.Collect()
+	actual := []metric.Metric{}
+	for i := 0; i < 17; i++ {
+		actual = append(actual, <-inst.Channel())
+	}
+	metricMap := map[string]metric.Metric{}
+	for _, m := range actual {
+		metricMap[m.Name] = m
+	}
+	assert.Equal(t, 99.0, metricMap["TotalAccesses"].Value)
+	assert.Equal(t, 34.0, metricMap["WritingWorkers"].Value)
+	assert.Equal(t, 6.0, metricMap["IdleWorkers"].Value)
+	assert.Equal(t, 6.0, metricMap["StandbyWorkers"].Value)
+	assert.Equal(t, 901.485, metricMap["CPULoad"].Value)
+	assert.Equal(t, 1.45588, metricMap["ReqPerSec"].Value)
+	assert.Equal(t, 1626.35, metricMap["BytesPerSec"].Value)
+
+	assert.Equal(t, port, metricMap["TotalAccesses"].Dimensions["port"])
+	assert.Equal(t, "test_service", metricMap["TotalAccesses"].Dimensions["service"])
 }
