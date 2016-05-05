@@ -43,5 +43,8 @@ func TestExtractApacheMetrics(t *testing.T) {
 	for _, m := range metrics {
 		metricMap[m.Name] = m
 	}
-	assert.Equal(t, 68, metricMap["Uptime"])
+	assert.Equal(t, 99.0, metricMap["TotalAccesses"].Value)
+	assert.Equal(t, 34.0, metricMap["WritingWorkers"].Value)
+	assert.Equal(t, 6.0, metricMap["IdleWorkers"].Value)
+	assert.Equal(t, 6.0, metricMap["StandbyWorkers"].Value)
 }

@@ -39,13 +39,7 @@ var (
 		"StandbyWorkers":   true,
 		"CPULoad":          true,
 	}
-	metricRegexp        = regexp.MustCompile(`^([A-Za-z ]+):\s+(.+)$`)
-	metricWithPrecision = map[string]bool{
-		"ReqPerSec":   true,
-		"BytesPerSec": true,
-		"BytesPerReq": true,
-		"CPULoad":     true,
-	}
+	metricRegexp = regexp.MustCompile(`^([A-Za-z ]+):\s+(.+)$`)
 )
 
 // NerveHTTPD discovers Apache servers via Nerve config
@@ -171,21 +165,24 @@ func extractApacheMetrics(data []byte) []metric.Metric {
 	for scanner.Scan() {
 		metricLine := scanner.Text()
 		resultMatch := metricRegexp.FindStringSubmatch(metricLine)
-		k := resultMatch[0]
-		v := resultMatch[1]
-		if k == "IdleWorkers" {
-			continue
+		if len(resultMatch) > 0 {
+			k := resultMatch[1]
+			v := resultMatch[2]
+			if k == "IdleWorkers" {
+				continue
+			}
+
+			if k == "Scoreboard" {
+				scoreBoardMetrics := extractScoreBoardMetrics(k, v)
+				results = append(results, scoreBoardMetrics...)
+			}
+
+			metric, err := buildApacheMetric(k, v)
+			if err == nil {
+				results = append(results, metric)
+			}
 		}
 
-		if k == "Scoreboard" {
-			scoreBoardMetrics := extractScoreBoardMetrics(k, v)
-			results = append(results, scoreBoardMetrics...)
-		}
-
-		metric, err := buildApacheMetric(k, v)
-		if err == nil {
-			results = append(results, metric)
-		}
 	}
 	return results
 }
