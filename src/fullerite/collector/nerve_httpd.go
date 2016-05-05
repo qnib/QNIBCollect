@@ -1,11 +1,15 @@
 package collector
 
 import (
+	"bufio"
+	"bytes"
 	"fmt"
 	"fullerite/metric"
 	"fullerite/util"
 	"io/ioutil"
 	"net/http"
+	"regexp"
+	"strings"
 	"sync"
 	"time"
 
@@ -14,6 +18,14 @@ import (
 
 var (
 	getNerveHTTPDMetrics = (*NerveHTTPD).getMetrics
+	knownApacheMetrics   = []string{
+		"ReqPerSec", "BytesPerSec", "BytesPerReq", "BusyWorkers",
+		"Total Accesses", "IdleWorkers", "StartingWorkers",
+		"ReadingWorkers", "WritingWorkers", "KeepaliveWorkers",
+		"DnsWorkers", "ClosingWorkers", "LoggingWorkers",
+		"FinishingWorkers", "CleanupWorkers", "StandbyWorkers", "CPULoad",
+	}
+	metricRegexp = regexp.MustCompile(`^([A-Za-z ]+):\s+(.+)$`)
 )
 
 // NerveHTTPD discovers Apache servers via Nerve config
@@ -134,6 +146,44 @@ func (c *NerveHTTPD) getMetrics(serviceName string, port int) []metric.Metric {
 
 func extractApacheMetrics(data []byte) []metric.Metric {
 	results := []metric.Metric{}
+	reader := bytes.NewReader(data)
+	scanner := bufio.NewScanner(reader)
+	for scanner.Scan() {
+		metricLine := scanner.Text()
+		resultMatch := metricRegexp.FindStringSubmatch(metricLine, -1)
+		k := resultMatch[0]
+		v := resultMatch[1]
+		if k == "IdleWorkers" {
+			continue
+		}
+
+		if k == "Scoreboard" {
+			scoreBoardMetrics := extractScoreBoardMetrics(k, v)
+			results = append(results, scoreBoardMetrics)
+		}
+
+		results = append(results, buildApacheMetric(k, v))
+	}
+	return results
+}
+
+func buildApacheMetric(key, value string) metric.Metric {
+
+}
+
+func extractScoreBoardMetrics(key, value string) []metric.Metric {
+	results := []metric.Metric{}
+	results = append(results, metric.WithValue("IdleWorkers", strings.Count(value, "_")))
+	results = append(results, metric.WithValue("StartingWorkers", strings.Count(value, "S")))
+	results = append(results, metric.WithValue("ReadingWorkers", strings.Count(value, "R")))
+	results = append(results, metric.WithValue("WritingWorkers", strings.Count(value, "W")))
+	results = append(results, metric.WithValue("KeepaliveWorkers", strings.Count(value, "K")))
+	results = append(results, metric.WithValue("DnsWorkers", strings.Count(value, "D")))
+	results = append(results, metric.WithValue("ClosingWorkers", strings.Count(value, "C")))
+	results = append(results, metric.WithValue("LoggingWorkers", strings.Count(value, "L")))
+	results = append(results, metric.WithValue("FinishingWorkers", strings.Count(value, "G")))
+	results = append(results, metric.WithValue("CleanupWorkers", strings.Count(value, "I")))
+	results = append(results, metric.WithValue("StandbyWorkers", strings.Count(value, "_")))
 	return results
 }
 

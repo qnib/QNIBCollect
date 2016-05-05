@@ -29,6 +29,13 @@ func New(name string) Metric {
 	}
 }
 
+// WithValue returns metric with value of type Gauge
+func WithValue(name string, value float64) Metric {
+	metric := New(name)
+	metric.Value = value
+	return metric
+}
+
 // AddDimension adds a new dimension to the Metric.
 func (m *Metric) AddDimension(name, value string) {
 	m.Dimensions[sanitizeString(name)] = sanitizeString(value)
