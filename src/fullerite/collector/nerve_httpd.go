@@ -106,7 +106,6 @@ func (c *NerveHTTPD) Collect() {
 		c.log.Warn("Failed to read the contents of file ", c.configFilePath, " because ", err)
 		return
 	}
-
 	servicePortMap, err := util.ParseNerveConfig(&rawFileContents)
 	if err != nil {
 		c.log.Warn("Failed to parse the nerve config at ", c.configFilePath, ": ", err)
