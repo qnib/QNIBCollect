@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"fullerite/config"
 	"fullerite/metric"
 	"fullerite/util"
 	"io/ioutil"
@@ -91,9 +92,8 @@ func (c *NerveHTTPD) Configure(configMap map[string]interface{}) {
 	}
 
 	if val, exists := configMap["status_ttl"]; exists {
-		if t, ok := val.(int); ok {
-			c.statusTTL = time.Duration(t) * time.Second
-		}
+		tmpStatusTTL := config.GetAsInt(val, 3600)
+		c.statusTTL = time.Duration(tmpStatusTTL) * time.Second
 	}
 
 	c.configureCommonParams(configMap)

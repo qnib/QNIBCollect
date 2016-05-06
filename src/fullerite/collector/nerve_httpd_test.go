@@ -9,6 +9,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"testing"
+	"time"
 
 	l "github.com/Sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -41,6 +42,20 @@ func TestDefaultConfigNerveHTTPD(t *testing.T) {
 	assert.Equal(t, 10, collector.Interval())
 	assert.Equal(t, "/etc/nerve/nerve.conf.json", collector.configFilePath)
 	assert.Equal(t, "server-status?auto", collector.queryPath)
+}
+
+func TestCustomConfigNerveHTTPD(t *testing.T) {
+	collector := getNerveHTTPDCollector()
+	configMap := map[string]interface{}{
+		"status_ttl":     120,
+		"configFilePath": "/tmp/foobar",
+	}
+	collector.Configure(configMap)
+
+	assert.Equal(t, 10, collector.Interval())
+	assert.Equal(t, "/tmp/foobar", collector.configFilePath)
+	assert.Equal(t, "server-status?auto", collector.queryPath)
+	assert.Equal(t, time.Duration(120)*time.Second, collector.statusTTL)
 }
 
 func TestExtractApacheMetrics(t *testing.T) {
