@@ -27,6 +27,7 @@ type DockerStats struct {
 	dockerClient      *docker.Client
 	statsTimeout      int
 	compiledRegex     map[string]*Regex
+	skipRegex         *regexp.Regexp
 	endpoint          string
 	mu                *sync.Mutex
 }
@@ -61,7 +62,6 @@ func newDockerStats(channel chan metric.Metric, initialInterval int, log *l.Entr
 	d.name = "DockerStats"
 	d.previousCPUValues = make(map[string]*CPUValues)
 	d.compiledRegex = make(map[string]*Regex)
-
 	return d
 }
 
@@ -100,6 +100,9 @@ func (d *DockerStats) Configure(configMap map[string]interface{}) {
 		}
 	}
 	d.configureCommonParams(configMap)
+	if skipRegex, skipExists := configMap["skipContainerRegex"]; skipExists {
+		d.skipRegex = regexp.MustCompile(skipRegex.(string))
+	}
 }
 
 // Collect iterates on all the docker containers alive and, if possible, collects the correspondent
@@ -117,8 +120,14 @@ func (d *DockerStats) Collect() {
 	}
 	for _, apiContainer := range containers {
 		container, err := d.dockerClient.InspectContainer(apiContainer.ID)
+
 		if err != nil {
 			d.log.Error("InspectContainer() failed: ", err)
+			continue
+		}
+
+		if d.skipRegex != nil && d.skipRegex.MatchString(container.Name) {
+			d.log.Info("Skip container: ", container.Name)
 			continue
 		}
 		if _, ok := d.previousCPUValues[container.ID]; !ok {
