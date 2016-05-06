@@ -65,6 +65,11 @@ tests: deps diamond_core_test
 		gom test -cover $$pkg || exit 1;\
 	done
 
+qbt:
+	@echo Fast testing $(FULLERITE)
+	@for pkg in $(PKGS); do \
+		gom test -v -cover $$pkg || exit 1;\
+	done
 
 diamond_core_test:
 	@python src/diamond/test.py -d
