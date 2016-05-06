@@ -25,7 +25,7 @@ var ipGetter = getIps
 //
 // Most imporantly is the port, host and service name. The service name is assumed to be formatted like this::
 //
-type releventNerveConfig struct {
+type nerveConfigData struct {
 	Services map[string]map[string]interface{}
 }
 
@@ -39,7 +39,7 @@ func ParseNerveConfig(raw *[]byte) (map[int]string, error) {
 	if err != nil {
 		return results, err
 	}
-	parsed := new(releventNerveConfig)
+	parsed := new(nerveConfigData)
 
 	// convert the ips into a map for membership tests
 	ipMap := make(map[string]bool)
