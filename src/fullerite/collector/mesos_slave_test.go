@@ -69,7 +69,8 @@ func TestMesosSlaveStatsSendMetrics(t *testing.T) {
 	oldGetMetrics := getSlaveMetrics
 	defer func() { getSlaveMetrics = oldGetMetrics }()
 
-	expected := metric.Metric{"mesos.test", "gauge", 0.1, map[string]string{}}
+	now := time.Now()
+	expected := metric.Metric{"mesos.test", "gauge", 0.1, map[string]string{}, now}
 	getSlaveMetrics = func(m *MesosSlaveStats, ip string) map[string]float64 {
 		return map[string]float64{
 			"test": 0.1,
@@ -81,7 +82,7 @@ func TestMesosSlaveStatsSendMetrics(t *testing.T) {
 
 	go sut.sendMetrics()
 	actual := <-c
-
+	actual.SetTime(now)
 	assert.Equal(t, expected, actual)
 }
 
