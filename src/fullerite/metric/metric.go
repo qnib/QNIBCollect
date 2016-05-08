@@ -2,7 +2,6 @@ package metric
 
 import (
 	"strings"
-
 	"time"
 )
 

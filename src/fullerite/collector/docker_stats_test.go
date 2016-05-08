@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"fullerite/metric"
-
 	"reflect"
 	"testing"
 	"time"
