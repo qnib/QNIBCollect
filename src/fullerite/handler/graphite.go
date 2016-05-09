@@ -86,8 +86,8 @@ func (g Graphite) convertToGraphite(incomingMetric metric.Metric) (datapoint str
 	}
 	sort.Strings(keys)
 
-	if g.prefixKeys {
-		datapoint = g.Prefix() + strings.Join(keys, "_") + incomingMetric.Name
+	if g.prefixKeys && len(keys) > 0 {
+		datapoint = g.Prefix() + strings.Join(keys, "_") + "." + incomingMetric.Name
 	} else {
 		datapoint = g.Prefix() + incomingMetric.Name
 	}
