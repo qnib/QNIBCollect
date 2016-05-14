@@ -1,0 +1,14 @@
+bin/*
+build/*
+pkg/*
+src/github.com/*
+src/golang.org/*
+*.deb
+*.secret
+*.swp
+*.pyc
+*.DS_Store
+.project
+.vagrant
+src/fullerite/collector/collector.test
+_vendor/
