@@ -5,6 +5,7 @@ import (
 	"fullerite/metric"
 	"net"
 	"sort"
+	"strings"
 	"time"
 
 	l "github.com/Sirupsen/logrus"
@@ -17,8 +18,9 @@ func init() {
 // Graphite type
 type Graphite struct {
 	BaseHandler
-	server string
-	port   string
+	server     string
+	port       string
+	prefixKeys bool
 }
 
 // newGraphite returns a new Graphite handler.
@@ -64,6 +66,9 @@ func (g *Graphite) Configure(configMap map[string]interface{}) {
 	} else {
 		g.log.Error("There was no port specified for the Graphite Handler, there won't be any emissions")
 	}
+	if prefixKeys, exists := configMap["prefixKeys"]; exists {
+		g.prefixKeys = prefixKeys.(bool)
+	}
 	g.configureCommonParams(configMap)
 }
 
@@ -81,7 +86,11 @@ func (g Graphite) convertToGraphite(incomingMetric metric.Metric) (datapoint str
 	}
 	sort.Strings(keys)
 
-	datapoint = g.Prefix() + incomingMetric.Name
+	if g.prefixKeys && len(keys) > 0 {
+		datapoint = g.Prefix() + strings.Join(keys, "_") + "." + incomingMetric.Name
+	} else {
+		datapoint = g.Prefix() + incomingMetric.Name
+	}
 	for _, key := range keys {
 		datapoint = fmt.Sprintf("%s.%s.%s", datapoint, key, dimensions[key])
 	}
