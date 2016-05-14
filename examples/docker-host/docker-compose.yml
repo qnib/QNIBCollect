@@ -1,7 +1,7 @@
 consul:
     hostname: consul
     container_name: consul
-    image: qnib/consul
+    image: qnib/alpn-consul
     environment:
      - DC_NAME=dc1
      - BOOTSTRAP_CONSUL=true
@@ -10,57 +10,42 @@ consul:
      - "8500:8500"
     dns: 127.0.0.1
     
-carbon:
-    hostname: carbon
-    container_name: carbon
-    image: qnib/carbon
+
+influxdb:
+    hostname: influxdb
+    container_name: influxdb
     dns: 127.0.0.1
+    image: qnib/influxdb
+    volumes:
+    - /opt/influxdb/shared
     environment:
-     - DC_NAME=dc1
-     - SERVICE_2003_NAME=carbon
-     - FORWARD_TO_LOGSTASH=false
-     - SKIP_PSWATCH=true
+    - DC_NAME=dc1
+    - COLLECT_METRICS=false
+    - INFLUXDB_GRAPHITE_ENABLED=true
     links:
     - consul:consul
     ports:
-     - 2003:2003
+    - 2003:2003
+    - 8083:8083
+    - 8086:8086
 
-gapi:
-    hostname: graphite-api
-    container_name: graphite-api
-    dns: 127.0.0.1
-    image: qnib/graphite-api
-    environment:
-     - DC_NAME=dc1
-     - SKIP_PSWATCH=true
-     - SERVICE_8888_NAME=graphite-api
+grafana3:
+    image: qnib/grafana3
+    container_name: grafana3
+    hostname: grafana3
     ports:
-     - 8888:80
-    links:
-     - consul:consul
-     - carbon:carbon
-    volumes_from:
-     - carbon
-    privileged: true
-
-grafana:
-    image: qnib/grafana
-    hostname: grafana
-    container_name: grafana
-    ports:
-    - "80:80"
+     - "3000:3000"
     dns: 127.0.0.1
     environment:
-     - DC_NAME=dc1
-     - SKIP_PSWATCH=true
+    - DC_NAME=dc1
+    - COLLECT_METRICS=false
     links:
-     - consul:consul
-    privileged: true
+    - consul:consul
 
-fullerite:
-    image: qnib/fullerite
-    hostname: fullerite
-    container_name: fullerite
+qcollect:
+    image: qnib/qcollect
+    hostname: qcollect
+    container_name: qcollect
     dns: 127.0.0.1
     links:
      - consul:consul
