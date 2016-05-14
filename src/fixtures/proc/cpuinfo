@@ -1,0 +1,15 @@
+processor	: 0
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 45
+model name	: Intel(R) Xeon(R) CPU E5-2630 0 @ 2.30GHz
+physical id	: 0
+cpu cores	: 6
+
+processor	: 1
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 45
+model name	: Intel(R) Xeon(R) CPU E5-2630 0 @ 2.30GHz
+physical id	: 1
+cpu cores	: 6

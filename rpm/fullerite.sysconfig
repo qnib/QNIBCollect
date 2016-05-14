@@ -1,0 +1,6 @@
+# Sysconfig file for fullerite
+USER=fuller
+CONFIG_FILE=/etc/fullerite.conf
+LOG_FILE=/var/log/fullerite/fullerite.log
+ERR_LOG_FILE=/var/log/fullerite/fullerite.err
+LOG_LEVEL=info

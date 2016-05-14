@@ -1,0 +1,70 @@
+{
+    "prefix": "test.",
+    "interval": 10,
+    "defaultConfig": {
+        "prefix":"fullerite"
+    },
+    "defaultDimensions": {
+        "application": "fullerite",
+        "host": "dev33-devc"
+    },
+    "fulleritePort": 19191,
+    "internalServer": {"port":"29090","path":"/metrics"},
+    "collectorsConfigPath": "/etc/fullerite/conf.d",
+    "diamondCollectorsPath": "src/diamond/collectors",
+    "diamondCollectors": [ "CPUCollector", "PingCollector" ]
+    },
+
+    "collectors": ["Test", "Diamond", "Fullerite", "DockerStats"],
+
+    "handlers": {
+        "Graphite": {
+            "server": "10.40.11.51",
+            "port": "2003",
+            "interval": "10",
+            "max_buffer_size": 300,
+            "timeout": 2
+        },
+        "Kairos": {
+            "server": "localhost",
+            "port": "8080",
+            "interval": "10",
+            "max_buffer_size": 300,
+            "timeout": 2,
+            "defaultDimensions": {
+              "runtimeenv":"dev",
+              "superregion": "norcal-dev",
+              "region": "uswest1-dev",
+              "ecosystem": "devc",
+              "habitat":"uswest1devc"
+            },
+        "collectorBlackList" : ["Test"]
+        },
+        "SignalFx": {
+            "authToken": "secret_token",
+            "endpoint": "https://ingest.signalfx.com/v2/datapoint",
+            "interval": "10",
+            "max_buffer_size": 300,
+            "timeout": 2,
+            "maxIdleConnectionsPerHost": 2,
+            "keepAliveInterval": 30
+        },
+        "Datadog": {
+            "apiKey": "secret_key",
+            "endpoint": "https://app.datadoghq.com/api/v1",
+            "interval": 10,
+            "max_buffer_size": 300,
+            "timeout": 2
+        },
+        "Scribe": {
+            "port": 1463,
+            "collectorWhiteList": ["DockerStats"],
+            "streamName": "fullerite_to_scribe",
+            "defaultDimensions": {
+                "region": "uswest1-devc",
+                "habitat": "devc",
+                "ecosystem": "devc"
+            }
+        }
+    }
+}
