@@ -9,7 +9,7 @@ import (
 )
 
 func TestNew(t *testing.T) {
-	names := []string{"Test", "Diamond", "Fullerite", "ProcStatus", "ProcStatus Instance2"}
+	names := []string{"Test", "Diamond", "Fullerite"}
 	for _, name := range names {
 		c := New(name)
 		name = strings.Split(name, " ")[0]
