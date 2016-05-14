@@ -136,6 +136,7 @@ func (d *Diamond) parseMetrics(line []byte) ([]metric.Metric, bool) {
 	for i := range metrics {
 		metrics[i].MetricType = strings.ToLower(metrics[i].MetricType)
 		metrics[i].AddDimension("diamond", "yes")
+		metrics[i].MetricTime = time.Now()
 	}
 	return metrics, true
 }

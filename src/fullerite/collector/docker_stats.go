@@ -236,6 +236,7 @@ func buildDockerMetric(name string, metricType string, value float64) (m metric.
 	m = metric.New(name)
 	m.MetricType = metricType
 	m.Value = value
+	m.MetricTime = time.Now()
 	return m
 }
 
