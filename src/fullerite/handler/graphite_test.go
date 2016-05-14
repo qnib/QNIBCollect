@@ -122,3 +122,32 @@ func TestConvertToGraphiteDims(t *testing.T) {
 
 	assert.Equal(t, fmt.Sprintf("TestMetric.container_id.test-id.container_name.test-container 0.000000 %d\n", now), dpString)
 }
+
+// TestConvertToGraphitePrefixKey tests the  handler convertion prefixed with all keys
+func TestConvertToGraphitePrefixKey(t *testing.T) {
+	config := map[string]interface{}{
+		"interval":        "10",
+		"timeout":         "10",
+		"max_buffer_size": "100",
+		"server":          "test_server",
+		"prefixKeys":      true,
+		"port":            10101,
+	}
+
+	g := getTestGraphiteHandler(12, 13, 14)
+	g.Configure(config)
+
+	waitForSplitSecond()
+	now := time.Now().Unix()
+	m := metric.New("TestMetric")
+
+	dims := map[string]string{
+		"container_id":   "test-id",
+		"container_name": "test-container",
+	}
+	m.Dimensions = dims
+
+	dpString := g.convertToGraphite(m)
+
+	assert.Equal(t, fmt.Sprintf("container_id_container_name.TestMetric.container_id.test-id.container_name.test-container 0.000000 %d\n", now), dpString)
+}
