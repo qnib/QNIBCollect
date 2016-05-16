@@ -1,13 +1,15 @@
 package handler
 
 import (
+	"fmt"
 	"fullerite/metric"
-
+	"regexp"
+	"strconv"
+	"strings"
 	"testing"
 	"time"
 
 	l "github.com/Sirupsen/logrus"
-	"github.com/influxdata/influxdb/client/v2"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -79,14 +81,27 @@ func TestConvertToInfluxDB(t *testing.T) {
 	i := getTestInfluxDBHandler(12, 13, 14)
 	i.Configure(config)
 
-	now := time.Now()
+	start := time.Now().UnixNano()
+	// Create Metric
 	m := metric.New("TestMetric")
-	m.MetricTime = now
-	tags := map[string]string{}
-	fields := map[string]interface{}{
-		"value": 0.0,
+	// Create datapoint
+	pt := i.createDatapoint(m)
+	dbString := "TestMetric value=0 [0-9]+"
+	fmt.Println(dbString)
+	msg := fmt.Sprintf("'%s' does not match expected '%s'", pt.String(), dbString)
+	match, _ := regexp.MatchString(dbString, pt.String())
+	assert.True(t, match, msg)
+	// Testing the timestamp
+	l := strings.Split(pt.String(), " ")
+	ts := l[len(l)-1]
+	tsInt, err := strconv.ParseInt(ts, 10, 64)
+	if err != nil {
+		// handle error
+		fmt.Println(err)
+		assert.True(t, false, fmt.Sprintf("could not convert '%s' to int", ts))
 	}
-	pt := i.convertToInfluxDB(m)
-	exp, _ := client.NewPoint("TestMetric", tags, fields, now)
-	assert.Equal(t, pt, exp)
+	end := time.Now().UnixNano()
+	msg = fmt.Sprintf("Timestamp is not within barriers. start:%d, ts:%d, now:%d", start, tsInt, end)
+	assert.True(t, (start < tsInt) && (tsInt < end), msg)
+
 }
