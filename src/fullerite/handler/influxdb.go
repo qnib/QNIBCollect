@@ -88,7 +88,7 @@ func (i *InfluxDB) Run() {
 	i.run(i.emitMetrics)
 }
 
-func (i InfluxDB) convertToInfluxDB(incomingMetric metric.Metric) (datapoint *client.Point) {
+func (i InfluxDB) createDatapoint(incomingMetric metric.Metric) (datapoint *client.Point) {
 	tags := incomingMetric.GetDimensions(i.DefaultDimensions())
 	// Assemble field (could be improved to convey multiple fields)
 	fields := map[string]interface{}{
@@ -118,6 +118,8 @@ func (i *InfluxDB) emitMetrics(metrics []metric.Metric) bool {
 	})
 	if err != nil {
 		log.Fatalln("Error: ", err)
+	} else {
+		i.log.Debug("Connected to ", addr, ", using '", i.database, "' database")
 	}
 	// Create a new point batch to be send in bulk
 	bp, err := client.NewBatchPoints(client.BatchPointsConfig{
@@ -130,7 +132,7 @@ func (i *InfluxDB) emitMetrics(metrics []metric.Metric) bool {
 
 	//iterate over metrics
 	for _, m := range metrics {
-		bp.AddPoint(i.convertToInfluxDB(m))
+		bp.AddPoint(i.createDatapoint(m))
 	}
 
 	// Write the batch
