@@ -12,3 +12,4 @@ gom "github.com/stretchr/testify/assert"
 gom "github.com/samuel/go-thrift", :commit => 'ca819cf963ab710e7a285044e92f1353fa497b80'
 gom "github.com/influxdata/influxdb/client/v2"
 gom "github.com/zeromq/goczmq"
+gom "github.com/qnib/zmq4", :tag => "trimmed_down"

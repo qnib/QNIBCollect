@@ -6,7 +6,7 @@ import (
 
 	"fullerite/metric"
 	l "github.com/Sirupsen/logrus"
-	goczmq "github.com/zeromq/goczmq"
+	zmq "github.com/pebbe/zmq4"
 )
 
 func init() {
@@ -17,7 +17,7 @@ func init() {
 type ZmqPUB struct {
 	BaseHandler
 	port   string
-	socket *goczmq.Sock
+	socket *zmq.Socket
 }
 
 // Port returns the server's port number
@@ -48,20 +48,24 @@ func (h *ZmqPUB) Configure(configMap map[string]interface{}) {
 	if port, exists := configMap["port"]; exists {
 		h.port = port.(string)
 	} else {
-		h.log.Error("There was no port specified for the ZMQPUB Handler, there won't be any emissions")
+		h.log.Error("There was no port specified for the ZmqPUB Handler, there won't be any emissions")
 	}
 
 	// Create connection if not existing
 	if h.socket == nil {
 		addr := fmt.Sprintf("tcp://*:%s", h.port)
 		var err error
-		h.socket, err = goczmq.NewPub(addr)
+		h.socket, err = zmq.NewSocket(zmq.PUB)
 		if err != nil {
-			msg := fmt.Sprintf("Could not create new RADIO socket on '%s'", addr)
+			msg := fmt.Sprintf("Could not create new PUB socket on '%s'", addr)
 			h.log.Error(msg)
 		} else {
-			h.log.Info("Reuse existing socket")
+			msg := fmt.Sprintf("Created new PUB socket on '%s'", addr)
+			h.log.Info(msg)
+			h.socket.Bind(addr)
 		}
+	} else {
+		h.log.Info("Reuse existing socket")
 	}
 	h.configureCommonParams(configMap)
 }
@@ -73,6 +77,8 @@ func (h *ZmqPUB) Run() {
 
 func (h *ZmqPUB) emitMetrics(metrics []metric.Metric) bool {
 	h.log.Info("Starting to emit ", len(metrics), " metrics")
-
+	for _, m := range metrics {
+		h.socket.Send(m.Name, zmq.SNDMORE)
+	}
 	return true
 }
