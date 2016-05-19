@@ -48,7 +48,7 @@ func (h *ZmqPUB) Configure(configMap map[string]interface{}) {
 	if port, exists := configMap["port"]; exists {
 		h.port = port.(string)
 	} else {
-		h.log.Error("There was no port specified for the ZmqPUB Handler, there won't be any emissions")
+		h.log.Error("There was no port specified for the ZMQPUB Handler, there won't be any emissions")
 	}
 
 	// Create connection if not existing
@@ -78,7 +78,7 @@ func (h *ZmqPUB) Run() {
 func (h *ZmqPUB) emitMetrics(metrics []metric.Metric) bool {
 	h.log.Info("Starting to emit ", len(metrics), " metrics")
 	for _, m := range metrics {
-		h.socket.Send(m.Name, zmq.SNDMORE)
+		h.socket.Send(m.Name, zmq.DONTWAIT)
 	}
 	return true
 }
