@@ -78,7 +78,7 @@ func (h *ZmqPUB) Run() {
 func (h *ZmqPUB) emitMetrics(metrics []metric.Metric) bool {
 	h.log.Info("Starting to emit ", len(metrics), " metrics")
 	for _, m := range metrics {
-		h.socket.Send(m.Name, zmq.DONTWAIT)
+		h.socket.Send(m.ToJSON(), zmq.DONTWAIT)
 	}
 	return true
 }
