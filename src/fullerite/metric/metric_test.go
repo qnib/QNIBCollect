@@ -1,6 +1,7 @@
 package metric_test
 
 import (
+	"encoding/json"
 	"fullerite/metric"
 
 	"testing"
@@ -340,4 +341,13 @@ func TestAddDimensions(t *testing.T) {
 	m2.AddDimensions(dimensions)
 
 	assert.Equal(t, m1, m2)
+}
+
+func TestToJSON(t *testing.T) {
+	m := metric.New("TestMetric")
+	s := m.ToJSON()
+	var nm metric.Metric
+	json.Unmarshal([]byte(s), &nm)
+	assert := assert.New(t)
+	assert.Equal(m, nm)
 }

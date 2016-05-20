@@ -24,11 +24,13 @@ func main() {
     // Since this is a router socket that support async
     // request / reply, the first frame of the message will
     // be the routing frame.
-    msg, err := socket.Recv(0)
-    if err != nil {
-        log.Fatal("Rcv-Err: ", err)
-    }
+    for {
+        msg, err := socket.Recv(0)
+        if err != nil {
+          log.Fatal("Rcv-Err: ", err)
+        }
 
-    log.Printf("Message '%s' received", msg)
+        log.Printf("Message '%s' received", msg)
+    }
 
 }
