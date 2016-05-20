@@ -10,7 +10,7 @@ Of course keep in touch with upstream.
 
 So 'butter bei die Fisch'; what do I want to do what makes it necessary to fork?
 
-#### Event vs. Process Time
+#### Event vs. Process Time (DONE [#4](https://github.com/qnib/QNIBCollect/pull/4))
 
 For now fullerite collects metrics without adding a timestamp. The timestamp is added to the metric by the handler, hence when the handler consumes the metrics channel.
 
@@ -20,7 +20,7 @@ This might be reasonable if the handlers are consuming the metrics right away. W
 
 To not miss important samples I would like to sample at hight frequency no matter what. OK, it should be the minimum frequency feasible for the task at hand.
 
-#### Bulky Handlers
+#### Bulky Handlers (DONE with Event time)
 
 Most back-ends like the notion of getting the metrics thrown at them in bulks. As the metrics within fullerite are presented to the handlers as list, it is not far stretched to collect the metrics at hight precision (1s) and only send it every once so often (30s). For this to work a metric is needed, which is timestamped during collection.
 
@@ -43,7 +43,7 @@ I would like to establish that to allow sending `real-time` to a hot cache and `
 
 As to be able to do stuff like Netflix's Vector does, I would like to expose the metrics on a web socket.
 
-##### ZMQ colector/handler
+##### ZMQ colector/handler (collector: [#16](https://github.com/qnib/QNIBCollect/pull/16))
 
 To allow a hierarchy of collectors (node, rack, DC, ...) a ZMQ PUB/SUB socket would be nice. Maybe the web socket would be sufficient to make this happen...
 
