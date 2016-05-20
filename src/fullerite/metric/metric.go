@@ -1,6 +1,8 @@
 package metric
 
 import (
+	"encoding/json"
+	"fmt"
 	"strings"
 	"time"
 )
@@ -103,4 +105,14 @@ func sanitizeString(s string) string {
 	s = strings.Replace(s, "=", "-", -1)
 	s = strings.Replace(s, ":", "-", -1)
 	return s
+}
+
+// ToJSON Transforms metric to JSON
+func (m *Metric) ToJSON() string {
+	b, err := json.Marshal(m)
+	if err != nil {
+		fmt.Println(err)
+		return "{}"
+	}
+	return string(b)
 }
