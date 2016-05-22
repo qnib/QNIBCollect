@@ -1,7 +1,6 @@
 package collector
 
 import (
-	//"fmt"
 	"fullerite/config"
 	"fullerite/metric"
 	"reflect"
@@ -184,28 +183,17 @@ func (d *DockerStats) extractMetrics(container *docker.Container, stats *docker.
 
 // buildMetrics creates the actual metrics for the given container.
 func (d DockerStats) buildMetrics(container *docker.Container, containerStats *docker.Stats, cpuPercentage float64) []metric.Metric {
-	ret := []metric.Metric{}
-	met := buildDockerMetric("DockerMemoryUsed", metric.Gauge, float64(containerStats.MemoryStats.Usage))
-	if d.bufferRegex != nil && d.bufferRegex.MatchString(met.Name) {
-		met.EnableBuffering()
+	ret := []metric.Metric{
+		d.buildDockerMetric("DockerMemoryUsed", metric.Gauge, float64(containerStats.MemoryStats.Usage)),
+		d.buildDockerMetric("DockerMemoryLimit", metric.Gauge, float64(containerStats.MemoryStats.Limit)),
+		d.buildDockerMetric("DockerCpuPercentage", metric.Gauge, cpuPercentage),
 	}
-	ret = append(ret, met)
-	met = buildDockerMetric("DockerMemoryLimit", metric.Gauge, float64(containerStats.MemoryStats.Limit))
-	if d.bufferRegex != nil && d.bufferRegex.MatchString(met.Name) {
-		met.EnableBuffering()
-	}
-	ret = append(ret, met)
-	met = buildDockerMetric("DockerCpuPercentage", metric.Gauge, cpuPercentage)
-	if d.bufferRegex != nil && d.bufferRegex.MatchString(met.Name) {
-		met.EnableBuffering()
-	}
-	ret = append(ret, met)
 	for netiface := range containerStats.Networks {
 		// legacy format
-		txb := buildDockerMetric("DockerTxBytes", metric.CumulativeCounter, float64(containerStats.Networks[netiface].TxBytes))
+		txb := d.buildDockerMetric("DockerTxBytes", metric.CumulativeCounter, float64(containerStats.Networks[netiface].TxBytes))
 		txb.AddDimension("iface", netiface)
 		ret = append(ret, txb)
-		rxb := buildDockerMetric("DockerRxBytes", metric.CumulativeCounter, float64(containerStats.Networks[netiface].RxBytes))
+		rxb := d.buildDockerMetric("DockerRxBytes", metric.CumulativeCounter, float64(containerStats.Networks[netiface].RxBytes))
 		rxb.AddDimension("iface", netiface)
 		ret = append(ret, rxb)
 	}
@@ -214,7 +202,7 @@ func (d DockerStats) buildMetrics(container *docker.Container, containerStats *d
 		"container_name": strings.TrimPrefix(container.Name, "/"),
 	}
 	metric.AddToAll(&ret, additionalDimensions)
-	ret = append(ret, buildDockerMetric("DockerContainerCount", metric.Counter, 1))
+	ret = append(ret, d.buildDockerMetric("DockerContainerCount", metric.Counter, 1))
 	metric.AddToAll(&ret, d.extractDimensions(container))
 
 	return ret
@@ -248,11 +236,14 @@ func (d DockerStats) extractDimensions(container *docker.Container) map[string]s
 	return ret
 }
 
-func buildDockerMetric(name string, metricType string, value float64) (m metric.Metric) {
+func (d DockerStats) buildDockerMetric(name string, metricType string, value float64) (m metric.Metric) {
 	m = metric.New(name)
 	m.MetricType = metricType
 	m.Value = value
 	m.MetricTime = time.Now()
+	if d.bufferRegex != nil && d.bufferRegex.MatchString(name) {
+		m.Buffered = true
+	}
 	return m
 }
 
