@@ -240,7 +240,7 @@ func (d DockerStats) buildDockerMetric(name string, metricType string, value flo
 	m = metric.New(name)
 	m.MetricType = metricType
 	m.Value = value
-	m.Time = time.Now()
+	m.SetTime(time.Now())
 	if d.bufferRegex != nil && d.bufferRegex.MatchString(name) {
 		m.Buffered = true
 	}

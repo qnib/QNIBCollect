@@ -339,7 +339,7 @@ func TestSanitizeDimensionNameOverwriteCleanDirty(t *testing.T) {
 func TestAddDimensions(t *testing.T) {
 	m1 := metric.New("TestMetric")
 	m2 := metric.New("TestMetric")
-	m2.SetTime(m1.Time)
+	m2.SetTime(m1.Time())
 	dimensions := map[string]string{
 		"TestDimension":    "TestValue",
 		"Dirty:=Dimension": "Dirty:=Value",

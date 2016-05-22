@@ -21,8 +21,8 @@ type Metric struct {
 	MetricType string            `json:"type"`
 	Value      float64           `json:"value"`
 	Dimensions map[string]string `json:"dimensions"`
-	Time       time.Time         `json:"time"`
 	Buffered   bool              `json:"buffered"`
+	time       time.Time         `json:"time"`
 }
 
 // New returns a new metric with name. Default metric type is "gauge"
@@ -33,8 +33,20 @@ func New(name string) Metric {
 		MetricType: "gauge",
 		Value:      0.0,
 		Dimensions: make(map[string]string),
-		Time: 		time.Now(),
+		time:       time.Now(),
 		Buffered:   false,
+	}
+}
+
+// NewExt provides a more controled creation
+func NewExt(name string, typ string, val float64, d map[string]string, t time.Time, b bool) Metric {
+	return Metric{
+		Name:       sanitizeString(name),
+		MetricType: typ,
+		Value:      val,
+		Dimensions: d,
+		time:       t,
+		Buffered:   b,
 	}
 }
 
@@ -57,7 +69,12 @@ func (m *Metric) DisableBuffering() {
 
 // SetTime to metric
 func (m *Metric) SetTime(mtime time.Time) {
-	m.Time = mtime
+	m.time = mtime
+}
+
+// Time to metric
+func (m *Metric) Time() time.Time {
+	return m.time
 }
 
 // AddDimension adds a new dimension to the Metric.
