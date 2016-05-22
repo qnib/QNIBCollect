@@ -21,7 +21,7 @@ func contains(t *testing.T, metrics []metric.Metric, other metric.Metric) bool {
 			assert.Equal(t, my.MetricType, other.MetricType)
 			assert.Equal(t, my.Value, other.Value)
 			assert.Equal(t, my.Dimensions, other.Dimensions)
-			assert.Equal(t, my.Time, other.Time)
+			assert.Equal(t, my.Time(), other.Time())
 			assert.Equal(t, my.Buffered, other.Buffered)
 			mdone = true
 		}
@@ -131,20 +131,19 @@ func TestDockerStatsBuildMetrics(t *testing.T) {
 	}
 	now := time.Now()
 	expectedMetrics := []metric.Metric{
-		metric.Metric{"DockerRxBytes", "cumcounter", 10, netDims, now, false},
-		metric.Metric{"DockerTxBytes", "cumcounter", 20, netDims, now, false},
-		metric.Metric{"DockerMemoryUsed", "gauge", 50, baseDims, now, false},
-		metric.Metric{"DockerMemoryLimit", "gauge", 70, baseDims, now, false},
-		metric.Metric{"DockerCpuPercentage", "gauge", 0.5, baseDims, now, false},
-		metric.Metric{"DockerContainerCount", "counter", 1, expectedDimsGen, now, false},
+		metric.NewExt("DockerRxBytes", "cumcounter", 10, netDims, now, false),
+		metric.NewExt("DockerTxBytes", "cumcounter", 20, netDims, now, false),
+		metric.NewExt("DockerMemoryUsed", "gauge", 50, baseDims, now, false),
+		metric.NewExt("DockerMemoryLimit", "gauge", 70, baseDims, now, false),
+		metric.NewExt("DockerCpuPercentage", "gauge", 0.5, baseDims, now, false),
+		metric.NewExt("DockerContainerCount", "counter", 1, expectedDimsGen, now, false),
 	}
-
 	d := getSUT()
 	d.Configure(config)
 	ret := d.buildMetrics(container, stats, 0.5)
 	var newMet metric.Metric
 	for _, met := range ret {
-		newMet = metric.Metric{met.Name, met.MetricType, met.Value, met.Dimensions, now, false}
+		newMet = metric.NewExt(met.Name, met.MetricType, met.Value, met.Dimensions, now, false)
 		contains(t, expectedMetrics, newMet)
 	}
 }
@@ -186,12 +185,12 @@ func TestDockerStatsBuildMetricsWithBufferRegex(t *testing.T) {
 	expectedDimsGen := map[string]string{}
 	now := time.Now()
 	expectedMetrics := []metric.Metric{
-		metric.Metric{"DockerRxBytes", "cumcounter", 10, netDims, now, false},
-		metric.Metric{"DockerTxBytes", "cumcounter", 20, netDims, now, false},
-		metric.Metric{"DockerMemoryUsed", "gauge", 50, baseDims, now, true},
-		metric.Metric{"DockerMemoryLimit", "gauge", 70, baseDims, now, true},
-		metric.Metric{"DockerCpuPercentage", "gauge", 0.5, baseDims, now, false},
-		metric.Metric{"DockerContainerCount", "counter", 1, expectedDimsGen, now, false},
+		metric.NewExt("DockerRxBytes", "cumcounter", 10, netDims, now, false),
+		metric.NewExt("DockerTxBytes", "cumcounter", 20, netDims, now, false),
+		metric.NewExt("DockerMemoryUsed", "gauge", 50, baseDims, now, true),
+		metric.NewExt("DockerMemoryLimit", "gauge", 70, baseDims, now, true),
+		metric.NewExt("DockerCpuPercentage", "gauge", 0.5, baseDims, now, false),
+		metric.NewExt("DockerContainerCount", "counter", 1, expectedDimsGen, now, false),
 	}
 
 	d := getSUT()
@@ -199,7 +198,7 @@ func TestDockerStatsBuildMetricsWithBufferRegex(t *testing.T) {
 	ret := d.buildMetrics(container, stats, 0.5)
 	var newMet metric.Metric
 	for _, met := range ret {
-		newMet = metric.Metric{met.Name, met.MetricType, met.Value, met.Dimensions, now, met.Buffered}
+		newMet = metric.NewExt(met.Name, met.MetricType, met.Value, met.Dimensions, now, met.Buffered)
 		contains(t, expectedMetrics, newMet)
 	}
 }
@@ -246,12 +245,12 @@ func TestDockerStatsBuildMetricsWithNameAsEnvVariable(t *testing.T) {
 	}
 	now := time.Now()
 	expectedMetrics := []metric.Metric{
-		metric.Metric{"DockerRxBytes", "cumcounter", 10, expectedDims, now, false},
-		metric.Metric{"DockerTxBytes", "cumcounter", 20, expectedDims, now, false},
-		metric.Metric{"DockerMemoryUsed", "gauge", 50, expectedDims, now, false},
-		metric.Metric{"DockerMemoryLimit", "gauge", 70, expectedDims, now, false},
-		metric.Metric{"DockerCpuPercentage", "gauge", 0.5, expectedDims, now, false},
-		metric.Metric{"DockerContainerCount", "counter", 1, expectedDimsGen, now, false},
+		metric.NewExt("DockerRxBytes", "cumcounter", 10, expectedDims, now, false),
+		metric.NewExt("DockerTxBytes", "cumcounter", 20, expectedDims, now, false),
+		metric.NewExt("DockerMemoryUsed", "gauge", 50, expectedDims, now, false),
+		metric.NewExt("DockerMemoryLimit", "gauge", 70, expectedDims, now, false),
+		metric.NewExt("DockerCpuPercentage", "gauge", 0.5, expectedDims, now, false),
+		metric.NewExt("DockerContainerCount", "counter", 1, expectedDimsGen, now, false),
 	}
 
 	d := getSUT()
@@ -259,7 +258,7 @@ func TestDockerStatsBuildMetricsWithNameAsEnvVariable(t *testing.T) {
 	ret := d.buildMetrics(container, stats, 0.5)
 	var newMet metric.Metric
 	for _, met := range ret {
-		newMet = metric.Metric{met.Name, met.MetricType, met.Value, met.Dimensions, now, false}
+		newMet = metric.NewExt(met.Name, met.MetricType, met.Value, met.Dimensions, now, false)
 		contains(t, expectedMetrics, newMet)
 	}
 }
