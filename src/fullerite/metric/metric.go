@@ -22,6 +22,7 @@ type Metric struct {
 	Value      float64           `json:"value"`
 	Dimensions map[string]string `json:"dimensions"`
 	MetricTime time.Time         `json:"time"`
+	Buffered   bool              `json:"buffered"`
 }
 
 // New returns a new metric with name. Default metric type is "gauge"
@@ -33,6 +34,7 @@ func New(name string) Metric {
 		Value:      0.0,
 		Dimensions: make(map[string]string),
 		MetricTime: time.Now(),
+		Buffered:   false,
 	}
 }
 
@@ -41,6 +43,16 @@ func WithValue(name string, value float64) Metric {
 	metric := New(name)
 	metric.Value = value
 	return metric
+}
+
+// EnableBuffering puts the metric into buffering handlers (e.g. ZmqBUF)
+func (m *Metric) EnableBuffering() {
+	m.Buffered = true
+}
+
+// DisableBuffering takes the metric out of buffering (e.g. ZmqBUF)
+func (m *Metric) DisableBuffering() {
+	m.Buffered = false
 }
 
 // SetTime to metric

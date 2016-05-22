@@ -1,6 +1,7 @@
 package collector
 
 import (
+	//"fmt"
 	"fullerite/config"
 	"fullerite/metric"
 	"reflect"
@@ -28,6 +29,7 @@ type DockerStats struct {
 	statsTimeout      int
 	compiledRegex     map[string]*Regex
 	skipRegex         *regexp.Regexp
+	bufferRegex       *regexp.Regexp
 	endpoint          string
 	mu                *sync.Mutex
 }
@@ -99,10 +101,13 @@ func (d *DockerStats) Configure(configMap map[string]interface{}) {
 			}
 		}
 	}
-	d.configureCommonParams(configMap)
 	if skipRegex, skipExists := configMap["skipContainerRegex"]; skipExists {
 		d.skipRegex = regexp.MustCompile(skipRegex.(string))
 	}
+	if bufferRegex, exists := configMap["bufferRegex"]; exists {
+		d.bufferRegex = regexp.MustCompile(bufferRegex.(string))
+	}
+	d.configureCommonParams(configMap)
 }
 
 // Collect iterates on all the docker containers alive and, if possible, collects the correspondent
@@ -179,11 +184,22 @@ func (d *DockerStats) extractMetrics(container *docker.Container, stats *docker.
 
 // buildMetrics creates the actual metrics for the given container.
 func (d DockerStats) buildMetrics(container *docker.Container, containerStats *docker.Stats, cpuPercentage float64) []metric.Metric {
-	ret := []metric.Metric{
-		buildDockerMetric("DockerMemoryUsed", metric.Gauge, float64(containerStats.MemoryStats.Usage)),
-		buildDockerMetric("DockerMemoryLimit", metric.Gauge, float64(containerStats.MemoryStats.Limit)),
-		buildDockerMetric("DockerCpuPercentage", metric.Gauge, cpuPercentage),
+	ret := []metric.Metric{}
+	met := buildDockerMetric("DockerMemoryUsed", metric.Gauge, float64(containerStats.MemoryStats.Usage))
+	if d.bufferRegex != nil && d.bufferRegex.MatchString(met.Name) {
+		met.EnableBuffering()
 	}
+	ret = append(ret, met)
+	met = buildDockerMetric("DockerMemoryLimit", metric.Gauge, float64(containerStats.MemoryStats.Limit))
+	if d.bufferRegex != nil && d.bufferRegex.MatchString(met.Name) {
+		met.EnableBuffering()
+	}
+	ret = append(ret, met)
+	met = buildDockerMetric("DockerCpuPercentage", metric.Gauge, cpuPercentage)
+	if d.bufferRegex != nil && d.bufferRegex.MatchString(met.Name) {
+		met.EnableBuffering()
+	}
+	ret = append(ret, met)
 	for netiface := range containerStats.Networks {
 		// legacy format
 		txb := buildDockerMetric("DockerTxBytes", metric.CumulativeCounter, float64(containerStats.Networks[netiface].TxBytes))

@@ -17,8 +17,16 @@ func TestNewMetric(t *testing.T) {
 	assert.Equal(m.Value, 0.0, "default value should be 0.0")
 	assert.Equal(m.MetricType, "gauge", "should be a Gauge metric")
 	assert.NotEqual(len(m.Dimensions), 1, "should have one dimension")
+	assert.False(m.Buffered, "should be unbuffered")
 }
 
+func TestMetricBuffering(t *testing.T) {
+	m := metric.New("TestMetric")
+	m.EnableBuffering()
+	assert.True(t, m.Buffered, "should be buffered")
+	m.DisableBuffering()
+	assert.False(t, m.Buffered, "should be unbuffered")
+}
 func TestAddDimension(t *testing.T) {
 	m := metric.New("TestMetric")
 	m.AddDimension("TestDimension", "test value")
