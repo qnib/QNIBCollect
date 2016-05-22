@@ -21,7 +21,7 @@ type Metric struct {
 	MetricType string            `json:"type"`
 	Value      float64           `json:"value"`
 	Dimensions map[string]string `json:"dimensions"`
-	MetricTime time.Time         `json:"time"`
+	Time       time.Time         `json:"time"`
 	Buffered   bool              `json:"buffered"`
 }
 
@@ -33,7 +33,7 @@ func New(name string) Metric {
 		MetricType: "gauge",
 		Value:      0.0,
 		Dimensions: make(map[string]string),
-		MetricTime: time.Now(),
+		Time: 		time.Now(),
 		Buffered:   false,
 	}
 }
@@ -57,7 +57,7 @@ func (m *Metric) DisableBuffering() {
 
 // SetTime to metric
 func (m *Metric) SetTime(mtime time.Time) {
-	m.MetricTime = mtime
+	m.Time = mtime
 }
 
 // AddDimension adds a new dimension to the Metric.
