@@ -18,8 +18,9 @@ func generateRandomValue() float64 {
 // Test collector type
 type Test struct {
 	baseCollector
-	metricName string
-	generator  valueGenerator
+	metricName   string
+	bufferMetric bool
+	generator    valueGenerator
 }
 
 func init() {
@@ -37,6 +38,7 @@ func NewTest(channel chan metric.Metric, initialInterval int, log *l.Entry) Coll
 	t.name = "Test"
 	t.metricName = "TestMetric"
 	t.generator = generateRandomValue
+	t.bufferMetric = false
 	return t
 }
 
@@ -45,6 +47,9 @@ func (t *Test) Configure(configMap map[string]interface{}) {
 	if metricName, exists := configMap["metricName"]; exists {
 		t.metricName = metricName.(string)
 	}
+	if bufferMetric, exists := configMap["bufferMetric"]; exists {
+		t.bufferMetric = bufferMetric.(bool)
+	}
 	t.configureCommonParams(configMap)
 }
 
@@ -52,6 +57,7 @@ func (t *Test) Configure(configMap map[string]interface{}) {
 func (t Test) Collect() {
 	metric := metric.New(t.metricName)
 	metric.Value = t.generator()
+	metric.Buffered = t.bufferMetric
 	metric.AddDimension("testing", "yes")
 	time.Sleep(3 * time.Second)
 	t.Channel() <- metric
