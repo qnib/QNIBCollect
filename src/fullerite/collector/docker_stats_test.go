@@ -21,7 +21,7 @@ func contains(t *testing.T, metrics []metric.Metric, other metric.Metric) bool {
 			assert.Equal(t, my.MetricType, other.MetricType)
 			assert.Equal(t, my.Value, other.Value)
 			assert.Equal(t, my.Dimensions, other.Dimensions)
-			assert.Equal(t, my.Time(), other.Time())
+			assert.Equal(t, my.GetTime(), other.GetTime())
 			assert.Equal(t, my.Buffered, other.Buffered)
 			mdone = true
 		}

@@ -40,12 +40,15 @@ func TestLogConfigure(t *testing.T) {
 }
 
 func TestConvertToLog(t *testing.T) {
+	now := time.Now()
 	h := getTestLogHandler(12, 13)
 	m := metric.New("TestMetric")
+	m.SetTime(now)
 
 	dpString, err := h.convertToLog(m)
 	if err != nil {
 		t.Errorf("convertToLog failed to convert %q: err", m, err)
 	}
-	assert.Equal(t, fmt.Sprintf("{\"name\":\"TestMetric\",\"type\":\"gauge\",\"value\":0,\"dimensions\":{},\"buffered\":false}"), dpString)
+	nowFmt := now.Format(time.RFC3339Nano)
+	assert.Equal(t, fmt.Sprintf("{\"name\":\"TestMetric\",\"type\":\"gauge\",\"value\":0,\"dimensions\":{},\"buffered\":false,\"time\":\"%s\"}", nowFmt), dpString)
 }
