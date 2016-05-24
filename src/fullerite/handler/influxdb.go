@@ -93,7 +93,7 @@ func (i InfluxDB) createDatapoint(incomingMetric metric.Metric) (datapoint *infl
 	fields := map[string]interface{}{
 		"value": incomingMetric.Value,
 	}
-	pt, _ := influxClient.NewPoint(incomingMetric.Name, tags, fields, incomingMetric.MetricTime)
+	pt, _ := influxClient.NewPoint(incomingMetric.Name, tags, fields, incomingMetric.GetTime())
 	return pt
 }
 
