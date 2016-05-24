@@ -3,6 +3,7 @@ package metric
 import (
 	"encoding/json"
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -21,7 +22,8 @@ type Metric struct {
 	MetricType string            `json:"type"`
 	Value      float64           `json:"value"`
 	Dimensions map[string]string `json:"dimensions"`
-	MetricTime time.Time         `json:"time"`
+	Buffered   bool              `json:"buffered"`
+	Time       time.Time         `json:"time"`
 }
 
 // New returns a new metric with name. Default metric type is "gauge"
@@ -32,7 +34,36 @@ func New(name string) Metric {
 		MetricType: "gauge",
 		Value:      0.0,
 		Dimensions: make(map[string]string),
-		MetricTime: time.Now(),
+		Time:       time.Now(),
+		Buffered:   false,
+	}
+}
+
+// NewExt provides a more controled creation
+func NewExt(name string, typ string, val float64, d map[string]string, t time.Time, b bool) Metric {
+	return Metric{
+		Name:       sanitizeString(name),
+		MetricType: typ,
+		Value:      val,
+		Dimensions: d,
+		Time:       t,
+		Buffered:   b,
+	}
+}
+
+// Filter provides a struct that can filter a metric by Name (regex), type, dimension (subset of Dimensions)
+type Filter struct {
+	Name       *regexp.Regexp
+	MetricType string
+	Dimensions map[string]string
+}
+
+// NewFilter returns a Filter with compiled regex
+func NewFilter(name string, t string, d map[string]string) Filter {
+	return Filter{
+		Name:       regexp.MustCompile(name),
+		MetricType: t,
+		Dimensions: d,
 	}
 }
 
@@ -43,9 +74,24 @@ func WithValue(name string, value float64) Metric {
 	return metric
 }
 
+// EnableBuffering puts the metric into buffering handlers (e.g. ZmqBUF)
+func (m *Metric) EnableBuffering() {
+	m.Buffered = true
+}
+
+// DisableBuffering takes the metric out of buffering (e.g. ZmqBUF)
+func (m *Metric) DisableBuffering() {
+	m.Buffered = false
+}
+
 // SetTime to metric
 func (m *Metric) SetTime(mtime time.Time) {
-	m.MetricTime = mtime
+	m.Time = mtime
+}
+
+// GetTime returns the time
+func (m *Metric) GetTime() time.Time {
+	return m.Time
 }
 
 // AddDimension adds a new dimension to the Metric.
@@ -115,4 +161,30 @@ func (m *Metric) ToJSON() string {
 		return "{}"
 	}
 	return string(b)
+}
+
+// IsSubDim checks if the 2st map contains all items in the second
+func (m *Metric) IsSubDim(other map[string]string) bool {
+	for k, v := range other {
+		val, ok := m.Dimensions[k]
+		if !ok || v != val {
+			return false
+		}
+	}
+	return true
+}
+
+// IsFiltered checks if metrics is filtered with a given filter
+func (m *Metric) IsFiltered(f Filter) bool {
+	if !m.IsSubDim(f.Dimensions) {
+		return false
+	}
+	if m.MetricType != f.MetricType {
+		return false
+	}
+	if !f.Name.MatchString(m.Name) {
+		return false
+	}
+
+	return true
 }

@@ -17,8 +17,16 @@ func TestNewMetric(t *testing.T) {
 	assert.Equal(m.Value, 0.0, "default value should be 0.0")
 	assert.Equal(m.MetricType, "gauge", "should be a Gauge metric")
 	assert.NotEqual(len(m.Dimensions), 1, "should have one dimension")
+	assert.False(m.Buffered, "should be unbuffered")
 }
 
+func TestMetricBuffering(t *testing.T) {
+	m := metric.New("TestMetric")
+	m.EnableBuffering()
+	assert.True(t, m.Buffered, "should be buffered")
+	m.DisableBuffering()
+	assert.False(t, m.Buffered, "should be unbuffered")
+}
 func TestAddDimension(t *testing.T) {
 	m := metric.New("TestMetric")
 	m.AddDimension("TestDimension", "test value")
@@ -331,7 +339,7 @@ func TestSanitizeDimensionNameOverwriteCleanDirty(t *testing.T) {
 func TestAddDimensions(t *testing.T) {
 	m1 := metric.New("TestMetric")
 	m2 := metric.New("TestMetric")
-	m2.SetTime(m1.MetricTime)
+	m2.SetTime(m1.GetTime())
 	dimensions := map[string]string{
 		"TestDimension":    "TestValue",
 		"Dirty:=Dimension": "Dirty:=Value",
@@ -350,4 +358,55 @@ func TestToJSON(t *testing.T) {
 	json.Unmarshal([]byte(s), &nm)
 	assert := assert.New(t)
 	assert.Equal(m, nm)
+}
+
+func TestIsSubDim(t *testing.T) {
+	m := metric.New("TestMetric")
+	m.AddDimension("dim1", "1")
+	m.AddDimension("dim2", "2")
+	m.AddDimension("dim3", "3")
+	other := map[string]string{
+		"dim1": "1",
+		"dim2": "2",
+		"dim3": "3",
+	}
+	assert.True(t, m.IsSubDim(other), "identical dimension")
+	other = map[string]string{
+		"dim1": "1",
+		"dim2": "2",
+	}
+	assert.True(t, m.IsSubDim(other), "other is smaller then my")
+	other = map[string]string{
+		"dim1": "1",
+		"dim2": "2",
+		"dim3": "3",
+		"dim4": "4",
+	}
+	assert.False(t, m.IsSubDim(other), "other is bigger then my")
+	other = map[string]string{
+		"dim1": "1",
+		"dim2": "2",
+		"dim3": "4",
+	}
+	assert.False(t, m.IsSubDim(other), "other[dim3] has different key then my[dim3]")
+}
+
+func TestIsFiltered(t *testing.T) {
+	m := metric.New("TestMetric")
+	m.AddDimension("dim1", "1")
+	m.AddDimension("dim2", "2")
+	good := map[string]string{
+		"dim1": "1",
+	}
+	f := metric.NewFilter("Test.*", "gauge", good)
+	assert.True(t, m.IsFiltered(f), "Should map")
+	bad := map[string]string{
+		"dim1": "2",
+	}
+	f = metric.NewFilter("Test.*", "counter", good)
+	assert.False(t, m.IsFiltered(f), "Should not map due to Type")
+	f = metric.NewFilter("Test.*", "gauge", bad)
+	assert.False(t, m.IsFiltered(f), "Should not map due to dimensions")
+	f = metric.NewFilter("Fail.*", "gauge", good)
+	assert.False(t, m.IsFiltered(f), "Should not map due to Name")
 }
