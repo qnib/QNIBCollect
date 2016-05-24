@@ -3,6 +3,7 @@ package metric
 import (
 	"encoding/json"
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -47,6 +48,22 @@ func NewExt(name string, typ string, val float64, d map[string]string, t time.Ti
 		Dimensions: d,
 		Time:       t,
 		Buffered:   b,
+	}
+}
+
+// Filter provides a struct that can filter a metric by Name (regex), type, dimension (subset of Dimensions)
+type Filter struct {
+	Name       *regexp.Regexp
+	MetricType string
+	Dimensions map[string]string
+}
+
+// NewFilter returns a Filter with compiled regex
+func NewFilter(name string, t string, d map[string]string) Filter {
+	return Filter{
+		Name:       regexp.MustCompile(name),
+		MetricType: t,
+		Dimensions: d,
 	}
 }
 
@@ -144,4 +161,30 @@ func (m *Metric) ToJSON() string {
 		return "{}"
 	}
 	return string(b)
+}
+
+// IsSubDim checks if the 2st map contains all items in the second
+func (m *Metric) IsSubDim(other map[string]string) bool {
+	for k, v := range other {
+		val, ok := m.Dimensions[k]
+		if !ok || v != val {
+			return false
+		}
+	}
+	return true
+}
+
+// IsFiltered checks if metrics is filtered with a given filter
+func (m *Metric) IsFiltered(f Filter) bool {
+	if !m.IsSubDim(f.Dimensions) {
+		return false
+	}
+	if m.MetricType != f.MetricType {
+		return false
+	}
+	if !f.Name.MatchString(m.Name) {
+		return false
+	}
+
+	return true
 }
