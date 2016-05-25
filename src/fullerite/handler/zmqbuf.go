@@ -5,9 +5,9 @@ import (
 	"time"
 
 	"fullerite/metric"
+	ring "github.com/ChristianKniep/go-mettring"
 	l "github.com/Sirupsen/logrus"
 	zmq "github.com/pebbe/zmq4"
-	ring "github.com/zfjagann/golang-ring"
 )
 
 func init() {
@@ -75,10 +75,8 @@ func (h *ZmqBUF) Configure(configMap map[string]interface{}) {
 	} else {
 		h.log.Info("Reuse existing socket")
 	}
-	//Initialize ring-buffer
-	h.buffer = ring.Ring{}
-	h.buffer.SetCapacity(h.capacity)
-
+	//Initialize ring-buffer with 300.000ms (300s -> 5m)
+	h.buffer = ring.New(300000)
 	h.configureCommonParams(configMap)
 }
 
@@ -90,7 +88,7 @@ func (h *ZmqBUF) Run() {
 func (h *ZmqBUF) emitMetrics(metrics []metric.Metric) bool {
 	h.log.Info("Starting to emit ", len(metrics), " metrics")
 	for _, m := range metrics {
-		h.buffer.Enqueue(m.ToJSON())
+		h.buffer.Enqueue(m)
 	}
 	return true
 }
