@@ -37,9 +37,9 @@ func (h ZmqBUF) Retention() int {
 }
 
 // SweepInterval returns the rings retention time (in nanosec)
-func (h ZmqBUF) SweepInterval() int {
+func (h ZmqBUF) SweepInterval() time.Duration {
 	i, _ := strconv.Atoi(h.sweepinterval)
-	return i
+	return time.Second * time.Duration(i)
 }
 
 // newZmqBUF returns a new handler.
@@ -105,8 +105,7 @@ func (h *ZmqBUF) serveReq() {
 		msg, _ := h.socket.Recv(0)
 		h.log.Info("Received request: ", msg)
 		reply, _ := h.Values()
-		for idx, rep := range reply {
-			h.log.Info(fmt.Sprintf("Sending #%d: %s", idx, rep.ToJSON()))
+		for _, rep := range reply {
 			h.socket.Send(rep.ToJSON(), zmq.SNDMORE)
 		}
 		h.socket.Send("EOM", 0)
@@ -117,6 +116,7 @@ func (h *ZmqBUF) serveReq() {
 // Run runs the handler main loop
 func (h *ZmqBUF) Run() {
 	go h.serveReq()
+	go h.sweepTicker()
 	h.run(h.emitMetrics)
 }
 
@@ -124,6 +124,19 @@ func (h *ZmqBUF) Run() {
 func (h *ZmqBUF) Enqueue(m metric.Metric) {
 	if m.Buffered {
 		h.buffer.Enqueue(m)
+	}
+}
+
+// sweepTicker ticks every sweepinterval and remove old entries
+func (h *ZmqBUF) sweepTicker() {
+	ticker := time.NewTicker(h.SweepInterval())
+	for t := range ticker.C {
+		cnt, ok := h.buffer.TidyUp()
+		if !ok {
+			h.log.Warn("TidyUp went wrong... :(")
+		} else {
+			h.log.Info(fmt.Sprintf("%s Kicked out %d metrics during TidyUp()", t, cnt))
+		}
 	}
 }
 
