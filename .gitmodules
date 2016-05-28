@@ -1,0 +1,3 @@
+[submodule "src/go-mettring"]
+	path = src/go-mettring
+	url = https://github.com/ChristianKniep/go-mettring.git

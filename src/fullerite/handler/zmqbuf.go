@@ -2,12 +2,13 @@ package handler
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
 	"fullerite/metric"
-	ring "github.com/ChristianKniep/go-mettring"
 	l "github.com/Sirupsen/logrus"
 	zmq "github.com/pebbe/zmq4"
+	ring "go-mettring"
 )
 
 func init() {
@@ -17,10 +18,11 @@ func init() {
 // ZmqBUF implements a simple way of reusing http connections
 type ZmqBUF struct {
 	BaseHandler
-	port     string
-	capacity int
-	socket   *zmq.Socket
-	buffer   ring.Ring
+	port          string
+	retention     string
+	sweepinterval string
+	socket        *zmq.Socket
+	buffer        ring.Ring
 }
 
 // Port returns the server's port number
@@ -28,14 +30,26 @@ func (h ZmqBUF) Port() string {
 	return h.port
 }
 
-// newZmqPUB returns a new handler.
+// Retention returns the rings retention time (in nanosec)
+func (h ZmqBUF) Retention() int {
+	i, _ := strconv.Atoi(h.retention)
+	return i
+}
+
+// SweepInterval returns the rings retention time (in nanosec)
+func (h ZmqBUF) SweepInterval() int {
+	i, _ := strconv.Atoi(h.sweepinterval)
+	return i
+}
+
+// newZmqBUF returns a new handler.
 func newZmqBUF(
 	channel chan metric.Metric,
 	initialInterval int,
 	initialBufferSize int,
 	initialTimeout time.Duration,
 	log *l.Entry) Handler {
-	inst := new(ZmqPUB)
+	inst := new(ZmqBUF)
 	inst.name = "ZmqBUF"
 	inst.interval = initialInterval
 	inst.maxBufferSize = initialBufferSize
@@ -53,10 +67,16 @@ func (h *ZmqBUF) Configure(configMap map[string]interface{}) {
 	} else {
 		h.log.Error("There was no port specified for the ZmqBUF Handler, there won't be any emissions")
 	}
-	if capacity, exists := configMap["capacity"]; exists {
-		h.capacity = capacity.(int)
+	if retention, exists := configMap["retention"]; exists {
+		h.retention = retention.(string)
 	} else {
-		h.log.Error("There was no capacity specified for the ZmqBUF Handler, there won't be any emissions")
+		h.log.Error("There was no retention specified for the ZmqBUF Handler, there won't be any emissions")
+	}
+	if sweep, exists := configMap["sweepinterval"]; exists {
+		h.sweepinterval = sweep.(string)
+	} else {
+		h.log.Warn("There was no sweep interval specified for the ZmqBUF Handler, use 5 (sec)")
+		h.sweepinterval = "5"
 	}
 
 	// Create connection if not existing
@@ -75,20 +95,61 @@ func (h *ZmqBUF) Configure(configMap map[string]interface{}) {
 	} else {
 		h.log.Info("Reuse existing socket")
 	}
-	//Initialize ring-buffer with 300.000ms (300s -> 5m)
-	h.buffer = ring.New(300000)
+	//Initialize ring-buffer
+	h.buffer = ring.New(h.Retention())
 	h.configureCommonParams(configMap)
+}
+
+func (h *ZmqBUF) serveReq() {
+	for {
+		msg, _ := h.socket.Recv(0)
+		h.log.Info("Received request: ", msg)
+		reply, _ := h.Values()
+		for idx, rep := range reply {
+			h.log.Info(fmt.Sprintf("Sending #%d: %s", idx, rep.ToJSON()))
+			h.socket.Send(rep.ToJSON(), zmq.SNDMORE)
+		}
+		h.socket.Send("EOM", 0)
+
+	}
 }
 
 // Run runs the handler main loop
 func (h *ZmqBUF) Run() {
+	go h.serveReq()
 	h.run(h.emitMetrics)
+}
+
+// Enqueue puts metric into buffer
+func (h *ZmqBUF) Enqueue(m metric.Metric) {
+	if m.Buffered {
+		h.buffer.Enqueue(m)
+	}
+}
+
+// Values returns all Values in the buffer
+func (h *ZmqBUF) Values() ([]metric.Metric, bool) {
+	return h.buffer.Values()
+}
+
+// Filter returns Values in the buffer which do not match the metric.Filter
+func (h *ZmqBUF) Filter(f metric.Filter) ([]metric.Metric, bool) {
+	slice, ok := h.buffer.Filter(f)
+	//h.log.Debug("Filter result length: ", len(slice))
+	return slice, ok
+}
+
+// Match returns Values in the buffer which match the metric.Filter
+func (h *ZmqBUF) Match(f metric.Filter) ([]metric.Metric, bool) {
+	slice, ok := h.buffer.Match(f)
+	//h.log.Debug("Filter result length: ", len(slice))
+	return slice, ok
 }
 
 func (h *ZmqBUF) emitMetrics(metrics []metric.Metric) bool {
 	h.log.Info("Starting to emit ", len(metrics), " metrics")
 	for _, m := range metrics {
-		h.buffer.Enqueue(m)
+		h.Enqueue(m)
 	}
 	return true
 }
