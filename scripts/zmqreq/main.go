@@ -4,7 +4,7 @@ import (
     "log"
     "os"
     "fmt"
-
+    "fullerite/metric"
     zmq "github.com/pebbe/zmq4"
 )
 
@@ -19,10 +19,12 @@ func main() {
 
     log.Println("Subscriber created and connected")
 
-    // send hello
-	msg := fmt.Sprintf("Hello")
+    // send filter
+    good := map[string]string{}
+    f := metric.NewFilter(os.Args[2], "gauge", good)
+	msg := f.ToJSON()
 	fmt.Println("Sending ", msg)
-	socket.Send(msg, 0)
+	socket.Send(string(msg), 0)
 	// Wait for replies:
     for {
         reply, _ := socket.Recv(0)

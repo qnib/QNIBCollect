@@ -85,9 +85,19 @@ time="28 May 16 18:28 CEST" level=info msg="POST of 1 metrics to ZmqBUF took 0.0
 Within the scripts directory a little helper is provides, which REQuests the buffer and gets JSON as a RE(s)Ponse.
 
 ```
-➜  zmqreq git:(master) go run main.go tcp://localhost:6060                                                                                                                                                                                                                                      git:(master↑5|
-2016/05/28 18:27:41 Subscriber created and connected
-Sending  Hello
-Received  {"name":"helloWorld","type":"gauge","value":0.6046602879796196,"dimensions":{"collector":"Test","testing":"yes"},"buffered":true,"time":"2016-05-28T18:27:27.113478239+02:00"}
-Received  {"name":"helloWorld","type":"gauge","value":0.9405090880450124,"dimensions":{"collector":"Test","testing":"yes"},"buffered":true,"time":"2016-05-28T18:27:32.112690313+02:00"}
+➜  zmqreq git:(match_zmqbuf) ✗ go run main.go tcp://localhost:6060 "hello.*"                                                                                                                                                                                                                git:(match_zmqbuf|✚4
+2016/05/29 10:36:54 Subscriber created and connected
+Sending  {"name":"hello.*","type":"gauge","dimensions":{}}
+Received  {"name":"helloWorld","type":"gauge","value":0.6046602879796196,"dimensions":{"collector":"Test","testing":"yes"},"buffered":true,"time":"2016-05-29T10:36:42.231534076+02:00"}
+Received  {"name":"helloWorld","type":"gauge","value":0.9405090880450124,"dimensions":{"collector":"Test","testing":"yes"},"buffered":true,"time":"2016-05-29T10:36:47.229114507+02:00"}
+➜  zmqreq git:(match_zmqbuf) ✗
+```
+
+By sending a missing metric name as second argument, no response is given.
+
+```
+➜  zmqreq git:(match_zmqbuf) ✗ go run main.go tcp://localhost:6060 "FAIL.*"                                                                                                                                                                                                                 git:(match_zmqbuf|✚4
+2016/05/29 10:36:59 Subscriber created and connected
+Sending  {"name":"FAIL.*","type":"gauge","dimensions":{}}
+➜  zmqreq git:(match_zmqbuf) ✗
 ```

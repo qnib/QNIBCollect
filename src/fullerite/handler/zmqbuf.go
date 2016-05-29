@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"time"
@@ -103,8 +104,10 @@ func (h *ZmqBUF) Configure(configMap map[string]interface{}) {
 func (h *ZmqBUF) serveReq() {
 	for {
 		msg, _ := h.socket.Recv(0)
-		h.log.Info("Received request: ", msg)
-		reply, _ := h.Values()
+		var filter metric.Filter
+		json.Unmarshal([]byte(msg), &filter)
+		h.log.Info("Received request: ", filter)
+		reply, _ := h.Match(filter)
 		for _, rep := range reply {
 			h.socket.Send(rep.ToJSON(), zmq.SNDMORE)
 		}
