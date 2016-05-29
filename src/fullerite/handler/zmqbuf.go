@@ -8,7 +8,7 @@ import (
 	"fullerite/metric"
 	l "github.com/Sirupsen/logrus"
 	zmq "github.com/pebbe/zmq4"
-	ring "go-mettring"
+	ring "mettring"
 )
 
 func init() {
