@@ -53,15 +53,25 @@ func NewExt(name string, typ string, val float64, d map[string]string, t time.Ti
 
 // Filter provides a struct that can filter a metric by Name (regex), type, dimension (subset of Dimensions)
 type Filter struct {
-	Name       *regexp.Regexp
-	MetricType string
-	Dimensions map[string]string
+	Name       string            `json:"name"`
+	MetricType string            `json:"type"`
+	Dimensions map[string]string `json:"dimensions"`
+}
+
+// ToJSON Transforms Filter to JSON
+func (f *Filter) ToJSON() string {
+	b, err := json.Marshal(f)
+	if err != nil {
+		fmt.Println(err)
+		return "{}"
+	}
+	return string(b)
 }
 
 // NewFilter returns a Filter with compiled regex
 func NewFilter(name string, t string, d map[string]string) Filter {
 	return Filter{
-		Name:       regexp.MustCompile(name),
+		Name:       name,
 		MetricType: t,
 		Dimensions: d,
 	}
@@ -182,7 +192,8 @@ func (m *Metric) IsFiltered(f Filter) bool {
 	if m.MetricType != f.MetricType {
 		return false
 	}
-	if !f.Name.MatchString(m.Name) {
+	// TODO: Precompile regex to speed up matching
+	if !regexp.MustCompile(f.Name).MatchString(m.Name) {
 		return false
 	}
 
