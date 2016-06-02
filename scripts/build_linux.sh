@@ -12,7 +12,7 @@ docker run -ti -v ${PDIR}:/data/ -w /data/ qnib/golang make
 mv ${PDIR}/bin/fullerite ${PDIR}/bin/fullerite-${TAG}-Linux
 rm -f bin/gom bin/beatit
 
-docker run -ti -v ${PDIR}:/data/ -w /data/ qnib/alpn-go-dev make
+docker run -ti -v ${PDIR}:/data/ -w /data/ qnib/alpn-go-dev make fullerite
 mv ${PDIR}/bin/fullerite ${PDIR}/bin/fullerite-${TAG}-LinuxMusl
 rm -f ${PDIR}/bin/gom bin/beatit
 
