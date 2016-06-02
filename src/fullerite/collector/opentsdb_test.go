@@ -1,11 +1,15 @@
 package collector
 
 import (
+	"fmt"
 	"net"
 	"testing"
 	"time"
 
+	"fullerite/metric"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"test_utils"
 )
 
 func TestOpenTSDBConfigureEmptyConfig(t *testing.T) {
@@ -33,7 +37,6 @@ func TestOpenTSDBConfigure(t *testing.T) {
 	assert.Equal(c.Port(), "4242", "should be the defined port")
 }
 
-/*
 func TestOpenTSBDCollect(t *testing.T) {
 	config := make(map[string]interface{})
 	config["port"] = "0"
@@ -47,20 +50,19 @@ func TestOpenTSBDCollect(t *testing.T) {
 	// start collecting metrics
 	go c.Collect()
 
-	conn, err := connectToOpenTSDBCollector(d)
+	conn, err := connectToOpenTSDBCollector(c)
 	require.Nil(t, err, "should connect")
 	require.NotNil(t, conn, "should connect")
 
-	fmt.Fprintf(conn, string(b)+"\n")
+	fmt.Fprintf(conn, "put sys.cpu.user host=webserver01,cpu=0 1356998400 1\n")
 
 	select {
 	case m := <-c.Channel():
-		assert.Equal(t, m.Name, "test")
+		assert.Equal(t, m.Name, "sys.cpu.user")
 	case <-time.After(1 * time.Second):
 		t.Fail()
 	}
 }
-*/
 
 func TestParseOpenTSDBMetric(t *testing.T) {
 	rawData := "put sys.cpu.user host=webserver01,cpu=0 1356998400 1"
