@@ -69,10 +69,15 @@ func TestParseOpenTSDBMetric(t *testing.T) {
 	c := newOpenTSDB(nil, 12, nil).(*OpenTSDB)
 	var conf map[string]interface{}
 	c.Configure(conf)
-	metric, ok := c.parseMetric(rawData)
-	assert.True(t, ok, metric.Name)
-	assert.Equal(t, "gauge", metric.MetricType)
-	assert.Equal(t, "sys.cpu.user", metric.Name)
+	m, ok := c.parseMetric(rawData)
+	assert.True(t, ok, m.Name)
+	d := map[string]string{
+		"host": "webserver01",
+		"cpu":  "0",
+	}
+	f := metric.NewFilter("sys.cpu.user", "gauge", d)
+	assert.True(t, m.IsFiltered(f), "Filter should map metric")
+
 }
 
 func TestInvalidOpenTSDBToMetric(t *testing.T) {
