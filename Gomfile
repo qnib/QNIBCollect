@@ -4,7 +4,7 @@ gom 'github.com/andygrunwald/megos', :commit => '5a1b5a99315853a986abab3905011f0
 gom 'github.com/codegangsta/cli', :commit => '8cea2901d4b2c28b97001e67a7d2d60e227f3da6'
 gom 'github.com/prometheus/procfs'
 gom 'github.com/davecheney/profile', :commit => 'c29d1a1565bca9fbeed5eed0e5d52ba78469a16b'
-gom 'github.com/fsouza/go-dockerclient', :commit => '02a8beb401b20e112cff3ea740545960b667eab1'
+gom 'github.com/fsouza/go-dockerclient', :commit => '3635acd5873d2dcb7e58d9baa7076da478399225'
 gom 'github.com/fzipp/gocyclo', :commit => '6acd4345c835499920e8426c7e4e8d7a34f1bb83'
 gom 'github.com/golang/lint/golint', :commit => '8f348af5e29faa4262efdc14302797f23774e477'
 gom 'github.com/golang/protobuf/proto', :commit => '68415e7123da32b07eab49c96d2c4d6158360e9b'
