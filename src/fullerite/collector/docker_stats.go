@@ -124,14 +124,14 @@ func (d *DockerStats) Collect() {
 	}
 	for _, apiContainer := range containers {
 		container, err := d.dockerClient.InspectContainer(apiContainer.ID)
-
+		contName := strings.TrimPrefix(container.Name, "/")
 		if err != nil {
 			d.log.Error("InspectContainer() failed: ", err)
 			continue
 		}
 
-		if d.skipRegex != nil && d.skipRegex.MatchString(container.Name) {
-			d.log.Info("Skip container: ", container.Name)
+		if d.skipRegex != nil && d.skipRegex.MatchString(contName) {
+			d.log.Debug("Skip container: ", contName)
 			continue
 		}
 		if _, ok := d.previousCPUValues[container.ID]; !ok {
