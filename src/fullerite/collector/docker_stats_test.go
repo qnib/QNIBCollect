@@ -228,7 +228,10 @@ func TestDockerStatsBuildMetricsWithNameAsEnvVariable(t *testing.T) {
 		"Config": {
 			"Env": [
 				"SERVICE_NAME=my_service"
-			]
+			],
+			"Labels": {
+			   "labelKey": "labelVar"
+		  }
 		}
 	}`)
 	var container *docker.Container
@@ -239,6 +242,7 @@ func TestDockerStatsBuildMetricsWithNameAsEnvVariable(t *testing.T) {
 		"container_id":   "test-id",
 		"container_name": "test-container",
 		"service_name":   "my_service",
+		"labelKey":       "labelVar",
 	}
 	expectedDimsGen := map[string]string{
 		"service_name": "my_service",
