@@ -19,7 +19,7 @@ rm -f ${PDIR}/bin/gom bin/beatit
 
 # Darwin
 if [ "Darwin" == $(uname) ];then
-    make
+    make fullerite
     mv ${PDIR}/bin/fullerite ${PDIR}/bin/fullerite-${TAG}-Darwin
     rm -f ${PDIR}/bin/gom bin/beatit
 fi
