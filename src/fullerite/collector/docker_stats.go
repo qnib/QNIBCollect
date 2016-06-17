@@ -201,6 +201,9 @@ func (d DockerStats) buildMetrics(container *docker.Container, containerStats *d
 		"container_id":   container.ID,
 		"container_name": strings.TrimPrefix(container.Name, "/"),
 	}
+	for k, v := range container.Config.Labels {
+		additionalDimensions[k] = v
+	}
 	metric.AddToAll(&ret, additionalDimensions)
 	ret = append(ret, d.buildDockerMetric("DockerContainerCount", metric.Counter, 1))
 	metric.AddToAll(&ret, d.extractDimensions(container))
